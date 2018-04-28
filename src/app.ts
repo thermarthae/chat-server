@@ -1,70 +1,53 @@
-import path = require("path");
 import express = require("express");
-import morgan = require("morgan");
+//import graphqlHTTP = require("express-graphql");
+import { graphqlExpress } from "apollo-server-express";
 import bodyParser = require("body-parser");
+import morgan = require("morgan");
 import mongoose = require("mongoose");
 
-export const secretKey = {
-	primary: "461b2697-e354-4b45-9500-cb4b410ca993",
-	secondary: "1f8bbfcb-3505-42b7-9f57-e7563eff8f25"
-};
+import schema from "./graphql";
 
-const productRoutes = require("./api/routes/products");
-const orderRoutes = require("./api/routes/orders");
-const userRoutes = require("./api/routes/user");
+export interface IRootValue {
+	access_token: string;
+	secretKey: {
+		primary: string;
+		secondary: string;
+	};
+}
 
-mongoose
-	.connect(process.env.MONGO_ATLAS_URI as string)
-	.then(() => console.log("connected to db"));
-
-mongoose.Promise = global.Promise;
+mongoose.connect(process.env.MONGO_ATLAS_URI as string)
+	.then(() => console.log("Connected to DB. "))
+	.catch(err => { throw err; });
+// mongoose.connection
+// 	.on("error", () => console.error("Failed to connect to DB."))
+// 	.once("open", () => console.log("Connected to DB. "));
 
 export const app = express();
-app.use(morgan("dev"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
-
 app.use((req, res, next) => {
 	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Methods", "POST, GET");
 	res.header(
 		"Access-Control-Allow-Headers",
-		"Origin, X-Requested-With, Content-Type, Accept, Authorization"
+		"Content-Type, Authorization, X-Apollo-Tracing, Credentials"//Accept, Origin, X-Requested-With
 	);
-	if (req.method === "OPTIONS") {
-		res.header(
-			"Access-Control-Allow-Methods",
-			"PUT, POST, PATCH, DELETE, GET"
-		);
-		return res.status(200).json({});
-	}
+	res.header("Access-Control-Allow-Credentials", "true");
+	if (req.method === "OPTIONS") return res.status(200).json({});
 	next();
 });
 
-// Routes which should handle requests
-app.use("/products", productRoutes);
-app.use("/orders", orderRoutes);
-app.use("/user", userRoutes);
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-app.use((req, res, next) => {
-	const error = new Error("Not found");
-	res.status(404);
-	next(error);
-});
-
-app.use(((error, req, res, next) => {
-	const status = error.status || res.statusCode || 500;
-	res.status(status);
-	res.json({
-		error: {
-			name: error.name,
-			message: error.message,
-			expiredAt: error.expiredAt,
-			statusCode: status,
-			request: {
-				method: req.method,
-				url: req.url
+app.use(morgan("dev"));
+app.use(
+	"/graphql",
+	bodyParser.json(),
+	graphqlExpress((req: any) => ({
+		schema,
+		rootValue: {
+			access_token: req.headers.authorization,
+			secretKey: {
+				primary: "461b2697-e354-4b45-9500-cb4b410ca993",
+				secondary: "1f8bbfcb-3505-42b7-9f57-e7563eff8f25"
 			}
-		}
-	});
-}) as express.ErrorRequestHandler);
+		},
+		tracing: true
+	}))
+);
