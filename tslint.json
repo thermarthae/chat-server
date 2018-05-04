@@ -18,7 +18,8 @@
 		"object-literal-sort-keys": [true, "match-declaration-order"],
 		"one-line": [true, "check-catch", "check-finally"],
 		"no-trailing-whitespace": [true, "ignore-blank-lines"],
-		"no-unused-expression": [true, "allow-new"]
+		"no-unused-expression": [true, "allow-new"],
+		"quotemark": [true, "single"]
 	},
 	"rulesDirectory": []
 }

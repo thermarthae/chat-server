@@ -4,10 +4,10 @@ import {
 	GraphQLNonNull,
 	GraphQLString,
 	GraphQLID
-} from "graphql";
+} from 'graphql';
 
 export const postType = new GraphQLObjectType({
-	name: "Post",
+	name: 'Post',
 	fields: () => ({
 		_id: {
 			type: new GraphQLNonNull(GraphQLID)
@@ -25,7 +25,7 @@ export const postType = new GraphQLObjectType({
 });
 
 export const postInputType = new GraphQLInputObjectType({
-	name: "PostInput",
+	name: 'PostInput',
 	fields: () => ({
 		uid: {
 			type: GraphQLString

@@ -1,4 +1,4 @@
-import mongoose = require("mongoose");
+import mongoose = require('mongoose');
 
 const conversationSchema = new mongoose.Schema(
 	{
@@ -32,7 +32,7 @@ const conversationSchema = new mongoose.Schema(
 		}
 	},
 	{
-		collection: "conversation",
+		collection: 'conversation',
 		timestamps: true
 	}
 );
@@ -59,4 +59,4 @@ export interface IConversation extends mongoose.Document {
 	messages: [IMessage];
 }
 
-export default mongoose.model<IConversation>("conversation", conversationSchema);
+export default mongoose.model<IConversation>('conversation', conversationSchema);

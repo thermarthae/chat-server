@@ -1,6 +1,6 @@
-import { userType } from "./user.types";
-import { postType } from "./post.types";
-import { conversationType } from "./conversation.types";
+import { userType } from './user.types';
+import { postType } from './post.types';
+import { conversationType } from './conversation.types';
 
 export default {
 	userType,

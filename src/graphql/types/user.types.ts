@@ -1,6 +1,6 @@
-import PostModel from "../../models/post";
-import { postType } from "./post.types";
-import { IUser } from "../../models/user";
+import PostModel from '../../models/post';
+import { postType } from './post.types';
+import { IUser } from '../../models/user';
 import {
 	GraphQLObjectType,
 	GraphQLInputObjectType,
@@ -10,7 +10,7 @@ import {
 	GraphQLList,
 	GraphQLBoolean,
 	GraphQLInt
-} from "graphql";
+} from 'graphql';
 
 export interface IUserToken {
 	_id: string;
@@ -18,7 +18,7 @@ export interface IUserToken {
 }
 
 export const userType = new GraphQLObjectType({
-	name: "User",
+	name: 'User',
 	fields: () => ({
 		_id: {
 			type: new GraphQLNonNull(GraphQLID)
@@ -43,7 +43,7 @@ export const userType = new GraphQLObjectType({
 });
 
 export const userTokenType = new GraphQLObjectType({
-	name: "UserToken",
+	name: 'UserToken',
 	fields: () => ({
 		user: {
 			type: userType
@@ -56,7 +56,7 @@ export const userTokenType = new GraphQLObjectType({
 		},
 		error: {
 			type: new GraphQLObjectType({
-				name: "UserTokenError",
+				name: 'UserTokenError',
 				fields: () => ({
 					code: { type: GraphQLInt },
 					message: { type: GraphQLString }
@@ -67,7 +67,7 @@ export const userTokenType = new GraphQLObjectType({
 });
 
 export const userInputType = new GraphQLInputObjectType({
-	name: "UserInput",
+	name: 'UserInput',
 	fields: () => ({
 		name: {
 			type: new GraphQLNonNull(GraphQLString)

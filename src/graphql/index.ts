@@ -1,27 +1,27 @@
-import { GraphQLObjectType, GraphQLSchema } from "graphql";
-import { PubSub } from "graphql-subscriptions";
+import { GraphQLObjectType, GraphQLSchema } from 'graphql';
+import { PubSub } from 'graphql-subscriptions';
 
-import queries from "./queries";
-import mutations from "./mutations";
-import subscriptions from "./subscriptions";
+import queries from './queries';
+import mutations from './mutations';
+import subscriptions from './subscriptions';
 
 export const pubsub = new PubSub();
 
 export default new GraphQLSchema({
 	query: new GraphQLObjectType({
-		name: "Query",
+		name: 'Query',
 		fields: {
 			...queries
 		}
 	}),
 	mutation: new GraphQLObjectType({
-		name: "Mutation",
+		name: 'Mutation',
 		fields: {
 			...mutations
 		}
 	}),
 	subscription: new GraphQLObjectType({
-		name: "Subscription",
+		name: 'Subscription',
 		fields: {
 			...subscriptions
 		}

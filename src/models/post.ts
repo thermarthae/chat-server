@@ -1,4 +1,4 @@
-import mongoose = require("mongoose");
+import mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema(
 	{
@@ -16,7 +16,7 @@ const postSchema = new mongoose.Schema(
 		}
 	},
 	{
-		collection: "post",
+		collection: 'post',
 		timestamps: true
 	}
 );
@@ -27,4 +27,4 @@ export interface IPost extends mongoose.Document {
 	body: string;
 }
 
-export default mongoose.model<IPost>("post", postSchema);
+export default mongoose.model<IPost>('post', postSchema);

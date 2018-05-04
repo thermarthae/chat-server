@@ -1,4 +1,4 @@
-import mongoose = require("mongoose");
+import mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema(
 	{
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
 		tokenSignature: {
 			type: String,
 			required: true,
-			default: "undefined"
+			default: 'undefined'
 		},
 		isAdmin: {
 			type: Boolean,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
 		}
 	},
 	{
-		collection: "user",
+		collection: 'user',
 		timestamps: true
 	}
 );
@@ -40,4 +40,4 @@ export interface IUser extends mongoose.Document {
 	isAdmin: boolean;
 }
 
-export default mongoose.model<IUser>("user", userSchema);
+export default mongoose.model<IUser>('user', userSchema);

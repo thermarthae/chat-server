@@ -4,10 +4,10 @@ import {
 	GraphQLString,
 	GraphQLID,
 	GraphQLList,
-} from "graphql";
+} from 'graphql';
 
 const seenType = new GraphQLObjectType({
-	name: "Seen",
+	name: 'Seen',
 	fields: () => ({
 		user: {
 			type: new GraphQLNonNull(GraphQLString)
@@ -20,7 +20,7 @@ const seenType = new GraphQLObjectType({
 
 
 export const messageType = new GraphQLObjectType({
-	name: "Message",
+	name: 'Message',
 	fields: () => ({
 		_id: {
 			type: new GraphQLNonNull(GraphQLID)
@@ -41,7 +41,7 @@ export const messageType = new GraphQLObjectType({
 });
 
 const draftType = new GraphQLObjectType({
-	name: "Draft",
+	name: 'Draft',
 	fields: () => ({
 		_id: {
 			type: new GraphQLNonNull(GraphQLID)
@@ -56,7 +56,7 @@ const draftType = new GraphQLObjectType({
 });
 
 export const conversationType = new GraphQLObjectType({
-	name: "Conversation",
+	name: 'Conversation',
 	fields: () => ({
 		_id: {
 			type: new GraphQLNonNull(GraphQLID)

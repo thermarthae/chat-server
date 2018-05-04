@@ -1,4 +1,4 @@
-import * as conversation from "./conversation.subscription";
+import * as conversation from './conversation.subscription';
 
 export default {
 	...conversation
