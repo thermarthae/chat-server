@@ -17,8 +17,8 @@
 		"max-classes-per-file": [true, 2],
 		"object-literal-sort-keys": [true, "match-declaration-order"],
 		"one-line": [true, "check-catch", "check-finally"],
-		"no-trailing-whitespace": [true, "ignore-blank-lines"]
-
+		"no-trailing-whitespace": [true, "ignore-blank-lines"],
+		"no-unused-expression": [true, "allow-new"]
 	},
 	"rulesDirectory": []
 }

@@ -1,6 +1,6 @@
 import jwt = require("jsonwebtoken");
 
-import { IRootValue } from "../app";
+import { IRootValue } from "../";
 import UserModel, { IUser } from "../models/user";
 import { IUserToken } from "../graphql/types/user.types";
 

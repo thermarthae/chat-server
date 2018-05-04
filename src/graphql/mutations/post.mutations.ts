@@ -1,9 +1,11 @@
 import {  GraphQLFieldConfig, GraphQLNonNull } from "graphql";
-import { postType, postInputType } from "../types/post.types";
+import { /* postType, */ postInputType } from "../types/post.types";
+import { conversationType } from "../types/conversation.types";
 import PostModel from "../../models/post";
 
 export const addPost: GraphQLFieldConfig<any, any, any> = {
-	type: postType,
+	// type: postType,
+	type: conversationType,
 	description: "Add new post",
 	args: {
 		payload: {

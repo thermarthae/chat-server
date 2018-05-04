@@ -1,9 +1,13 @@
 import express = require("express");
-//import graphqlHTTP = require("express-graphql");
+import cors = require("cors");
 import { graphqlExpress } from "apollo-server-express";
+import expressPlayground from "graphql-playground-middleware-express";
 import bodyParser = require("body-parser");
 import morgan = require("morgan");
 import mongoose = require("mongoose");
+import http = require("http");
+import { execute, subscribe } from "graphql";
+import { SubscriptionServer } from "subscriptions-transport-ws";
 
 import schema from "./graphql";
 
@@ -18,11 +22,12 @@ export interface IRootValue {
 mongoose.connect(process.env.MONGO_ATLAS_URI as string)
 	.then(() => console.log("Connected to DB. "))
 	.catch(err => { throw err; });
-// mongoose.connection
-// 	.on("error", () => console.error("Failed to connect to DB."))
-// 	.once("open", () => console.log("Connected to DB. "));
 
-export const app = express();
+const port = process.env.PORT || 3000;
+const url = `localhost:${port}`;
+const app = express();
+
+app.use("*", cors({ origin: `http://${url}` }));
 app.use((req, res, next) => {
 	res.header("Access-Control-Allow-Origin", "*");
 	res.header("Access-Control-Allow-Methods", "POST, GET");
@@ -51,3 +56,37 @@ app.use(
 		tracing: true
 	}))
 );
+
+app.use(
+	"/playground",
+	expressPlayground({
+		endpoint: "/graphql",
+		subscriptionsEndpoint: `ws://${url}/graphql`
+	})
+);
+
+//////////////////////////////////////////////////////////////////////////////
+
+const server = http.createServer(app);
+
+server.listen(port, () => {
+	console.log(
+		"\x1b[36m%s\x1b[0m",
+		`GraphQL Server is now running on http://${url}/graphql`
+	);
+	console.log(
+		"\x1b[35m%s\x1b[0m",
+		`GraphQL Playground is now running on http://${url}/playground`
+	);
+
+	new SubscriptionServer(
+		{
+			execute,
+			subscribe,
+			schema
+		},
+		{
+			server,
+			path: "/graphql"
+		});
+});

@@ -3,7 +3,6 @@ import bcrypt = require("bcrypt");
 
 import UserModel from "../../models/user";
 import { userType, userInputType } from "../types/user.types";
-import { postType } from "../types/post.types";
 import { checkPermissions } from "../../utils/token.utils";
 
 export const addUser: GraphQLFieldConfig<any, any, any> = {
@@ -28,7 +27,7 @@ export const addUser: GraphQLFieldConfig<any, any, any> = {
 };
 
 export const removeUser: GraphQLFieldConfig<any, any, any> = {
-	type: postType,
+	type: userType,
 	description: "Remove existing user",
 	args: {
 		id: {

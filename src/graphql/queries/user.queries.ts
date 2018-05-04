@@ -9,7 +9,7 @@ import {
 
 import { userType, userTokenType } from "../types/user.types";
 import UserModel from "../../models/user";
-import { IRootValue } from "../../app";
+import { IRootValue } from "../../";
 import {
 	makeAccessToken,
 	makeRefreshToken,
