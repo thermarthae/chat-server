@@ -1,4 +1,5 @@
 import PostModel from '../../models/post';
+import ConversationModel from '../../models/conversation';
 import { postType } from './post.types';
 import { IUser } from '../../models/user';
 import {
@@ -31,6 +32,19 @@ export const userType = new GraphQLObjectType({
 		},
 		password: {
 			type: new GraphQLNonNull(GraphQLString)
+		},
+		// conversations: {
+		// 	type: new GraphQLList(GraphQLString)
+		// },
+		conversations: {
+			type: new GraphQLList(GraphQLString),
+			resolve: async (con: IUser) => {
+				const users = await ConversationModel.find({ users: { $all: con._id } }, '_id');
+				const UsersIdArr = [];
+				for (const user of users) UsersIdArr.push(user._id);
+
+				return UsersIdArr;
+			}
 		},
 		isAdmin: {
 			type: new GraphQLNonNull(GraphQLBoolean)
