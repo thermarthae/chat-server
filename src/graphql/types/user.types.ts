@@ -1,6 +1,4 @@
-import PostModel from '../../models/post';
 import ConversationModel from '../../models/conversation';
-import { postType } from './post.types';
 import { IUser } from '../../models/user';
 import {
 	GraphQLObjectType,
@@ -45,10 +43,6 @@ export const userType = new GraphQLObjectType({
 		},
 		isAdmin: {
 			type: new GraphQLNonNull(GraphQLBoolean)
-		},
-		posts: {
-			type: new GraphQLList(postType),
-			resolve: async (user: IUser) => await PostModel.find({ uid: user._id })
 		}
 	})
 });
