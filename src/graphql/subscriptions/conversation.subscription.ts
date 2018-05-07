@@ -16,8 +16,12 @@ export const messageAdded: GraphQLFieldConfig<any, any, any> = {
 	subscribe: withFilter(
 		() => pubsub.asyncIterator('messageAdded'),
 		(payload, variables) => {
-			console.log('Payload', payload, 'Var:', variables);
 			return payload.conversationId === variables.conversationId;
 		}
-	)
+	),
+	resolve: async (payload, b: any, { currentUser }: any) => {
+		if (payload.authorizedUsers.includes(currentUser._id))
+			return payload.messageAdded;
+		throw new Error('No access');
+	}
 };

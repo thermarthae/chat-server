@@ -3,20 +3,13 @@ import {
 	GraphQLID,
 	GraphQLNonNull,
 	GraphQLString,
-	GraphQLList,
 	GraphQLFieldConfig
 } from 'graphql';
 
 import { userType, userTokenType } from '../types/user.types';
 import UserModel from '../../models/user';
 import { IRootValue } from '../../';
-import {
-	makeAccessToken,
-	makeRefreshToken,
-	checkToken,
-	checkRefreshToken,
-	makeNewTokenSignature
-} from '../../utils/token.utils';
+import TokenUtils from '../../utils/token.utils';
 
 enum Errors {
 	userNotFound = 100,
@@ -24,18 +17,6 @@ enum Errors {
 	wrongPassword = 200,
 	unknown = 999,
 }
-
-export const getAllUsers: GraphQLFieldConfig<IRootValue, any, any> = {
-	type: new GraphQLList(userType),
-	description: 'Get all users',
-	resolve: async source => {
-		checkToken(source);
-
-		return await UserModel.find().catch(err => {
-			throw new Error('Error getting users');
-		});
-	}
-};
 
 export const getUser: GraphQLFieldConfig<IRootValue, any, any> = {
 	type: userType,
@@ -47,9 +28,20 @@ export const getUser: GraphQLFieldConfig<IRootValue, any, any> = {
 		}
 	},
 	resolve: async (source, { id }) => {
-		checkToken(source);
+		TokenUtils.verifyAccessToken(source);
 		return await UserModel.findById(id).catch(err => {
 			throw new Error('Error getting user');
+		});
+	}
+};
+
+export const currentUser: GraphQLFieldConfig<IRootValue, any, any> = {
+	type: userType,
+	description: 'Get current user data',
+	resolve: async source => {
+		const user = TokenUtils.verifyAccessToken(source);
+		return await UserModel.findById(user._id).catch(err => {
+			throw new Error('Getting user error');
 		});
 	}
 };
@@ -78,7 +70,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 			}
 		};
 
-		const newTokenSignature = await makeNewTokenSignature(userFromDB._id);
+		const newTokenSignature = await TokenUtils.newTokenSignature(userFromDB._id);
 
 		const payload = {
 			_id: userFromDB._id,
@@ -87,8 +79,8 @@ export const getAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 
 		return {
 			user: userFromDB,
-			access_token: await makeAccessToken(payload, secretKey.primary),
-			refresh_token: await makeRefreshToken(
+			access_token: await TokenUtils.newAccessToken(payload, secretKey.primary),
+			refresh_token: await TokenUtils.newRefreshToken(
 				payload,
 				secretKey.secondary,
 				userFromDB.password + newTokenSignature
@@ -107,11 +99,11 @@ export const refreshAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 		}
 	},
 	resolve: async ({ secretKey }, { refreshToken }) => {
-		const tokenOwner = await checkRefreshToken(
+		const tokenOwner = await TokenUtils.verifyRefreshToken(
 			secretKey.secondary,
 			refreshToken
 		);
-		const newTokenSignature = await makeNewTokenSignature(tokenOwner._id);
+		const newTokenSignature = await TokenUtils.newTokenSignature(tokenOwner._id);
 
 		const payload = {
 			_id: tokenOwner._id,
@@ -119,8 +111,8 @@ export const refreshAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 		};
 
 		return {
-			access_token: await makeAccessToken(payload, secretKey.primary),
-			refresh_token: await makeRefreshToken(
+			access_token: await TokenUtils.newAccessToken(payload, secretKey.primary),
+			refresh_token: await TokenUtils.newRefreshToken(
 				payload,
 				secretKey.secondary,
 				tokenOwner.password + newTokenSignature

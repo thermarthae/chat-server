@@ -8,6 +8,7 @@ import mongoose = require('mongoose');
 import http = require('http');
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import TokenUtils from './utils/token.utils';
 
 import schema from './graphql';
 
@@ -24,10 +25,15 @@ mongoose.connect(process.env.MONGO_ATLAS_URI as string)
 	.catch(err => { throw err; });
 
 const port = process.env.PORT || 3000;
-const url = `localhost:${port}`;
+const adress = 'localhost';
+const url = `${adress}:${port}`;
 const app = express();
+const secretKey = {
+	primary: '461b2697-e354-4b45-9500-cb4b410ca993',
+	secondary: '1f8bbfcb-3505-42b7-9f57-e7563eff8f25'
+};
 
-app.use('*', cors({ origin: `http://${url}` }));
+app.use('*', cors({ origin: [`http://${url}`, `http://${adress}:8080`] }));
 app.use((req, res, next) => {
 	res.header('Access-Control-Allow-Origin', '*');
 	res.header('Access-Control-Allow-Methods', 'POST, GET');
@@ -48,10 +54,7 @@ app.use(
 		schema,
 		rootValue: {
 			access_token: req.headers.authorization,
-			secretKey: {
-				primary: '461b2697-e354-4b45-9500-cb4b410ca993',
-				secondary: '1f8bbfcb-3505-42b7-9f57-e7563eff8f25'
-			}
+			secretKey
 		},
 		tracing: true
 	}))
@@ -83,7 +86,15 @@ server.listen(port, () => {
 		{
 			execute,
 			subscribe,
-			schema
+			schema,
+			onConnect: async ({ Authorization }: any) => {
+				if (Authorization) {
+					const source = { access_token: Authorization, secretKey };
+					const currentUser = await TokenUtils.verifyAccessToken(source);
+					return { currentUser };
+				}
+				throw new Error('Missing auth token!');
+			}
 		},
 		{
 			server,

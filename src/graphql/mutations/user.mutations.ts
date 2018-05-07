@@ -3,7 +3,7 @@ import bcrypt = require('bcrypt');
 
 import UserModel from '../../models/user';
 import { userType, userInputType } from '../types/user.types';
-import { checkPermissions } from '../../utils/token.utils';
+import TokenUtils from '../../utils/token.utils';
 
 export const addUser: GraphQLFieldConfig<any, any, any> = {
 	type: userType,
@@ -36,10 +36,10 @@ export const removeUser: GraphQLFieldConfig<any, any, any> = {
 		}
 	},
 	resolve: async (source, { id }) => {
-		checkPermissions(id, source);
+		TokenUtils.checkPermissions(id, source);
 
 		return await UserModel.findByIdAndRemove(id).catch(err => {
-			throw new Error('Error removing user');
+			throw new Error('User removing error');
 		});
 	}
 };
@@ -58,7 +58,7 @@ export const updateUser: GraphQLFieldConfig<any, any, any> = {
 		}
 	},
 	resolve: async (source, { id, payload }) => {
-		checkPermissions(id, source);
+		TokenUtils.checkPermissions(id, source);
 
 		return await UserModel.findByIdAndUpdate(
 			id,

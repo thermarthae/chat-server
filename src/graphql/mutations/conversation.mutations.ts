@@ -7,10 +7,11 @@ import {
 } from 'graphql';
 import * as crypto from 'crypto';
 
-import ConversationModel from '../../models/conversation';
+import ConversationModel, { IConversation } from '../../models/conversation';
 import { pubsub } from '../';
 import { conversationType, messageType } from '../types/conversation.types';
-import { checkToken } from '../../utils/token.utils';
+import TokenUtils from '../../utils/token.utils';
+import ConversationUtils from '../../utils/conversation.utils';
 
 export const initConversation: GraphQLFieldConfig<any, any, any> = {
 	type: conversationType,
@@ -30,20 +31,18 @@ export const initConversation: GraphQLFieldConfig<any, any, any> = {
 			defaultValue: null
 		}
 	},
-
 	resolve: async (source, { idArr, message, name }) => {
-		checkToken(source);
-		const fakeAuthorID = '5ab7eb53c226e213206f07ec'; //TODO From Token
+		const user = TokenUtils.verifyAccessToken(source);
 
 		const newConversation = new ConversationModel({
 			name,
 			users: idArr,
 			messages: [{
 				_id: crypto.randomBytes(16).toString('hex'),
-				author: fakeAuthorID,
+				author: user._id,
 				time: Date.now().toString(),
 				seen: [{
-					user: fakeAuthorID,
+					user: user._id,
 					time: '-1'
 				}],
 				content: message,
@@ -70,64 +69,31 @@ export const sendMessage: GraphQLFieldConfig<any, any, any> = {
 			description: 'Your message'
 		}
 	},
-
 	resolve: async (source, { conversationId, message }) => {
-		// const conversation = await ConversationModel.findById(conversationId).catch(err => {
-		// 	throw new Error('Error getting conversation from DB');
-		// });
-		//checkPermissions(conversation.id, source);
-		const fakeAuthorID = '5ab7eb53c226e213206f07ec'; //TODO From Token
-		const newMessage = {
+		const user = TokenUtils.verifyAccessToken(source);
+		await ConversationUtils.checkPermission(source, user._id, conversationId);
+
+		const messageAdded = {
 			_id: crypto.randomBytes(16).toString('hex'),
-			author: fakeAuthorID,
+			author: user._id,
 			time: Date.now().toString(),
 			seen: [{
-				user: fakeAuthorID,
+				user: user._id,
 				time: '-1'
 			}],
 			content: message,
 		};
 
-		await ConversationModel.findByIdAndUpdate(
+		const { users }: IConversation = await ConversationModel.findByIdAndUpdate(
 			conversationId,
-			{
-				$push: {
-					messages: newMessage
-				}
-			},
-			{ new: true }
+			{ $push: { messages: messageAdded } },
+			{ select: 'users -_id' }
 		).catch(err => {
 			throw new Error('Error');
 		});
 
-		pubsub.publish('messageAdded', { messageAdded: newMessage, conversationId: '5ae62ff43b9c5b0f04795bad' });
+		pubsub.publish('messageAdded', { messageAdded, conversationId, authorizedUsers: users });
 
-		return newMessage;
+		return messageAdded;
 	}
 };
-
-// export const updateUser: GraphQLFieldConfig<any, any, any> = {
-// 	type: userType,
-// 	description: 'Update user data',
-// 	args: {
-// 		id: {
-// 			type: new GraphQLNonNull(GraphQLID),
-// 			description: 'User ID'
-// 		},
-// 		payload: {
-// 			type: new GraphQLNonNull(userInputType),
-// 			description: 'user updated data'
-// 		}
-// 	},
-// 	resolve: async (source, { id, payload }) => {
-// 		checkPermissions(id, source);
-//
-// 		return await UserModel.findByIdAndUpdate(
-// 			id,
-// 			{ $set: { ...payload } },
-// 			{ new: true }
-// 		).catch(err => {
-// 			throw new Error('Error updating user');
-// 		});
-// 	}
-// };

@@ -30,11 +30,8 @@ export const userType = new GraphQLObjectType({
 		email: {
 			type: new GraphQLNonNull(GraphQLString)
 		},
-		password: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		// conversations: {
-		// 	type: new GraphQLList(GraphQLString)
+		// password: {
+		// 	type: new GraphQLNonNull(GraphQLString)
 		// },
 		conversations: {
 			type: new GraphQLList(GraphQLString),
