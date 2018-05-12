@@ -2,9 +2,12 @@ import {
 	GraphQLObjectType,
 	GraphQLNonNull,
 	GraphQLString,
+	GraphQLInt,
 	GraphQLID,
 	GraphQLList,
 } from 'graphql';
+import { IConversationAndTokenResult } from '../../models/conversation';
+// import TokenUtils from '../../utils/token.utils';
 
 const seenType = new GraphQLObjectType({
 	name: 'Seen',
@@ -65,14 +68,43 @@ export const conversationType = new GraphQLObjectType({
 			type: GraphQLString
 		},
 		users: {
-			type: new GraphQLList(GraphQLString)
+			type: new GraphQLNonNull(new GraphQLList(GraphQLString))
 		},
 		draft: {
 			type: new GraphQLList(draftType)
 		},
 		messages: {
-			type: new GraphQLList(messageType)
+			type: new GraphQLNonNull(new GraphQLList(messageType))
 		},
-
+		messagesCount: {
+			type: new GraphQLNonNull(GraphQLInt),
+			resolve: (result: IConversationAndTokenResult) => result.messages.length
+		},
+		unread: {
+			type: new GraphQLObjectType({
+				name: 'Unread',
+				fields: () => ({
+					count: {
+						type: new GraphQLNonNull(GraphQLID)
+					},
+					allMessages: {
+						type: new GraphQLList(messageType)
+					},
+					lastMessage: {
+						type: messageType
+					},
+				})
+			}),
+			resolve: (result: IConversationAndTokenResult) => {
+				const allMessages = result.messages.filter(
+					message => message.seen.find(seen => seen.user !== result.userFromToken._id)
+				);
+				return {
+					count: allMessages.length,
+					allMessages,
+					lastMessage: allMessages[allMessages.length - 1]
+				};
+			}
+		},
 	})
 });

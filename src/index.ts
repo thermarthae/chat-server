@@ -6,10 +6,10 @@ import bodyParser = require('body-parser');
 import morgan = require('morgan');
 import mongoose = require('mongoose');
 import http = require('http');
+import cachegoose = require('cachegoose');
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import TokenUtils from './utils/token.utils';
-
 import schema from './graphql';
 
 export interface IRootValue {
@@ -20,9 +20,17 @@ export interface IRootValue {
 	};
 }
 
+
+cachegoose(mongoose, {
+	// engine: 'redis',
+	port: 6379,
+	host: 'localhost'
+});
+
 mongoose.connect(process.env.MONGO_ATLAS_URI as string)
 	.then(() => console.log('Connected to DB. '))
 	.catch(err => { throw err; });
+mongoose.set('debug', true);
 
 const port = process.env.PORT || 3000;
 const adress = 'localhost';

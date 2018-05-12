@@ -32,27 +32,32 @@ export const initConversation: GraphQLFieldConfig<any, any, any> = {
 		}
 	},
 	resolve: async (source, { idArr, message, name }) => {
-		const user = TokenUtils.verifyAccessToken(source);
+		const userFromToken = TokenUtils.verifyAccessToken(source);
 
 		const newConversation = new ConversationModel({
 			name,
 			users: idArr,
 			messages: [{
 				_id: crypto.randomBytes(16).toString('hex'),
-				author: user._id,
+				author: userFromToken._id,
 				time: Date.now().toString(),
 				seen: [{
-					user: user._id,
+					userFromToken: userFromToken._id,
 					time: '-1'
 				}],
 				content: message,
 			}]
 		});
 
-		return await newConversation.save().catch(err => {
+		const result = await newConversation.save().catch(err => {
 			// throw new Error('Initialize conversation error');
 			throw err;
 		});
+
+		return {
+			userFromToken,
+			...result
+		};
 	}
 };
 

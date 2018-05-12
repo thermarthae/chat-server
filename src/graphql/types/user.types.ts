@@ -31,19 +31,55 @@ export const userType = new GraphQLObjectType({
 		// password: {
 		// 	type: new GraphQLNonNull(GraphQLString)
 		// },
-		conversations: {
-			type: new GraphQLList(GraphQLString),
-			resolve: async (con: IUser) => {
-				const users = await ConversationModel.find({ users: { $all: con._id } }, '_id');
-				const UsersIdArr = [];
-				for (const user of users) UsersIdArr.push(user._id);
-
-				return UsersIdArr;
+		conversationData: {
+			type: new GraphQLNonNull(new GraphQLObjectType({
+				name: 'conversationData',
+				fields: () => ({
+					idsArr: {
+						type: new GraphQLList(GraphQLString),
+						description: 'ID of conversation that user belongs to'
+					},
+					count: {
+						type: new GraphQLNonNull(GraphQLInt),
+						description: 'Count of conversation that user belongs to'
+					}
+				})
+			})),
+			resolve: async (user: IUser) => {
+				const result = await ConversationModel.find({ users: { $all: user._id } }, '_id');
+				const idsArr = result.map(conv => conv._id);
+				return {
+					idsArr,
+					count: idsArr.length
+				};
+			}
+		},
+		draftData: {
+			type: new GraphQLNonNull(new GraphQLObjectType({
+				name: 'draftData',
+				fields: () => ({
+					idsArr: {
+						type: new GraphQLList(GraphQLString),
+						description: 'ID of conversation with user draft messages'
+					},
+					count: {
+						type: new GraphQLNonNull(GraphQLInt),
+						description: 'Count of conversation with user draft messages'
+					}
+				})
+			})),
+			resolve: async (user: IUser) => {
+				const result = await ConversationModel.find({ 'draft._id': { $all: user._id } }, '_id');
+				const idsArr = result.map(conv => conv._id);
+				return {
+					idsArr,
+					count: idsArr.length
+				};
 			}
 		},
 		isAdmin: {
 			type: new GraphQLNonNull(GraphQLBoolean)
-		}
+		},
 	})
 });
 

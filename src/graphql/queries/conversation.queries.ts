@@ -19,9 +19,11 @@ export const getConversation: GraphQLFieldConfig<IRootValue, any, any> = {
 		}
 	},
 	resolve: async (source, { id }) => {
-		TokenUtils.verifyAccessToken(source);
-		return await ConversationModel.findById(id).catch(err => {
-			throw new Error('Error getting user');
+		const userFromToken = TokenUtils.verifyAccessToken(source);
+		const result: any = await ConversationModel.findById(id).cache(10).catch(err => {
+			throw new Error('Conversation getting error');
 		});
+
+		return Object.assign({userFromToken}, result._doc);
 	}
 };

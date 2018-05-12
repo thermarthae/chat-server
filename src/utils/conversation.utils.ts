@@ -3,7 +3,7 @@ import { IRootValue } from '../';
 
 export default class ConversationUtils {
 	public static async checkPermission(source: IRootValue, userId: string, conversationId: string) {
-		const conversation = await ConversationModel.findById(conversationId, 'users').catch(err => {
+		const conversation = await ConversationModel.findById(conversationId, 'users').cache(5).catch(err => {
 			throw err;
 		});
 

@@ -29,7 +29,7 @@ export const getUser: GraphQLFieldConfig<IRootValue, any, any> = {
 	},
 	resolve: async (source, { id }) => {
 		TokenUtils.verifyAccessToken(source);
-		return await UserModel.findById(id).catch(err => {
+		return await UserModel.findById(id).cache(10).catch(err => {
 			throw new Error('Error getting user');
 		});
 	}
@@ -40,7 +40,7 @@ export const currentUser: GraphQLFieldConfig<IRootValue, any, any> = {
 	description: 'Get current user data',
 	resolve: async source => {
 		const user = TokenUtils.verifyAccessToken(source);
-		return await UserModel.findById(user._id).catch(err => {
+		return await UserModel.findById(user._id).cache(10).catch(err => {
 			throw new Error('Getting user error');
 		});
 	}
@@ -54,7 +54,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
 	resolve: async ({ secretKey }, { username, password }) => {
-		const userFromDB = await UserModel.findOne({ email: username });
+		const userFromDB = await UserModel.findOne({ email: username }).cache(10);
 		if (!userFromDB) return {
 			error: {
 				code: Errors.userNotFound,
