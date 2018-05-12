@@ -23,11 +23,14 @@ const conversationSchema = new mongoose.Schema(
 				_id: String,
 				author: String,
 				time: String,
-				seen: [{
-					user: String,
-					time: String
-				}],
 				content: String,
+			}],
+			required: true
+		},
+		seen: {
+			type: [{
+				user: String,
+				time: String
 			}],
 			required: true
 		}
@@ -42,22 +45,22 @@ interface IMessage {
 	_id: string;
 	author: string;
 	time: string;
-	seen: [{
-		user: string,
-		time: string
-	}];
 	content: string;
 }
 
 export interface IConversation extends mongoose.Document {
 	name: string;
 	users: [string];
-	draft?: [{
+	draft: [{
 		_id: string;
 		time: string;
 		content: string;
 	}];
 	messages: [IMessage];
+	seen: [{
+		user: string;
+		time: string;
+	}];
 }
 
 export interface IConversationAndTokenResult extends IConversation {

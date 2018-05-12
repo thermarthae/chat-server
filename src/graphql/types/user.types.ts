@@ -34,46 +34,54 @@ export const userType = new GraphQLObjectType({
 		conversationData: {
 			type: new GraphQLNonNull(new GraphQLObjectType({
 				name: 'conversationData',
+				description: 'Data of conversation that user belongs to',
 				fields: () => ({
-					idsArr: {
+					conversationIdArr: {
 						type: new GraphQLList(GraphQLString),
-						description: 'ID of conversation that user belongs to'
+						description: 'IDs of conversation that user belongs to'
 					},
-					count: {
+					draftIdArr: {
+						type: new GraphQLList(GraphQLString),
+					},
+					unreadIdArr: {
+						type: new GraphQLList(GraphQLString),
+					},
+					conversationCount: {
 						type: new GraphQLNonNull(GraphQLInt),
 						description: 'Count of conversation that user belongs to'
-					}
-				})
-			})),
-			resolve: async (user: IUser) => {
-				const result = await ConversationModel.find({ users: { $all: user._id } }, '_id');
-				const idsArr = result.map(conv => conv._id);
-				return {
-					idsArr,
-					count: idsArr.length
-				};
-			}
-		},
-		draftData: {
-			type: new GraphQLNonNull(new GraphQLObjectType({
-				name: 'draftData',
-				fields: () => ({
-					idsArr: {
-						type: new GraphQLList(GraphQLString),
-						description: 'ID of conversation with user draft messages'
 					},
-					count: {
-						type: new GraphQLNonNull(GraphQLInt),
-						description: 'Count of conversation with user draft messages'
+					draftCount: {
+						type: new GraphQLNonNull(GraphQLInt)
+					},
+					unreadCount: {
+						type: new GraphQLNonNull(GraphQLInt)
 					}
 				})
 			})),
 			resolve: async (user: IUser) => {
-				const result = await ConversationModel.find({ 'draft._id': { $all: user._id } }, '_id');
-				const idsArr = result.map(conv => conv._id);
+				const userID = user._id;
+				const result = await ConversationModel.find({ users: { $all: userID } }, '_id messages draft seen').cache(10);
+				const conversationIdArr = result.map(conv => conv._id);
+				const draftIdArr = [];
+				const unreadIdArr = [];
+
+				for (const conversation of result) {
+					if (conversation.draft.some(d => d._id == userID)) // tslint:disable-line:triple-equals
+						draftIdArr.push(conversation._id);
+
+					const lastMessage = conversation.messages[conversation.messages.length - 1];
+					const seen = conversation.seen.find(r => r.user === userID);
+					if (!seen || lastMessage.time > seen.time)
+						unreadIdArr.push(conversation._id);
+				}
+
 				return {
-					idsArr,
-					count: idsArr.length
+					conversationIdArr,
+					draftIdArr,
+					unreadIdArr,
+					conversationCount: conversationIdArr.length,
+					draftCount: draftIdArr.length,
+					unreadCount: unreadIdArr.length,
 				};
 			}
 		},

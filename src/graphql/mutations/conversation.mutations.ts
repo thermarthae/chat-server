@@ -34,18 +34,19 @@ export const initConversation: GraphQLFieldConfig<any, any, any> = {
 	resolve: async (source, { idArr, message, name }) => {
 		const userFromToken = TokenUtils.verifyAccessToken(source);
 
+		const time = Date.now().toString();
 		const newConversation = new ConversationModel({
 			name,
 			users: idArr,
 			messages: [{
 				_id: crypto.randomBytes(16).toString('hex'),
 				author: userFromToken._id,
-				time: Date.now().toString(),
-				seen: [{
-					userFromToken: userFromToken._id,
-					time: '-1'
-				}],
+				time,
 				content: message,
+			}],
+			seen: [{
+				user: userFromToken._id,
+				time
 			}]
 		});
 
@@ -82,16 +83,17 @@ export const sendMessage: GraphQLFieldConfig<any, any, any> = {
 			_id: crypto.randomBytes(16).toString('hex'),
 			author: user._id,
 			time: Date.now().toString(),
-			seen: [{
-				user: user._id,
-				time: '-1'
-			}],
 			content: message,
+		};
+
+		const seen = {
+			user: user._id,
+			time: Date.now().toString()
 		};
 
 		const { users }: IConversation = await ConversationModel.findByIdAndUpdate(
 			conversationId,
-			{ $push: { messages: messageAdded } },
+			{ $push: {messages: messageAdded, seen} },
 			{ select: 'users -_id' }
 		).catch(err => {
 			throw new Error('Error');

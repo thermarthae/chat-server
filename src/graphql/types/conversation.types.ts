@@ -5,9 +5,9 @@ import {
 	GraphQLInt,
 	GraphQLID,
 	GraphQLList,
+	GraphQLBoolean,
 } from 'graphql';
 import { IConversationAndTokenResult } from '../../models/conversation';
-// import TokenUtils from '../../utils/token.utils';
 
 const seenType = new GraphQLObjectType({
 	name: 'Seen',
@@ -76,34 +76,21 @@ export const conversationType = new GraphQLObjectType({
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType))
 		},
+		lastMessages: {
+			type: messageType,
+			resolve: (result: IConversationAndTokenResult) => result.messages[result.messages.length - 1]
+		},
 		messagesCount: {
 			type: new GraphQLNonNull(GraphQLInt),
 			resolve: (result: IConversationAndTokenResult) => result.messages.length
 		},
 		unread: {
-			type: new GraphQLObjectType({
-				name: 'Unread',
-				fields: () => ({
-					count: {
-						type: new GraphQLNonNull(GraphQLID)
-					},
-					allMessages: {
-						type: new GraphQLList(messageType)
-					},
-					lastMessage: {
-						type: messageType
-					},
-				})
-			}),
+			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: (result: IConversationAndTokenResult) => {
-				const allMessages = result.messages.filter(
-					message => message.seen.find(seen => seen.user !== result.userFromToken._id)
-				);
-				return {
-					count: allMessages.length,
-					allMessages,
-					lastMessage: allMessages[allMessages.length - 1]
-				};
+				const lastMessage = result.messages[result.messages.length - 1];
+				const seen = result.seen.find(r => r.user === result.userFromToken._id);
+				if (lastMessage.time > seen!.time) return true;
+				return false;
 			}
 		},
 	})
