@@ -1,5 +1,4 @@
 import mongoose = require('mongoose');
-import { IUserToken } from '../graphql/types/user.types';
 
 const conversationSchema = new mongoose.Schema(
 	{
@@ -61,10 +60,6 @@ export interface IConversation extends mongoose.Document {
 		user: string;
 		time: string;
 	}];
-}
-
-export interface IConversationAndTokenResult extends IConversation {
-	userFromToken: IUserToken;
 }
 
 export default mongoose.model<IConversation>('conversation', conversationSchema);

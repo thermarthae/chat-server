@@ -8,7 +8,7 @@ import {
 
 import { userType, userTokenType } from '../types/user.types';
 import UserModel from '../../models/user';
-import { IRootValue } from '../../';
+import { IRootValue, IContext } from '../../';
 import TokenUtils from '../../utils/token.utils';
 
 enum Errors {
@@ -18,7 +18,7 @@ enum Errors {
 	unknown = 999,
 }
 
-export const getUser: GraphQLFieldConfig<IRootValue, any, any> = {
+export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Get user by ID',
 	args: {
@@ -27,26 +27,28 @@ export const getUser: GraphQLFieldConfig<IRootValue, any, any> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async (source, { id }) => {
-		TokenUtils.verifyAccessToken(source);
+	resolve: async ({}, { id }, { verifiedToken }) => {
+		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
+
 		return await UserModel.findById(id).cache(10).catch(err => {
 			throw new Error('Error getting user');
 		});
 	}
 };
 
-export const currentUser: GraphQLFieldConfig<IRootValue, any, any> = {
+export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Get current user data',
-	resolve: async source => {
-		const user = TokenUtils.verifyAccessToken(source);
-		return await UserModel.findById(user._id).cache(10).catch(err => {
+	resolve: async ({}, {}, { verifiedToken }) => {
+		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
+
+		return await UserModel.findById(verifiedToken._id).cache(10).catch(err => {
 			throw new Error('Getting user error');
 		});
 	}
 };
 
-export const getAccess: GraphQLFieldConfig<IRootValue, any, any> = {
+export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userTokenType,
 	description: 'Get access and refresh token',
 	args: {
@@ -78,7 +80,6 @@ export const getAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 		};
 
 		return {
-			user: userFromDB,
 			access_token: await TokenUtils.newAccessToken(payload, secretKey.primary),
 			refresh_token: await TokenUtils.newRefreshToken(
 				payload,
@@ -89,7 +90,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, any, any> = {
 	}
 };
 
-export const refreshAccess: GraphQLFieldConfig<IRootValue, any, any> = {
+export const refreshAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userTokenType,
 	description: 'Get new access and refresh token',
 	args: {

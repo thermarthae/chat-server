@@ -4,8 +4,9 @@ import bcrypt = require('bcrypt');
 import UserModel from '../../models/user';
 import { userType, userInputType } from '../types/user.types';
 import TokenUtils from '../../utils/token.utils';
+import { IRootValue, IContext } from '../../';
 
-export const addUser: GraphQLFieldConfig<any, any, any> = {
+export const addUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Add new user',
 	args: {
@@ -14,7 +15,7 @@ export const addUser: GraphQLFieldConfig<any, any, any> = {
 			description: 'User data'
 		}
 	},
-	resolve: async (source, { payload }) => {
+	resolve: async ({}, { payload }) => {
 		const newUser = new UserModel({
 			...payload,
 			password: bcrypt.hashSync(payload.password, 10)
@@ -26,7 +27,7 @@ export const addUser: GraphQLFieldConfig<any, any, any> = {
 	}
 };
 
-export const removeUser: GraphQLFieldConfig<any, any, any> = {
+export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Remove existing user',
 	args: {
@@ -35,8 +36,9 @@ export const removeUser: GraphQLFieldConfig<any, any, any> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async (source, { id }) => {
-		TokenUtils.checkPermissions(id, source);
+	resolve: async ({}, { id }, { verifiedToken }) => {
+		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
+		TokenUtils.checkPermissions(id, verifiedToken);
 
 		return await UserModel.findByIdAndRemove(id).catch(err => {
 			throw new Error('User removing error');
@@ -44,7 +46,7 @@ export const removeUser: GraphQLFieldConfig<any, any, any> = {
 	}
 };
 
-export const updateUser: GraphQLFieldConfig<any, any, any> = {
+export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Update user data',
 	args: {
@@ -57,8 +59,9 @@ export const updateUser: GraphQLFieldConfig<any, any, any> = {
 			description: 'user updated data'
 		}
 	},
-	resolve: async (source, { id, payload }) => {
-		TokenUtils.checkPermissions(id, source);
+	resolve: async ({}, { id, payload }, { verifiedToken }) => {
+		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
+		TokenUtils.checkPermissions(id, verifiedToken);
 
 		return await UserModel.findByIdAndUpdate(
 			id,

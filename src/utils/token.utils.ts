@@ -40,10 +40,15 @@ export default class TokenUtils {
 		return newTokenSignature;
 	}
 
-	public static verifyAccessToken({ access_token, secretKey }: IRootValue) {
-		if (!access_token) throw new Error('No access token');
-		const token = access_token.split(' ', 2)[1] || 'malformed';
-		return jwt.verify(token, secretKey.primary) as IUserToken;
+	public static verifyAccessToken({ access_token, secretKey }: IRootValue): IUserToken {
+		try {
+			if (!access_token) throw new Error('No access token');
+			const token = access_token.split(' ', 2)[1] || 'malformed';
+
+			return jwt.verify(token, secretKey.primary) as IUserToken;
+		} catch (err) {
+			return { error: err.message };
+		}
 	}
 
 	public static async verifyRefreshToken(secretKey: string, token: string) {
@@ -60,9 +65,13 @@ export default class TokenUtils {
 		return userFromDB;
 	}
 
-	public static async checkPermissions(id: string, source: IRootValue) {
-		const token = await this.verifyAccessToken(source);
-		const permission = token._id === id || token.isAdmin;
+	public static checkIfAccessTokenIsVerified(verifiedToken: IUserToken) {
+		if (verifiedToken.error) throw new Error(verifiedToken.error);
+	}
+
+	public static async checkPermissions(id: string, verifiedToken: IUserToken) {
+		this.checkIfAccessTokenIsVerified(verifiedToken);
+		const permission = verifiedToken._id === id || verifiedToken.isAdmin;
 		if (!permission) throw new Error('Permission error');
 		return permission;
 	}

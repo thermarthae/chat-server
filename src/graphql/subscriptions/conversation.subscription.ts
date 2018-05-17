@@ -2,9 +2,10 @@ import { GraphQLFieldConfig, GraphQLNonNull, GraphQLID } from 'graphql';
 import { pubsub } from '../';
 import { withFilter } from 'graphql-subscriptions';
 
+import { /* IRootValue,*/ IContext } from '../../';
 import { messageType } from '../types/conversation.types';
 
-export const messageAdded: GraphQLFieldConfig<any, any, any> = {
+export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {
 	type: messageType,
 	description: 'Sync messages',
 	args: {
@@ -19,8 +20,8 @@ export const messageAdded: GraphQLFieldConfig<any, any, any> = {
 			return payload.conversationId === variables.conversationId;
 		}
 	),
-	resolve: async (payload, b: any, { currentUser }: any) => {
-		if (payload.authorizedUsers.includes(currentUser._id))
+	resolve: async (payload, {}, { verifiedToken }) => {
+		if (payload.authorizedUsers.includes(verifiedToken._id))
 			return payload.messageAdded;
 		throw new Error('No access');
 	}

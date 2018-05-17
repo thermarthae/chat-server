@@ -7,7 +7,6 @@ import {
 	GraphQLList,
 	GraphQLBoolean,
 } from 'graphql';
-import { IConversationAndTokenResult } from '../../models/conversation';
 
 const seenType = new GraphQLObjectType({
 	name: 'Seen',
@@ -21,6 +20,7 @@ const seenType = new GraphQLObjectType({
 	})
 });
 
+import { IConversation } from '../../models/conversation';
 
 export const messageType = new GraphQLObjectType({
 	name: 'Message',
@@ -76,19 +76,19 @@ export const conversationType = new GraphQLObjectType({
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType))
 		},
-		lastMessages: {
+		lastMessage: {
 			type: messageType,
-			resolve: (result: IConversationAndTokenResult) => result.messages[result.messages.length - 1]
+			resolve: (result: IConversation) =>  result.messages[result.messages.length - 1]
 		},
 		messagesCount: {
 			type: new GraphQLNonNull(GraphQLInt),
-			resolve: (result: IConversationAndTokenResult) => result.messages.length
+			resolve: (result: IConversation) => result.messages.length
 		},
-		unread: {
+		unread: {//TODO Unread Count
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: (result: IConversationAndTokenResult) => {
+			resolve: (result: IConversation, {}, { verifiedToken }) => {
 				const lastMessage = result.messages[result.messages.length - 1];
-				const seen = result.seen.find(r => r.user === result.userFromToken._id);
+				const seen = result.seen.find(r => r.user == verifiedToken._id); // tslint:disable-line:triple-equals
 				if (lastMessage.time > seen!.time) return true;
 				return false;
 			}

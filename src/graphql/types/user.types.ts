@@ -1,4 +1,5 @@
 import ConversationModel from '../../models/conversation';
+import { conversationType } from './conversation.types';
 import { IUser } from '../../models/user';
 import {
 	GraphQLObjectType,
@@ -12,8 +13,9 @@ import {
 } from 'graphql';
 
 export interface IUserToken {
-	_id: string;
-	isAdmin: boolean;
+	_id?: string;
+	isAdmin?: boolean;
+	error?: string;
 }
 
 export const userType = new GraphQLObjectType({
@@ -36,9 +38,9 @@ export const userType = new GraphQLObjectType({
 				name: 'conversationData',
 				description: 'Data of conversation that user belongs to',
 				fields: () => ({
-					conversationIdArr: {
-						type: new GraphQLList(GraphQLString),
-						description: 'IDs of conversation that user belongs to'
+					conversationArr: {
+						type: new GraphQLList(conversationType),
+						description: 'Conversation that user belongs to'
 					},
 					draftIdArr: {
 						type: new GraphQLList(GraphQLString),
@@ -60,8 +62,7 @@ export const userType = new GraphQLObjectType({
 			})),
 			resolve: async (user: IUser) => {
 				const userID = user._id;
-				const result = await ConversationModel.find({ users: { $all: userID } }, '_id messages draft seen').cache(10);
-				const conversationIdArr = result.map(conv => conv._id);
+				const result = await ConversationModel.find({ users: { $all: userID } }).cache(10);
 				const draftIdArr = [];
 				const unreadIdArr = [];
 
@@ -76,10 +77,10 @@ export const userType = new GraphQLObjectType({
 				}
 
 				return {
-					conversationIdArr,
+					conversationArr: result,
 					draftIdArr,
 					unreadIdArr,
-					conversationCount: conversationIdArr.length,
+					conversationCount: result.length,
 					draftCount: draftIdArr.length,
 					unreadCount: unreadIdArr.length,
 				};

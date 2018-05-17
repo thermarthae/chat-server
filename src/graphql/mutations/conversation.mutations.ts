@@ -12,8 +12,9 @@ import { pubsub } from '../';
 import { conversationType, messageType } from '../types/conversation.types';
 import TokenUtils from '../../utils/token.utils';
 import ConversationUtils from '../../utils/conversation.utils';
+import { IRootValue, IContext } from '../../';
 
-export const initConversation: GraphQLFieldConfig<any, any, any> = {
+export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: conversationType,
 	description: 'Send message to initialize conversation with given users',
 	args: {
@@ -31,8 +32,8 @@ export const initConversation: GraphQLFieldConfig<any, any, any> = {
 			defaultValue: null
 		}
 	},
-	resolve: async (source, { idArr, message, name }) => {
-		const userFromToken = TokenUtils.verifyAccessToken(source);
+	resolve: async ({}, { idArr, message, name }, { verifiedToken }) => {
+		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
 
 		const time = Date.now().toString();
 		const newConversation = new ConversationModel({
@@ -40,29 +41,24 @@ export const initConversation: GraphQLFieldConfig<any, any, any> = {
 			users: idArr,
 			messages: [{
 				_id: crypto.randomBytes(16).toString('hex'),
-				author: userFromToken._id,
+				author: verifiedToken._id,
 				time,
 				content: message,
 			}],
 			seen: [{
-				user: userFromToken._id,
+				user: verifiedToken._id,
 				time
 			}]
 		});
 
-		const result = await newConversation.save().catch(err => {
+		return await newConversation.save().catch(err => {
 			// throw new Error('Initialize conversation error');
 			throw err;
 		});
-
-		return {
-			userFromToken,
-			...result
-		};
 	}
 };
 
-export const sendMessage: GraphQLFieldConfig<any, any, any> = {
+export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: messageType,
 	description: 'Send message in given conversation',
 	args: {
@@ -75,19 +71,19 @@ export const sendMessage: GraphQLFieldConfig<any, any, any> = {
 			description: 'Your message'
 		}
 	},
-	resolve: async (source, { conversationId, message }) => {
-		const user = TokenUtils.verifyAccessToken(source);
-		await ConversationUtils.checkPermission(source, user._id, conversationId);
+	resolve: async ({}, { conversationId, message }, { verifiedToken }) => {
+		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
+		await ConversationUtils.checkPermission(verifiedToken._id!, conversationId);
 
 		const messageAdded = {
 			_id: crypto.randomBytes(16).toString('hex'),
-			author: user._id,
+			author: verifiedToken._id,
 			time: Date.now().toString(),
 			content: message,
 		};
 
 		const seen = {
-			user: user._id,
+			user: verifiedToken._id,
 			time: Date.now().toString()
 		};
 

@@ -11,15 +11,19 @@ import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import TokenUtils from './utils/token.utils';
 import schema from './graphql';
+import { IUserToken } from './graphql/types/user.types';
 
 export interface IRootValue {
-	access_token: string;
+	access_token?: string;
 	secretKey: {
 		primary: string;
 		secondary: string;
 	};
 }
 
+export interface IContext {
+	verifiedToken: IUserToken;
+}
 
 cachegoose(mongoose, {
 	// engine: 'redis',
@@ -58,14 +62,23 @@ app.use(morgan('dev'));
 app.use(
 	'/graphql',
 	bodyParser.json(),
-	graphqlExpress((req: any) => ({
-		schema,
-		rootValue: {
-			access_token: req.headers.authorization,
+	graphqlExpress(req => {
+		const authToken = req!.headers.authorization;
+		const rootValue = {
+			access_token: authToken,
 			secretKey
-		},
-		tracing: true
-	}))
+		};
+		const verifiedToken = TokenUtils.verifyAccessToken(rootValue);
+
+		return {
+			schema,
+			rootValue,
+			tracing: true,
+			context: {
+				verifiedToken,
+			}
+		};
+	})
 );
 
 app.use(
@@ -95,11 +108,10 @@ server.listen(port, () => {
 			execute,
 			subscribe,
 			schema,
-			onConnect: async ({ Authorization }: any) => {
+			onConnect: ({ Authorization }: any) => {
 				if (Authorization) {
 					const source = { access_token: Authorization, secretKey };
-					const currentUser = await TokenUtils.verifyAccessToken(source);
-					return { currentUser };
+					return { verifiedToken: TokenUtils.verifyAccessToken(source) }; //Context
 				}
 				throw new Error('Missing auth token!');
 			}
