@@ -100,6 +100,27 @@ export const userType = new GraphQLObjectType({
 	})
 });
 
+export const userInConversationType = new GraphQLObjectType({
+	name: 'UserInConversation',
+	fields: () => ({
+		_id: {
+			type: new GraphQLNonNull(GraphQLID)
+		},
+		name: {
+			type: new GraphQLNonNull(GraphQLString)
+		},
+		email: {
+			type: new GraphQLNonNull(GraphQLString)
+		},
+		// password: {
+		// 	type: new GraphQLNonNull(GraphQLString)
+		// },
+		isAdmin: {
+			type: new GraphQLNonNull(GraphQLBoolean)
+		},
+	})
+});
+
 export const userTokenType = new GraphQLObjectType({
 	name: 'UserToken',
 	fields: () => ({
