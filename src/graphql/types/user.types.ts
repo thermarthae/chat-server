@@ -9,7 +9,8 @@ import {
 	GraphQLID,
 	GraphQLList,
 	GraphQLBoolean,
-	GraphQLInt
+	GraphQLInt,
+	GraphQLEnumType,
 } from 'graphql';
 
 export interface IUserToken {
@@ -42,15 +43,9 @@ export const userType = new GraphQLObjectType({
 						type: new GraphQLList(conversationType),
 						description: 'Conversation that user belongs to'
 					},
-					draftIdArr: {
-						type: new GraphQLList(GraphQLString),
-					},
-					unreadIdArr: {
-						type: new GraphQLList(GraphQLString),
-					},
 					conversationCount: {
 						type: new GraphQLNonNull(GraphQLInt),
-						description: 'Count of conversation that user belongs to'
+						description: 'Count of all conversation that user belongs to'
 					},
 					draftCount: {
 						type: new GraphQLNonNull(GraphQLInt)
@@ -60,29 +55,42 @@ export const userType = new GraphQLObjectType({
 					}
 				})
 			})),
-			resolve: async (user: IUser) => {
+			args: {
+				filter: {
+					defaultValue: 'all',
+					type: new GraphQLEnumType({
+						name: 'conversationFilter',
+						values: {
+							ALL: { value: 'all' },
+							UNREAD: { value: 'unread' },
+							DRAFT: { value: 'draft' },
+						}
+					}),
+				},
+			},
+			resolve: async (user: IUser, { filter }) => {
 				const userID = user._id;
 				const result = await ConversationModel.find({ users: { $all: userID } }).cache(10);
-				const draftIdArr = [];
-				const unreadIdArr = [];
+				const draftArr = [];
+				const unreadArr = [];
 
 				for (const conversation of result) {
 					if (conversation.draft.some(d => d._id == userID)) // tslint:disable-line:triple-equals
-						draftIdArr.push(conversation._id);
+						draftArr.push(conversation);
 
 					const lastMessage = conversation.messages[conversation.messages.length - 1];
 					const seen = conversation.seen.find(r => r.user === userID);
 					if (!seen || lastMessage.time > seen.time)
-						unreadIdArr.push(conversation._id);
+						unreadArr.push(conversation);
 				}
 
+				const conversationArr = (filter === 'unread') ? unreadArr : ((filter === 'draft') ? draftArr : result);
+
 				return {
-					conversationArr: result,
-					draftIdArr,
-					unreadIdArr,
+					conversationArr,
 					conversationCount: result.length,
-					draftCount: draftIdArr.length,
-					unreadCount: unreadIdArr.length,
+					draftCount: draftArr.length,
+					unreadCount: unreadArr.length,
 				};
 			}
 		},
