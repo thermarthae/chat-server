@@ -11,6 +11,7 @@ import {
 import { IConversation } from '../../models/conversation';
 import UserModel, { IUser } from '../../models/user';
 import { userInConversationType } from './user.types';
+import { IContext } from '../../';
 
 const userLoader = new DataLoader(async users => {
 	return await UserModel.find({ _id: { $in: users } }).cache(30).catch(err => {
@@ -44,20 +45,24 @@ export const conversationType = new GraphQLObjectType({
 		},
 		name: {
 			type: GraphQLString,
-			resolve: async ({ name, users }: IConversation) => {
-				const usersFromDB = await userLoader.loadMany(users);
+			resolve: async ({ name, users }: IConversation, { }, { verifiedToken }: IContext) => {
+				const usersWithoutCurrent = users.filter(user => user !== verifiedToken._id);
+				const usersFromDB = await userLoader.loadMany(usersWithoutCurrent);
 				const names = usersFromDB.map(user => user.name);
 				return names.join(', ');
 			}
 		},
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userInConversationType)),
-			resolve: async ({ users }: IConversation) => await userLoader.loadMany(users)
+			resolve: async ({ users }: IConversation, { }, { verifiedToken }: IContext) => {
+				const usersWithoutCurrent = users.filter(user => user !== verifiedToken._id);
+				return await userLoader.loadMany(usersWithoutCurrent);
+			}
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: (result: IConversation, { }, { verifiedToken }) => {
-				const seen = result.seen.find(r => r.user == verifiedToken._id); // tslint:disable-line:triple-equals
+			resolve: (result: IConversation, { }, { verifiedToken }: IContext) => {
+				const seen = result.seen.find(r => r.user == verifiedToken._id);
 				const messageArr = result.messages.reverse();
 				const unreaded = messageArr.find(msg => msg.time > seen!.time);
 				if (unreaded) return false;
@@ -65,12 +70,9 @@ export const conversationType = new GraphQLObjectType({
 			}
 		},
 		draft: {
-			type: new GraphQLList(new GraphQLObjectType({
+			type: new GraphQLObjectType({
 				name: 'Draft',
 				fields: () => ({
-					_id: {
-						type: new GraphQLNonNull(GraphQLID)
-					},
 					time: {
 						type: new GraphQLNonNull(GraphQLString)
 					},
@@ -78,7 +80,10 @@ export const conversationType = new GraphQLObjectType({
 						type: GraphQLString
 					},
 				})
-			}))
+			}),
+			resolve: ({ draft }: IConversation, { }, { verifiedToken }: IContext) => {
+				return draft.find(userDraft => userDraft._id == verifiedToken._id);
+			}
 		},
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType))
@@ -93,8 +98,8 @@ export const conversationType = new GraphQLObjectType({
 		},
 		unreadCount: {
 			type: new GraphQLNonNull(GraphQLInt),
-			resolve: (result: IConversation, { }, { verifiedToken }) => {
-				const seen = result.seen.find(r => r.user == verifiedToken._id); // tslint:disable-line:triple-equals
+			resolve: (result: IConversation, { }, { verifiedToken }: IContext) => {
+				const seen = result.seen.find(r => r.user == verifiedToken._id);
 				const messageArr = result.messages.reverse();
 				return messageArr.findIndex(msg => msg.time < seen!.time);
 			}

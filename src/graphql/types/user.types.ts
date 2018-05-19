@@ -75,11 +75,11 @@ export const userType = new GraphQLObjectType({
 				const unreadArr = [];
 
 				for (const conversation of result) {
-					if (conversation.draft.some(d => d._id == userID)) // tslint:disable-line:triple-equals
+					if (conversation.draft.some(d => d._id == userID))
 						draftArr.push(conversation);
 
 					const lastMessage = conversation.messages[conversation.messages.length - 1];
-					const seen = conversation.seen.find(r => r.user == userID); // tslint:disable-line:triple-equals
+					const seen = conversation.seen.find(r => r.user == userID);
 					if (!seen || lastMessage.time > seen.time)
 						unreadArr.push(conversation);
 				}
