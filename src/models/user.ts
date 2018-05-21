@@ -1,4 +1,5 @@
 import mongoose = require('mongoose');
+import DataLoader = require('dataloader');
 
 const userSchema = new mongoose.Schema(
 	{
@@ -40,4 +41,11 @@ export interface IUser extends mongoose.Document {
 	isAdmin: boolean;
 }
 
-export default mongoose.model<IUser>('user', userSchema);
+const UserModel = mongoose.model<IUser>('user', userSchema);
+export default UserModel;
+
+export const userLoader = new DataLoader(async ids => {
+	return await UserModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
+		throw err;
+	}) as IUser[];
+});

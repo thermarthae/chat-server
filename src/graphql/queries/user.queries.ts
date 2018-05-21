@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 
 import { userType, userTokenType } from '../types/user.types';
-import UserModel from '../../models/user';
+import UserModel, { userLoader } from '../../models/user';
 import { IRootValue, IContext } from '../../';
 import TokenUtils from '../../utils/token.utils';
 
@@ -29,10 +29,7 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	},
 	resolve: async ({}, { id }, { verifiedToken }) => {
 		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-
-		return await UserModel.findById(id).cache(10).catch(err => {
-			throw new Error('Error getting user');
-		});
+		return await userLoader.load(verifiedToken._id!);
 	}
 };
 
@@ -41,10 +38,7 @@ export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	description: 'Get current user data',
 	resolve: async ({}, {}, { verifiedToken }) => {
 		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-
-		return await UserModel.findById(verifiedToken._id).cache(10).catch(err => {
-			throw new Error('Getting user error');
-		});
+		return await userLoader.load(verifiedToken._id!);
 	}
 };
 

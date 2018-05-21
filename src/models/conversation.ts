@@ -1,4 +1,5 @@
 import mongoose = require('mongoose');
+import DataLoader = require('dataloader');
 
 const conversationSchema = new mongoose.Schema(
 	{
@@ -62,4 +63,11 @@ export interface IConversation extends mongoose.Document {
 	}];
 }
 
-export default mongoose.model<IConversation>('conversation', conversationSchema);
+const ConversationModel = mongoose.model<IConversation>('conversation', conversationSchema);
+export default ConversationModel;
+
+export const conversationLoader = new DataLoader(async ids => {
+	return await ConversationModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
+		throw err;
+	}) as IConversation[];
+});

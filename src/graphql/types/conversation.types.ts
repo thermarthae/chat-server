@@ -1,4 +1,3 @@
-import DataLoader = require('dataloader');
 import {
 	GraphQLObjectType,
 	GraphQLNonNull,
@@ -9,15 +8,9 @@ import {
 	GraphQLBoolean,
 } from 'graphql';
 import { IConversation } from '../../models/conversation';
-import UserModel, { IUser } from '../../models/user';
+import { userLoader } from '../../models/user';
 import { userInConversationType } from './user.types';
 import { IContext } from '../../';
-
-const userLoader = new DataLoader(async users => {
-	return await UserModel.find({ _id: { $in: users } }).cache(30).catch(err => {
-		throw err;
-	}) as IUser[];
-});
 
 export const messageType = new GraphQLObjectType({
 	name: 'Message',
@@ -28,8 +21,14 @@ export const messageType = new GraphQLObjectType({
 		author: {
 			type: new GraphQLNonNull(GraphQLString)
 		},
+		authorName: {
+			type: new GraphQLNonNull(GraphQLString)
+		},
 		time: {
 			type: new GraphQLNonNull(GraphQLString)
+		},
+		me: {
+			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 		content: {
 			type: GraphQLString
@@ -86,11 +85,33 @@ export const conversationType = new GraphQLObjectType({
 			}
 		},
 		messages: {
-			type: new GraphQLNonNull(new GraphQLList(messageType))
+			type: new GraphQLNonNull(new GraphQLList(messageType)),
+			resolve: async ({ messages }: IConversation, { }, { verifiedToken }: IContext) => {
+				return await messages.map(async message => {
+					let me = false;
+					if (message.author == verifiedToken._id) me = true;
+					const author = await userLoader.load(message.author);
+					return {
+						...(message as any)._doc,
+						me,
+						authorName: author.name,
+					};
+				});
+			}
 		},
 		lastMessage: {
-			type: messageType,
-			resolve: (result: IConversation) => result.messages[result.messages.length - 1]
+			type: new GraphQLNonNull(messageType),
+			resolve: async ({ messages }: IConversation, { }, { verifiedToken }: IContext) => {
+				const lastMessage = messages[messages.length - 1];
+				let me = false;
+				if (lastMessage.author == verifiedToken._id) me = true;
+				const author = await userLoader.load(lastMessage.author);
+				return {
+					...(lastMessage as any)._doc,
+					me,
+					authorName: author.name,
+				};
+			}
 		},
 		messagesCount: {
 			type: new GraphQLNonNull(GraphQLInt),
