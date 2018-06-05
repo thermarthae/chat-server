@@ -3,7 +3,7 @@ import bcrypt = require('bcrypt');
 
 import UserModel from '../../models/user';
 import { userType, userInputType } from '../types/user.types';
-import TokenUtils from '../../utils/token.utils';
+import { checkIfTokenError, tokenAuthorisation } from '../../utils/token.utils';
 import { IRootValue, IContext } from '../../';
 
 export const addUser: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -22,7 +22,7 @@ export const addUser: GraphQLFieldConfig<IRootValue, IContext> = {
 		});
 
 		return await newUser.save().catch(err => {
-			throw new Error('Error adding new user');
+			throw err;
 		});
 	}
 };
@@ -37,11 +37,10 @@ export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 		}
 	},
 	resolve: async ({}, { id }, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-		TokenUtils.checkPermissions(id, verifiedToken);
-
+		checkIfTokenError(verifiedToken);
+		tokenAuthorisation(id, verifiedToken!);
 		return await UserModel.findByIdAndRemove(id).catch(err => {
-			throw new Error('User removing error');
+			throw err;
 		});
 	}
 };
@@ -60,15 +59,15 @@ export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
 		}
 	},
 	resolve: async ({}, { id, payload }, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-		TokenUtils.checkPermissions(id, verifiedToken);
+		checkIfTokenError(verifiedToken);
+		tokenAuthorisation(id, verifiedToken!);
 
 		return await UserModel.findByIdAndUpdate(
 			id,
 			{ $set: { ...payload } },
 			{ new: true }
 		).catch(err => {
-			throw new Error('Error updating user');
+			throw err;
 		});
 	}
 };

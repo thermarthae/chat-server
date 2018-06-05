@@ -6,8 +6,7 @@ import {
 
 import { IRootValue, IContext } from '../../';
 import { conversationType } from '../types/conversation.types';
-import { conversationLoader } from '../../models/conversation';
-import TokenUtils from '../../utils/token.utils';
+import { checkIfTokenError } from '../../utils/token.utils';
 
 export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: conversationType,
@@ -18,8 +17,8 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Conversation ID'
 		}
 	},
-	resolve: async ({}, { id }, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-		return await conversationLoader.load(id);
+	resolve: async ({}, { id }, { verifiedToken, loaders }) => {
+		checkIfTokenError(verifiedToken);
+		return await loaders.conversationLoader.load(id);
 	}
 };

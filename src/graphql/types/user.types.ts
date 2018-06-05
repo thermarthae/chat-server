@@ -14,9 +14,9 @@ import {
 } from 'graphql';
 
 export interface IUserToken {
-	_id?: string;
-	isAdmin?: boolean;
-	error?: string;
+	_id: string;
+	exp?: number;
+	isAdmin: boolean;
 }
 
 export const userType = new GraphQLObjectType({
@@ -124,9 +124,6 @@ export const userInConversationType = new GraphQLObjectType({
 export const userTokenType = new GraphQLObjectType({
 	name: 'UserToken',
 	fields: () => ({
-		user: {
-			type: userType
-		},
 		access_token: {
 			type: GraphQLString
 		},

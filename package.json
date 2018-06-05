@@ -1,5 +1,5 @@
 {
-	"name": "rest-shop",
+	"name": "newChatServer",
 	"version": "0.0.0",
 	"scripts": {
 		"start": "nodemon src/index.ts",
@@ -8,23 +8,25 @@
 	},
 	"license": "MIT",
 	"dependencies": {
+		"@types/cookie-parser": "^1.4.1",
 		"apollo-server-express": "^1.3.2",
 		"bcrypt": "^2.0.1",
-		"body-parser": "^1.18.2",
+		"body-parser": "^1.18.3",
 		"cachegoose": "^7.0.0",
+		"cookie-parser": "^1.4.3",
 		"cors": "^2.8.4",
 		"dataloader": "^1.4.0",
 		"express": "^4.16.3",
 		"graphql": "^0.13.1",
-		"graphql-playground-middleware-express": "^1.6.1",
+		"graphql-playground-middleware-express": "^1.7.0",
 		"graphql-subscriptions": "^0.5.8",
-		"jsonwebtoken": "^8.2.1",
-		"mongoose": "^5.0.17",
+		"jsonwebtoken": "^8.2.2",
+		"mongoose": "^5.1.3",
 		"morgan": "^1.9.0",
 		"multer": "^1.3.0",
-		"nodemon": "^1.17.3",
-		"subscriptions-transport-ws": "^0.9.8",
-		"ts-node": "^6.0.2",
+		"nodemon": "^1.17.5",
+		"subscriptions-transport-ws": "^0.9.9",
+		"ts-node": "^6.1.0",
 		"uuid": "^3.2.1"
 	},
 	"devDependencies": {
@@ -32,13 +34,13 @@
 		"@types/body-parser": "^1.17.0",
 		"@types/cors": "^2.8.4",
 		"@types/express": "^4.11.1",
-		"@types/graphql": "^0.12.7",
+		"@types/graphql": "^0.13.1",
 		"@types/jsonwebtoken": "^7.2.5",
-		"@types/mongoose": "^5.0.11",
+		"@types/mongoose": "^5.0.15",
 		"@types/morgan": "^1.7.35",
 		"@types/multer": "^1.3.6",
-		"@types/node": "^10.0.3",
+		"@types/node": "^10.3.0",
 		"@types/uuid": "^3.4.3",
-		"typescript": "^2.8.3"
+		"typescript": "^2.9.1"
 	}
 }

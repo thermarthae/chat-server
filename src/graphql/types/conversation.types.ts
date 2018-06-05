@@ -8,7 +8,6 @@ import {
 	GraphQLBoolean,
 } from 'graphql';
 import { IConversation } from '../../models/conversation';
-import { userLoader } from '../../models/user';
 import { userInConversationType } from './user.types';
 import { IContext } from '../../';
 
@@ -36,7 +35,7 @@ export const messageType = new GraphQLObjectType({
 	})
 });
 
-export const conversationType = new GraphQLObjectType({
+export const conversationType = new GraphQLObjectType({ //TODO Pagination
 	name: 'Conversation',
 	fields: () => ({
 		_id: {
@@ -44,24 +43,25 @@ export const conversationType = new GraphQLObjectType({
 		},
 		name: {
 			type: GraphQLString,
-			resolve: async ({ name, users }: IConversation, { }, { verifiedToken }: IContext) => {
-				const usersWithoutCurrent = users.filter(user => user !== verifiedToken._id);
-				const usersFromDB = await userLoader.loadMany(usersWithoutCurrent);
+			resolve: async ({ users }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
+				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!._id);
+				const usersFromDB = await loaders.userLoader.loadMany(usersWithoutCurrent);
 				const names = usersFromDB.map(user => user.name);
 				return names.join(', ');
 			}
 		},
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userInConversationType)),
-			resolve: async ({ users }: IConversation, { }, { verifiedToken }: IContext) => {
-				const usersWithoutCurrent = users.filter(user => user !== verifiedToken._id);
-				return await userLoader.loadMany(usersWithoutCurrent);
+			resolve: async ({ users }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
+				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!._id);
+				return await loaders.userLoader.loadMany(usersWithoutCurrent);
 			}
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: (result: IConversation, { }, { verifiedToken }: IContext) => {
-				const seen = result.seen.find(r => r.user == verifiedToken._id);
+				const seen = result.seen.find(r => r.user == verifiedToken!._id);
+				if (!seen) return false;
 				const messageArr = result.messages.reverse();
 				const unreaded = messageArr.find(msg => msg.time > seen!.time);
 				if (unreaded) return false;
@@ -81,16 +81,16 @@ export const conversationType = new GraphQLObjectType({
 				})
 			}),
 			resolve: ({ draft }: IConversation, { }, { verifiedToken }: IContext) => {
-				return draft.find(userDraft => userDraft._id == verifiedToken._id);
+				return draft.find(userDraft => userDraft._id == verifiedToken!._id);
 			}
 		},
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType)),
-			resolve: async ({ messages }: IConversation, { }, { verifiedToken }: IContext) => {
+			resolve: async ({ messages }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
 				return await messages.map(async message => {
 					let me = false;
-					if (message.author == verifiedToken._id) me = true;
-					const author = await userLoader.load(message.author);
+					if (message.author == verifiedToken!._id) me = true;
+					const author = await loaders.userLoader.load(message.author);
 					return {
 						...(message as any)._doc,
 						me,
@@ -101,11 +101,11 @@ export const conversationType = new GraphQLObjectType({
 		},
 		lastMessage: {
 			type: new GraphQLNonNull(messageType),
-			resolve: async ({ messages }: IConversation, { }, { verifiedToken }: IContext) => {
+			resolve: async ({ messages }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
 				const lastMessage = messages[messages.length - 1];
 				let me = false;
-				if (lastMessage.author == verifiedToken._id) me = true;
-				const author = await userLoader.load(lastMessage.author);
+				if (lastMessage.author == verifiedToken!._id) me = true;
+				const author = await loaders.userLoader.load(lastMessage.author);
 				return {
 					...(lastMessage as any)._doc,
 					me,
@@ -120,7 +120,7 @@ export const conversationType = new GraphQLObjectType({
 		unreadCount: {
 			type: new GraphQLNonNull(GraphQLInt),
 			resolve: (result: IConversation, { }, { verifiedToken }: IContext) => {
-				const seen = result.seen.find(r => r.user == verifiedToken._id);
+				const seen = result.seen.find(r => r.user == verifiedToken!._id);
 				const messageArr = result.messages.reverse();
 				return messageArr.findIndex(msg => msg.time < seen!.time);
 			}

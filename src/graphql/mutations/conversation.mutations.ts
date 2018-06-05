@@ -10,8 +10,8 @@ import * as crypto from 'crypto';
 import ConversationModel, { IConversation } from '../../models/conversation';
 import { pubsub } from '../';
 import { conversationType, messageType } from '../types/conversation.types';
-import TokenUtils from '../../utils/token.utils';
-import ConversationUtils from '../../utils/conversation.utils';
+import { checkIfTokenError } from '../../utils/token.utils';
+import { conversationAuthorisation } from '../../utils/conversation.utils';
 import { IRootValue, IContext } from '../../';
 
 export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -33,7 +33,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 		}
 	},
 	resolve: async ({}, { idArr, message, name }, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
+		checkIfTokenError(verifiedToken);
 
 		const time = Date.now().toString();
 		const newConversation = new ConversationModel({
@@ -41,12 +41,12 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			users: idArr,
 			messages: [{
 				_id: crypto.randomBytes(16).toString('hex'),
-				author: verifiedToken._id,
+				author: verifiedToken!._id,
 				time,
 				content: message,
 			}],
 			seen: [{
-				user: verifiedToken._id,
+				user: verifiedToken!._id,
 				time
 			}]
 		});
@@ -71,19 +71,19 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Your message'
 		}
 	},
-	resolve: async ({}, { conversationId, message }, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-		await ConversationUtils.checkPermission(verifiedToken._id!, conversationId);
+	resolve: async ({}, { conversationId, message }, { verifiedToken, loaders }) => {
+		checkIfTokenError(verifiedToken);
+		await conversationAuthorisation(loaders, verifiedToken!._id, conversationId);
 
 		const messageAdded = {
 			_id: crypto.randomBytes(16).toString('hex'),
-			author: verifiedToken._id,
+			author: verifiedToken!._id,
 			time: Date.now().toString(),
 			content: message,
 		};
 
 		const seen = {
-			user: verifiedToken._id,
+			user: verifiedToken!._id,
 			time: Date.now().toString()
 		};
 
@@ -92,7 +92,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			{ $push: {messages: messageAdded, seen} },
 			{ select: 'users -_id' }
 		).catch(err => {
-			throw new Error('Error');
+			throw err;
 		});
 
 		pubsub.publish('messageAdded', { messageAdded, conversationId, authorizedUsers: users });

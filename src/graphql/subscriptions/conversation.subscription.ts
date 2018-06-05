@@ -2,7 +2,7 @@ import { GraphQLFieldConfig, GraphQLNonNull, GraphQLID } from 'graphql';
 import { pubsub } from '../';
 import { withFilter } from 'graphql-subscriptions';
 
-import { /* IRootValue,*/ IContext } from '../../';
+import { IContext } from '../../';
 import { messageType } from '../types/conversation.types';
 
 export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {

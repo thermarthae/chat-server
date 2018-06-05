@@ -7,9 +7,9 @@ import {
 } from 'graphql';
 
 import { userType, userTokenType } from '../types/user.types';
-import UserModel, { userLoader } from '../../models/user';
+import UserModel from '../../models/user';
 import { IRootValue, IContext } from '../../';
-import TokenUtils from '../../utils/token.utils';
+import { checkIfTokenError, makeNewTokens, setTokenCookies, renewTokens } from '../../utils/token.utils';
 
 enum Errors {
 	userNotFound = 100,
@@ -27,18 +27,18 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({}, { id }, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-		return await userLoader.load(verifiedToken._id!);
+	resolve: async ({ }, { id }, { verifiedToken, loaders }) => {
+		checkIfTokenError(verifiedToken);
+		return await loaders.userLoader.load(id);
 	}
 };
 
 export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Get current user data',
-	resolve: async ({}, {}, { verifiedToken }) => {
-		TokenUtils.checkIfAccessTokenIsVerified(verifiedToken);
-		return await userLoader.load(verifiedToken._id!);
+	resolve: async ({ }, { }, { verifiedToken, loaders }) => {
+		checkIfTokenError(verifiedToken);
+		return await loaders.userLoader.load(verifiedToken!._id);
 	}
 };
 
@@ -49,7 +49,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 		username: { type: new GraphQLNonNull(GraphQLString) },
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
-	resolve: async ({ secretKey }, { username, password }) => {
+	resolve: async ({}, { username, password }, { res }) => {
 		const userFromDB = await UserModel.findOne({ email: username }).cache(10);
 		if (!userFromDB) return {
 			error: {
@@ -58,29 +58,17 @@ export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 			}
 		};
 
-		const validData = bcrypt.compareSync(password, userFromDB.password);
-		if (!validData) return {
+		const validPassword = await bcrypt.compare(password, userFromDB.password);
+		if (!validPassword) return {
 			error: {
 				code: Errors.wrongPassword,
 				message: 'Wrong password'
 			}
 		};
 
-		const newTokenSignature = await TokenUtils.newTokenSignature(userFromDB._id);
-
-		const payload = {
-			_id: userFromDB._id,
-			isAdmin: userFromDB.isAdmin
-		};
-
-		return {
-			access_token: await TokenUtils.newAccessToken(payload, secretKey.primary),
-			refresh_token: await TokenUtils.newRefreshToken(
-				payload,
-				secretKey.secondary,
-				userFromDB.password + newTokenSignature
-			)
-		};
+		const newTokens = await makeNewTokens(userFromDB);
+		setTokenCookies(res, newTokens);
+		return newTokens;
 	}
 };
 
@@ -93,25 +81,10 @@ export const refreshAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Refresh token'
 		}
 	},
-	resolve: async ({ secretKey }, { refreshToken }) => {
-		const tokenOwner = await TokenUtils.verifyRefreshToken(
-			secretKey.secondary,
-			refreshToken
-		);
-		const newTokenSignature = await TokenUtils.newTokenSignature(tokenOwner._id);
+	resolve: async ({}, { refreshToken }, { res, loaders }) => {
+		const newTokens = await renewTokens(loaders, refreshToken);
 
-		const payload = {
-			_id: tokenOwner._id,
-			isAdmin: tokenOwner.isAdmin
-		};
-
-		return {
-			access_token: await TokenUtils.newAccessToken(payload, secretKey.primary),
-			refresh_token: await TokenUtils.newRefreshToken(
-				payload,
-				secretKey.secondary,
-				tokenOwner.password + newTokenSignature
-			)
-		};
+		setTokenCookies(res, newTokens);
+		return newTokens;
 	}
 };

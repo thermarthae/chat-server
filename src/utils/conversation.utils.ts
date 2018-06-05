@@ -1,10 +1,7 @@
-import { conversationLoader, IConversation } from '../models/conversation';
+import { IDataLoaders } from '../';
 
-export default class ConversationUtils {
-	public static async checkPermission(userId: string, conversationId: string) {
-		const conversation = await conversationLoader.load(conversationId);
-
-		if ((conversation as IConversation).users.includes(userId)) return;
-		throw new Error('Permission error');
-	}
-}
+export const conversationAuthorisation = async (loaders: IDataLoaders, userId: string, conversationId: string ) => {
+	const conversation = await loaders.conversationLoader.load(conversationId);
+	if (conversation.users.includes(userId)) return;
+	throw new Error('Permission error');
+};
