@@ -38,7 +38,7 @@ const makeNewRefreshToken = (payload: IUserToken, secret: string): Promise<strin
 export const makeNewTokens = async (userFromDB: IUser) => {
 	const newTokenSignature = new Date().getTime();
 	const payload: IUserToken = {
-		_id: userFromDB._id,
+		sub: userFromDB._id,
 		isAdmin: userFromDB.isAdmin
 	};
 
@@ -109,7 +109,7 @@ export const checkIfTokenError = (verifiedToken: IUserToken | undefined) => {
 
 export const tokenAuthorisation = (id: string, verifiedToken: IUserToken) => {
 	checkIfTokenError(verifiedToken);
-	const permission = verifiedToken._id === id || verifiedToken.isAdmin;
+	const permission = verifiedToken.sub === id || verifiedToken.isAdmin;
 	if (!permission) throw new Error('Permission error');
 	return permission;
 };

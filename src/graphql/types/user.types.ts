@@ -14,7 +14,7 @@ import {
 } from 'graphql';
 
 export interface IUserToken {
-	_id: string;
+	sub: string;
 	exp?: number;
 	isAdmin: boolean;
 }

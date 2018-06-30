@@ -44,7 +44,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		name: {
 			type: GraphQLString,
 			resolve: async ({ users }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
-				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!._id);
+				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!.sub);
 				const usersFromDB = await loaders.userLoader.loadMany(usersWithoutCurrent);
 				const names = usersFromDB.map(user => user.name);
 				return names.join(', ');
@@ -53,14 +53,14 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userInConversationType)),
 			resolve: async ({ users }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
-				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!._id);
+				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!.sub);
 				return await loaders.userLoader.loadMany(usersWithoutCurrent);
 			}
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: (result: IConversation, { }, { verifiedToken }: IContext) => {
-				const seen = result.seen.find(r => r.user == verifiedToken!._id);
+				const seen = result.seen.find(r => r.user == verifiedToken!.sub);
 				if (!seen) return false;
 				const messageArr = result.messages.reverse();
 				const unreaded = messageArr.find(msg => msg.time > seen!.time);
@@ -81,7 +81,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 				})
 			}),
 			resolve: ({ draft }: IConversation, { }, { verifiedToken }: IContext) => {
-				return draft.find(userDraft => userDraft._id == verifiedToken!._id);
+				return draft.find(userDraft => userDraft._id == verifiedToken!.sub);
 			}
 		},
 		messages: {
@@ -89,7 +89,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: async ({ messages }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
 				return await messages.map(async message => {
 					let me = false;
-					if (message.author == verifiedToken!._id) me = true;
+					if (message.author == verifiedToken!.sub) me = true;
 					const author = await loaders.userLoader.load(message.author);
 					return {
 						...(message as any)._doc,
@@ -104,7 +104,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: async ({ messages }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
 				const lastMessage = messages[messages.length - 1];
 				let me = false;
-				if (lastMessage.author == verifiedToken!._id) me = true;
+				if (lastMessage.author == verifiedToken!.sub) me = true;
 				const author = await loaders.userLoader.load(lastMessage.author);
 				return {
 					...(lastMessage as any)._doc,
@@ -120,7 +120,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		unreadCount: {
 			type: new GraphQLNonNull(GraphQLInt),
 			resolve: (result: IConversation, { }, { verifiedToken }: IContext) => {
-				const seen = result.seen.find(r => r.user == verifiedToken!._id);
+				const seen = result.seen.find(r => r.user == verifiedToken!.sub);
 				const messageArr = result.messages.reverse();
 				return messageArr.findIndex(msg => msg.time < seen!.time);
 			}

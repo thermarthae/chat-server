@@ -41,12 +41,12 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			users: idArr,
 			messages: [{
 				_id: crypto.randomBytes(16).toString('hex'),
-				author: verifiedToken!._id,
+				author: verifiedToken!.sub,
 				time,
 				content: message,
 			}],
 			seen: [{
-				user: verifiedToken!._id,
+				user: verifiedToken!.sub,
 				time
 			}]
 		});
@@ -73,17 +73,17 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 	},
 	resolve: async ({}, { conversationId, message }, { verifiedToken, loaders }) => {
 		checkIfTokenError(verifiedToken);
-		await conversationAuthorisation(loaders, verifiedToken!._id, conversationId);
+		await conversationAuthorisation(loaders, verifiedToken!.sub, conversationId);
 
 		const messageAdded = {
 			_id: crypto.randomBytes(16).toString('hex'),
-			author: verifiedToken!._id,
+			author: verifiedToken!.sub,
 			time: Date.now().toString(),
 			content: message,
 		};
 
 		const seen = {
-			user: verifiedToken!._id,
+			user: verifiedToken!.sub,
 			time: Date.now().toString()
 		};
 

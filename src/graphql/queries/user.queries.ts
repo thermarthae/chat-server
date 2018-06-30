@@ -38,7 +38,7 @@ export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	description: 'Get current user data',
 	resolve: async ({ }, { }, { verifiedToken, loaders }) => {
 		checkIfTokenError(verifiedToken);
-		return await loaders.userLoader.load(verifiedToken!._id);
+		return await loaders.userLoader.load(verifiedToken!.sub);
 	}
 };
 
