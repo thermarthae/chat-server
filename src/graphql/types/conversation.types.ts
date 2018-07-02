@@ -87,16 +87,18 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType)),
 			resolve: async ({ messages }: IConversation, { }, { verifiedToken, loaders }: IContext) => {
-				return await messages.map(async message => {
+				const messagesFromDB = [];
+				for (const message of messages) {
 					let me = false;
 					if (message.author == verifiedToken!.sub) me = true;
 					const author = await loaders.userLoader.load(message.author);
-					return {
+					messagesFromDB.push({
 						...(message as any)._doc,
 						me,
 						authorName: author.name,
-					};
-				});
+					});
+				}
+				return messagesFromDB;
 			}
 		},
 		lastMessage: {
