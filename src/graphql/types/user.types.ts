@@ -130,6 +130,9 @@ export const userTokenType = new GraphQLObjectType({
 		refresh_token: {
 			type: GraphQLString
 		},
+		sign_token: {
+			type: GraphQLString
+		},
 		error: {
 			type: new GraphQLObjectType({
 				name: 'UserTokenError',

@@ -50,7 +50,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
 	resolve: async ({}, { username, password }, { res }) => {
-		const userFromDB = await UserModel.findOne({ email: username }).cache(10);
+		const userFromDB = await UserModel.findOne({ email: username }).cache(5);
 		if (!userFromDB) return {
 			error: {
 				code: Errors.userNotFound,
@@ -81,8 +81,8 @@ export const refreshAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Refresh token'
 		}
 	},
-	resolve: async ({}, { refreshToken }, { res, loaders }) => {
-		const newTokens = await renewTokens(loaders, refreshToken);
+	resolve: async ({}, { refreshToken }, { res }) => {
+		const newTokens = await renewTokens(refreshToken);
 
 		setTokenCookies(res, newTokens);
 		return newTokens;

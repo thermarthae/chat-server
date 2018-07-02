@@ -8,14 +8,13 @@ import morgan = require('morgan');
 import mongoose = require('mongoose');
 import http = require('http');
 import cachegoose = require('cachegoose');
-import jwt = require('jsonwebtoken');
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import DataLoader = require('dataloader');
 
 import UserModel, { IUser } from './models/user';
 import ConversationModel, { IConversation } from './models/conversation';
-import { verifyToken, renewTokens, setTokenCookies } from './utils/token.utils';
+import { parseToken } from './utils/token.utils';
 import schema from './graphql';
 import { IUserToken } from './graphql/types/user.types';
 
@@ -50,6 +49,7 @@ const port = process.env.PORT || 3000;
 const adress = 'localhost';
 const url = `${adress}:${port}`;
 const app = express();
+
 export const secretKeys: ISecretKeys = {
 	primary: '461b2697-e354-4b45-9500-cb4b410ca993',
 	secondary: '1f8bbfcb-3505-42b7-9f57-e7563eff8f25'
@@ -58,40 +58,8 @@ export const secretKeys: ISecretKeys = {
 app.use(cors({
 	origin: `http://${adress}:8080`,
 	credentials: true
-}
-));
+}));
 app.use(cookieParser());
-
-const parseToken = async (req: express.Request, res: express.Response, loaders: IDataLoaders) => {
-	const token = req.headers['x-token'] as string;
-	if (!token) return;
-
-	const cookieToken = req.cookies.token;
-	if (!cookieToken || token !== cookieToken) return;
-
-	try {
-		await verifyToken(loaders, token, secretKeys.primary);
-		return jwt.decode(token) as IUserToken;
-	} catch (err) {
-		const refreshToken = req.headers['x-refresh-token'] as string;
-		if (!refreshToken) return;
-
-		const cookieRefreshToken = req.cookies['refresh-token'];
-		if (!cookieRefreshToken || refreshToken !== cookieRefreshToken) return;
-
-		const newTokens = await renewTokens(loaders, refreshToken);
-		console.log('NEWTOKENS', newTokens);
-
-		res.set('Access-Control-Expose-Headers', 'x-token, x-refresh-token');
-		res.set('x-token', newTokens.access_token);
-		res.set('x-refresh-token', newTokens.refresh_token);
-		setTokenCookies(res, newTokens);
-
-		console.log('NEWTOKENS.ACCESS_TOKEN', newTokens.access_token);
-		return jwt.decode(newTokens.access_token) as IUserToken;
-	}
-};
-
 app.use(morgan('dev'));
 app.use(
 	'/graphql',
@@ -109,7 +77,7 @@ app.use(
 				}) as IConversation[];
 			}),
 		};
-		const verifiedToken = await parseToken(req!, res!, loaders);
+		const verifiedToken = await parseToken(req!, res!);
 
 		return {
 			schema,
