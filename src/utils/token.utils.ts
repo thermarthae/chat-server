@@ -66,8 +66,8 @@ export const makeNewTokens = async (userFromDB: IUser) => {
 	return { access_token, refresh_token, sign_token };
 };
 
-export const renewTokens = async (oldRefreshToken: string) => {
-	const verifiedUser = await verifyToken(oldRefreshToken, secretKeys.secondary)
+export const renewTokens = async (oldRefreshTokenBody: string, oldSignTokenBody: string) => {
+	const verifiedUser = await verifyToken(oldRefreshTokenBody + oldSignTokenBody, secretKeys.secondary)
 		.catch(err => { throw err; });
 	return await makeNewTokens(verifiedUser);
 };
@@ -96,28 +96,28 @@ export const setTokenCookies = (res: Response, tokens: ITokens) => {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+const tokenHeader = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.';
+
 export const parseToken = async (req: Request, res: Response) => {
-	const tokenHeader = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.';
 	try {
 		const accessCookie = req.cookies.access_token;
 		if (!accessCookie) throw new Error('No token');
 
-		const parsedAToken = tokenHeader + accessCookie;
-		await verifyToken(parsedAToken, secretKeys.primary);
-		return jwt.decode(parsedAToken) as IUserToken;
+		await verifyToken(accessCookie, secretKeys.primary);
+		return decodeTokenUNSAFE(accessCookie);
 	} catch (err) {
 		const refreshCookie = req.cookies.refresh_token;
 		const signCookie = req.cookies.sign_token;
 		if (!refreshCookie || !signCookie) return;
 
-		const parsedRToken = tokenHeader + refreshCookie + signCookie;
-		const newTokens = await renewTokens(parsedRToken);
+		const newTokens = await renewTokens(refreshCookie, signCookie);
 		setTokenCookies(res, newTokens);
-		return jwt.decode(tokenHeader + newTokens.access_token) as IUserToken;
+		return decodeTokenUNSAFE(newTokens.access_token);
 	}
 };
 
-const verifyToken = async (token: string, secret: string) => {
+const verifyToken = async (tokenBody: string, secret: string) => {
+	const token = tokenHeader + tokenBody;
 	const decoded = jwt.decode(token) as IUserToken;
 	if (decoded.exp! < new Date().getTime() / 1000) throw new Error('Token expired');
 
@@ -135,6 +135,10 @@ const verifyToken = async (token: string, secret: string) => {
 			}
 		)
 	) as Promise<IUser>;
+};
+
+const decodeTokenUNSAFE = (tokenBody: string) => {
+	return jwt.decode(tokenHeader + tokenBody) as IUserToken;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
