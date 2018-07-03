@@ -79,10 +79,14 @@ export const refreshAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 		refreshToken: {
 			type: new GraphQLNonNull(GraphQLString),
 			description: 'Refresh token'
+		},
+		signToken: {
+			type: new GraphQLNonNull(GraphQLString),
+			description: 'Sign token'
 		}
 	},
-	resolve: async ({}, { refreshToken }, { res }) => {
-		const newTokens = await renewTokens(refreshToken);
+	resolve: async ({}, { refreshToken, signToken }, { res }) => {
+		const newTokens = await renewTokens(refreshToken, signToken);
 
 		setTokenCookies(res, newTokens);
 		return newTokens;
