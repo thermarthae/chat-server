@@ -27,18 +27,18 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({ }, { id }, { verifiedToken, loaders }) => {
+	resolve: async ({ }, { id }, { verifiedToken, userIDLoader }) => {
 		checkIfTokenError(verifiedToken);
-		return await loaders.userLoader.load(id);
+		return await userIDLoader.load(id);
 	}
 };
 
 export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Get current user data',
-	resolve: async ({ }, { }, { verifiedToken, loaders }) => {
+	resolve: async ({ }, { }, { verifiedToken, userIDLoader }) => {
 		checkIfTokenError(verifiedToken);
-		return await loaders.userLoader.load(verifiedToken!.sub);
+		return await userIDLoader.load(verifiedToken!.sub);
 	}
 };
 

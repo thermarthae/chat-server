@@ -71,9 +71,9 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Your message'
 		}
 	},
-	resolve: async ({}, { conversationId, message }, { verifiedToken, loaders }) => {
+	resolve: async ({}, { conversationId, message }, { verifiedToken, convIDLoader }) => {
 		checkIfTokenError(verifiedToken);
-		await conversationAuthorisation(loaders, verifiedToken!.sub, conversationId);
+		await conversationAuthorisation(convIDLoader, verifiedToken!.sub, conversationId);
 
 		const messageAdded = {
 			_id: crypto.randomBytes(16).toString('hex'),

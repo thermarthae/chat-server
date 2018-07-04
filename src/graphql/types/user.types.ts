@@ -1,8 +1,8 @@
-import ConversationModel from '../../models/conversation';
 import { conversationType } from './conversation.types';
 import { IUser } from '../../models/user';
 import {
 	GraphQLObjectType,
+	GraphQLObjectTypeConfig,
 	GraphQLInputObjectType,
 	GraphQLNonNull,
 	GraphQLString,
@@ -12,6 +12,7 @@ import {
 	GraphQLInt,
 	GraphQLEnumType,
 } from 'graphql';
+import { IContext } from '../../';
 
 export interface IUserToken {
 	sub: string;
@@ -68,24 +69,21 @@ export const userType = new GraphQLObjectType({
 					}),
 				},
 			},
-			resolve: async (user: IUser, { filter }) => {
+			resolve: async (user: IUser, { filter }, { convUsersLoader }) => {
 				const userID = user._id;
-				const result = await ConversationModel.find({ users: { $all: userID } }).cache(10);
+				const result = await convUsersLoader.load(userID);
 				const draftArr = [];
 				const unreadArr = [];
 
 				for (const conversation of result) {
-					if (conversation.draft.some(d => d._id == userID))
-						draftArr.push(conversation);
-
 					const lastMessage = conversation.messages[conversation.messages.length - 1];
 					const seen = conversation.seen.find(r => r.user == userID);
-					if (!seen || lastMessage.time > seen.time)
-						unreadArr.push(conversation);
+
+					if (conversation.draft.some(d => d._id == userID)) draftArr.push(conversation);
+					if (!seen || lastMessage.time > seen.time) unreadArr.push(conversation);
 				}
 
 				const conversationArr = (filter === 'unread') ? unreadArr : ((filter === 'draft') ? draftArr : result);
-
 				return {
 					conversationArr,
 					conversationCount: result.length,
@@ -98,7 +96,7 @@ export const userType = new GraphQLObjectType({
 			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 	})
-});
+} as GraphQLObjectTypeConfig<any, IContext>);
 
 export const userInConversationType = new GraphQLObjectType({
 	name: 'UserInConversation',
@@ -119,7 +117,7 @@ export const userInConversationType = new GraphQLObjectType({
 			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 	})
-});
+} as GraphQLObjectTypeConfig<any, IContext>);
 
 export const userTokenType = new GraphQLObjectType({
 	name: 'UserToken',

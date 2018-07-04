@@ -10,10 +10,8 @@ import http = require('http');
 import cachegoose = require('cachegoose');
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
-import DataLoader = require('dataloader');
 
-import UserModel, { IUser } from './models/user';
-import ConversationModel, { IConversation } from './models/conversation';
+import dataLoaders, { IDataLoaders } from './dataloaders';
 import { parseToken } from './utils/token.utils';
 import schema from './graphql';
 import { IUserToken } from './graphql/types/user.types';
@@ -22,15 +20,10 @@ interface ISecretKeys {
 	primary: string;
 	secondary: string;
 }
-export interface IDataLoaders {
-	userLoader: DataLoader<string, IUser>;
-	conversationLoader: DataLoader<string, IConversation>;
-}
 
 export interface IRootValue {}
-export interface IContext {
+export interface IContext extends IDataLoaders {
 	res: express.Response;
-	loaders: IDataLoaders;
 	verifiedToken: IUserToken | undefined;
 }
 console.clear();
@@ -65,18 +58,6 @@ app.use(
 	'/graphql',
 	bodyParser.json(),
 	graphqlExpress(async (req, res) => {
-		const loaders = {
-			userLoader: new DataLoader(async ids => {
-				return await UserModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
-					throw err;
-				}) as IUser[];
-			}),
-			conversationLoader: new DataLoader(async ids => {
-				return await ConversationModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
-					throw err;
-				}) as IConversation[];
-			}),
-		};
 		const verifiedToken = await parseToken(req!, res!);
 
 		return {
@@ -84,7 +65,7 @@ app.use(
 			tracing: true,
 			context: {
 				res,
-				loaders,
+				...dataLoaders,
 				verifiedToken,
 			}
 		};

@@ -17,8 +17,8 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Conversation ID'
 		}
 	},
-	resolve: async ({}, { id }, { verifiedToken, loaders }) => {
+	resolve: async ({}, { id }, { verifiedToken, convIDLoader }) => {
 		checkIfTokenError(verifiedToken);
-		return await loaders.conversationLoader.load(id);
+		return await convIDLoader.load(id);
 	}
 };
