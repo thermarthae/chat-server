@@ -9,7 +9,7 @@ import {
 import { userType, userTokenType } from '../types/user.types';
 import UserModel from '../../models/user';
 import { IRootValue, IContext } from '../../';
-import { checkIfTokenError, makeNewTokens, setTokenCookies, renewTokens } from '../../utils/token.utils';
+import { checkIfTokenError, makeNewTokens, setTokenCookies } from '../../utils/token.utils';
 
 enum Errors {
 	userNotFound = 100,
@@ -67,27 +67,6 @@ export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 		};
 
 		const newTokens = await makeNewTokens(userFromDB);
-		setTokenCookies(res, newTokens);
-		return newTokens;
-	}
-};
-
-export const refreshAccess: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userTokenType,
-	description: 'Get new access and refresh token',
-	args: {
-		refreshToken: {
-			type: new GraphQLNonNull(GraphQLString),
-			description: 'Refresh token'
-		},
-		signToken: {
-			type: new GraphQLNonNull(GraphQLString),
-			description: 'Sign token'
-		}
-	},
-	resolve: async ({}, { refreshToken, signToken }, { res }) => {
-		const newTokens = await renewTokens(refreshToken, signToken);
-
 		setTokenCookies(res, newTokens);
 		return newTokens;
 	}
