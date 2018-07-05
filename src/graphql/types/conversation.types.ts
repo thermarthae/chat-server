@@ -63,7 +63,8 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: (result: IConversation, { }, { verifiedToken }) => {
 				const seen = result.seen.find(r => r.user == verifiedToken!.sub);
 				if (!seen) return false;
-				const messageArr = result.messages.reverse();
+				const messages = result.messages.slice(0);
+				const messageArr = messages.reverse();
 				const unreaded = messageArr.find(msg => msg.time > seen!.time);
 				if (unreaded) return false;
 				return true;
