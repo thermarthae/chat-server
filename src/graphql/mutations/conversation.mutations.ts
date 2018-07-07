@@ -51,10 +51,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			}]
 		});
 
-		return await newConversation.save().catch(err => {
-			// throw new Error('Initialize conversation error');
-			throw err;
-		});
+		return await newConversation.save();
 	}
 };
 
@@ -91,9 +88,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			conversationId,
 			{ $push: {messages: messageAdded, seen} },
 			{ select: 'users -_id' }
-		).catch(err => {
-			throw err;
-		});
+		).catch(err => { throw err; });
 
 		pubsub.publish('messageAdded', { messageAdded, conversationId, authorizedUsers: users });
 

@@ -34,8 +34,7 @@ cachegoose(mongoose, {
 });
 
 mongoose.connect(process.env.MONGO_ATLAS_URI as string)
-	.then(() => console.log('Connected to DB. '))
-	.catch(err => { throw err; });
+	.then(() => console.log('Connected to DB. '));
 mongoose.set('debug', true);
 
 const port = process.env.PORT || 3000;

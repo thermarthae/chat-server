@@ -21,9 +21,7 @@ export const addUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			password: bcrypt.hashSync(payload.password, 10)
 		});
 
-		return await newUser.save().catch(err => {
-			throw err;
-		});
+		return await newUser.save();
 	}
 };
 
@@ -39,9 +37,7 @@ export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: async ({}, { id }, { verifiedToken }) => {
 		checkIfTokenError(verifiedToken);
 		tokenAuthorisation(id, verifiedToken!);
-		return await UserModel.findByIdAndRemove(id).catch(err => {
-			throw err;
-		});
+		return await UserModel.findByIdAndRemove(id);
 	}
 };
 
@@ -66,8 +62,6 @@ export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			id,
 			{ $set: { ...payload } },
 			{ new: true }
-		).catch(err => {
-			throw err;
-		});
+		);
 	}
 };
