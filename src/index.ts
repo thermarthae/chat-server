@@ -33,7 +33,7 @@ cachegoose(mongoose, {
 	host: 'localhost'
 });
 
-mongoose.connect(process.env.MONGO_ATLAS_URI as string)
+mongoose.connect(process.env.MONGO_ATLAS_URI as string, { useNewUrlParser: true })
 	.then(() => console.log('Connected to DB. '));
 mongoose.set('debug', true);
 
