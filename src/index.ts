@@ -10,10 +10,11 @@ import http = require('http');
 import cachegoose = require('cachegoose');
 import { execute, subscribe } from 'graphql';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
+import DataLoader = require('dataloader');
 
-import dataLoaders, { IDataLoaders } from './dataloaders';
 import { parseToken } from './utils/token.utils';
 import schema from './graphql';
+import { IDataLoaders, userIDFn, convIDFn, convUsersFn } from './dataloaders';
 import { IUserToken } from './graphql/types/user.types';
 
 interface ISecretKeys {
@@ -64,7 +65,9 @@ app.use(
 			tracing: true,
 			context: {
 				res,
-				...dataLoaders,
+				userIDLoader: new DataLoader(async ids => userIDFn(ids)),
+				convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+				convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
 				verifiedToken,
 			}
 		};

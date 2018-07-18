@@ -13,24 +13,22 @@ export interface IDataLoaders {
 	convUsersLoader: TConvLoaderArr;
 }
 
-export default {
-	userIDLoader: new DataLoader(async ids => {
-		return await UserModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
-			if (err.name === 'CastError') throw new Error('404 (Not Found)');
-			throw err;
-		}) as IUser[];
-	}),
-	convIDLoader: new DataLoader(async ids => {
-		return await ConversationModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
-			if (err.name === 'CastError') throw new Error('404 (Not Found)');
-			throw err;
-		}) as IConversation[];
-	}),
-	convUsersLoader: new DataLoader(async ids => {
-		const result = await ConversationModel.find({ users: { $all: ids } }).cache(10).catch(err => {
-			if (err.name === 'CastError') throw new Error('404 (Not Found)');
-			throw err;
-		}) as IConversation[];
-		return [[...result]];
-	}),
+export const userIDFn = async (ids: Array<{}>) => {
+	return await UserModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
+		if (err.name === 'CastError') throw new Error('404 (Not Found)');
+		throw err;
+	}) as IUser[];
+};
+export const convIDFn = async (ids: Array<{}>) => {
+	return await ConversationModel.find({ _id: { $in: ids } }).cache(10).catch(err => {
+		if (err.name === 'CastError') throw new Error('404 (Not Found)');
+		throw err;
+	}) as IConversation[];
+};
+export const convUsersFn = async (ids: Array<{}>) => {
+	const result = await ConversationModel.find({ users: { $all: ids } }).cache(10).catch(err => {
+		if (err.name === 'CastError') throw new Error('404 (Not Found)');
+		throw err;
+	}) as IConversation[];
+	return [[...result]];
 };
