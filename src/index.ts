@@ -1,15 +1,12 @@
+// TODO: new apollo errors throw
+
 import express = require('express');
-import cors = require('cors');
 import cookieParser = require('cookie-parser');
-import { graphqlExpress } from 'apollo-server-express';
-import expressPlayground from 'graphql-playground-middleware-express';
-import bodyParser = require('body-parser');
+import { ApolloServer } from 'apollo-server-express';
 import morgan = require('morgan');
 import mongoose = require('mongoose');
 import http = require('http');
 import cachegoose = require('cachegoose');
-import { execute, subscribe } from 'graphql';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
 import DataLoader = require('dataloader');
 
 import { parseToken } from './utils/token.utils';
@@ -48,65 +45,57 @@ export const secretKeys: ISecretKeys = {
 	secondary: '1f8bbfcb-3505-42b7-9f57-e7563eff8f25'
 };
 
-app.use(cors({
-	origin: `http://${adress}:8080`,
-	credentials: true
-}));
 app.use(cookieParser());
 app.use(morgan('dev'));
-app.use(
-	'/graphql',
-	bodyParser.json(),
-	graphqlExpress(async (req, res) => {
-		const verifiedToken = await parseToken(req!, res!);
+
+const server = new ApolloServer({
+	schema,
+	tracing: true,
+	context: async ({ req, res }: any) => {
 
 		return {
-			schema,
-			tracing: true,
-			context: {
-				res,
-				userIDLoader: new DataLoader(async ids => userIDFn(ids)),
-				convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-				convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
-				verifiedToken,
-			}
+			res,
+			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
+			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+			convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
+			verifiedToken,
 		};
-	})
-);
+	},
+	subscriptions: {
+		onConnect: async ({ }, { }, context: any) => {// TODO Auth cookie
+			try {
+				const cookies = context.request.headers.cookie;
+				if (!cookies) throw new Error('Missing auth token!');
+				const refreshCookie = cookies.match(RegExp('refresh_token=([^;]*)'))[0].split('=')[1];
+				const signCookie = cookies.match(RegExp('sign_token=([^;]*)'))[0].split('=')[1];
+				const parsedRefreshToken = refreshCookie + signCookie;
 
-app.use(
-	'/playground',
-	expressPlayground({
-		endpoint: '/graphql',
-		subscriptionEndpoint: `ws://${url}/graphql`,
-	})
-);
+				return { verifiedToken: parsedRefreshToken };
+			} catch (err) {
+				throw err;
+			}
+		}
+	}
+});
 
-const server = http.createServer(app);
+server.applyMiddleware({
+	app,
+	cors: {
+		origin: `http://${adress}:8080`,
+		credentials: true
+	}
+});
 
-server.listen(port, () => {
+const httpServer = http.createServer(app);
+server.installSubscriptionHandlers(httpServer);
+
+httpServer.listen(port, () => {
 	console.log(
 		'\x1b[36m%s\x1b[0m',
-		`GraphQL Server is now running on http://${url}/graphql`
+		`GraphQL Server is now running on http://${url + server.graphqlPath}`
 	);
 	console.log(
 		'\x1b[35m%s\x1b[0m',
-		`GraphQL Playground is now running on http://${url}/playground`
+		`GraphQL WS is now running on ws://${url + server.subscriptionsPath}`
 	);
-
-	new SubscriptionServer(// TODO Auth cookie
-		{
-			execute,
-			subscribe,
-			schema,
-			onConnect: (x: any) => {
-				console.log('TESTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT', x);
-				// if (x.Authorization) return { verifiedToken: verifyToken(x.Authorization, secretKeys.primary) }; //Context
-				throw new Error('Missing auth token!');
-			}
-		},
-		{
-			server,
-			path: '/graphql'
-		});
 });
