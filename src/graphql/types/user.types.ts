@@ -20,21 +20,33 @@ export interface IUserToken {
 	isAdmin: boolean;
 }
 
+const userBasicType = {
+	_id: {
+		type: new GraphQLNonNull(GraphQLID)
+	},
+	name: {
+		type: new GraphQLNonNull(GraphQLString)
+	},
+	email: {
+		type: new GraphQLNonNull(GraphQLString)
+	},
+	// password: {
+	// 	type: new GraphQLNonNull(GraphQLString)
+	// },
+	isAdmin: {
+		type: new GraphQLNonNull(GraphQLBoolean)
+	},
+};
+
 export const userType = new GraphQLObjectType({
 	name: 'User',
+	fields: () => ({ ...userBasicType })
+} as GraphQLObjectTypeConfig<any, IContext>);
+
+export const userInConversationType = new GraphQLObjectType({
+	name: 'UserInConversation',
 	fields: () => ({
-		_id: {
-			type: new GraphQLNonNull(GraphQLID)
-		},
-		name: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		email: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		// password: {
-		// 	type: new GraphQLNonNull(GraphQLString)
-		// },
+		...userBasicType,
 		conversationData: {
 			type: new GraphQLNonNull(new GraphQLObjectType({
 				name: 'conversationData',
@@ -79,7 +91,7 @@ export const userType = new GraphQLObjectType({
 					const lastMessage = conversation.messages[conversation.messages.length - 1];
 					const seen = conversation.seen.find(r => r.user == userID);
 
-					if (conversation.draft.some(d => d._id == userID)) draftArr.push(conversation);
+					if (conversation.draft.some(d => d.user == userID)) draftArr.push(conversation);
 					if (!seen || lastMessage.time > seen.time) unreadArr.push(conversation);
 				}
 
@@ -91,30 +103,6 @@ export const userType = new GraphQLObjectType({
 					unreadCount: unreadArr.length,
 				};
 			}
-		},
-		isAdmin: {
-			type: new GraphQLNonNull(GraphQLBoolean)
-		},
-	})
-} as GraphQLObjectTypeConfig<any, IContext>);
-
-export const userInConversationType = new GraphQLObjectType({
-	name: 'UserInConversation',
-	fields: () => ({
-		_id: {
-			type: new GraphQLNonNull(GraphQLID)
-		},
-		name: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		email: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		// password: {
-		// 	type: new GraphQLNonNull(GraphQLString)
-		// },
-		isAdmin: {
-			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 	})
 } as GraphQLObjectTypeConfig<any, IContext>);

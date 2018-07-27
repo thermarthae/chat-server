@@ -6,7 +6,7 @@ import {
 	GraphQLFieldConfig
 } from 'graphql';
 
-import { userType, userTokenType } from '../types/user.types';
+import { userType, userInConversationType, userTokenType } from '../types/user.types';
 import UserModel from '../../models/user';
 import { IRootValue, IContext } from '../../';
 import { checkIfTokenError, makeNewTokens, setTokenCookies } from '../../utils/token.utils';
@@ -34,7 +34,7 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 };
 
 export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userType,
+	type: userInConversationType,
 	description: 'Get current user data',
 	resolve: async ({ }, { }, { verifiedToken, userIDLoader }) => {
 		checkIfTokenError(verifiedToken);
@@ -49,7 +49,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 		username: { type: new GraphQLNonNull(GraphQLString) },
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
-	resolve: async ({}, { username, password }, { res }) => {
+	resolve: async ({ }, { username, password }, { res }) => {
 		const userFromDB = await UserModel.findOne({ email: username }).cache(5);
 		if (!userFromDB) return {
 			error: {

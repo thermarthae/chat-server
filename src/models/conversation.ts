@@ -1,58 +1,33 @@
 import mongoose = require('mongoose');
+import { IMessage } from './message';
+import { IUser } from './user';
 
 const conversationSchema = new mongoose.Schema(
 	{
-		name: {
-			type: String
-		},
-		users: {
-			type: [String],
-			required: true
-		},
-		draft: {
-			type: [{
-				_id: String,
-				time: String,
-				content: String,
-			}],
-			required: false
-		},
-		messages: {
-			type: [{
-				_id: String,
-				author: String,
-				time: String,
-				content: String,
-			}],
-			required: true
-		},
-		seen: {
-			type: [{
-				user: String,
-				time: String
-			}],
-			required: true
-		}
+		name: String,
+		users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+		draft: [{
+			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+			time: String,
+			content: String,
+		}],
+		messages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
+		seen: [{
+			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+			time: String
+		}]
 	},
 	{
-		collection: 'conversation',
+		collection: 'Conversation',
 		timestamps: true
 	}
 );
 
-interface IMessage {
-	_id: string;
-	author: string;
-	time: string;
-	content: string;
-}
-
 export interface IConversation extends mongoose.Document {
 	name: string;
-	users: [string];
+	users: [IUser];
 	draft: [{
-		_id: string;
-		time: string;
+		user: string;
 		content: string;
 	}];
 	messages: [IMessage];
@@ -62,5 +37,5 @@ export interface IConversation extends mongoose.Document {
 	}];
 }
 
-const ConversationModel = mongoose.model<IConversation>('conversation', conversationSchema);
+const ConversationModel = mongoose.model<IConversation>('Conversation', conversationSchema);
 export default ConversationModel;

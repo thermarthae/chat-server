@@ -5,20 +5,20 @@ import {
 	GraphQLString,
 	GraphQLList
 } from 'graphql';
-import * as crypto from 'crypto';
 
 import ConversationModel, { IConversation } from '../../models/conversation';
+import MessageModel from '../../models/message';
 import { pubsub } from '../';
 import { conversationType, messageType } from '../types/conversation.types';
 import { checkIfTokenError } from '../../utils/token.utils';
-import { conversationAuthorisation } from '../../utils/conversation.utils';
+import { checkConvAuth, checkConvPerm } from '../../utils/conversation.utils';
 import { IRootValue, IContext } from '../../';
 
 export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: conversationType,
 	description: 'Send message to initialize conversation with given users',
 	args: {
-		idArr: {
+		userIdArr: {
 			type: new GraphQLNonNull(new GraphQLList(GraphQLID)),
 			description: 'Array of users ID you wanna chat'
 		},
@@ -32,26 +32,36 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			defaultValue: null
 		}
 	},
-	resolve: async ({}, { idArr, message, name }, { verifiedToken }) => {
+	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, verifiedToken }) => {
 		checkIfTokenError(verifiedToken);
-
+		await checkConvPerm(verifiedToken!, userIDLoader, userIdArr);
 		const time = Date.now().toString();
+		const seen = [];
+		const draft = [];
+		for (const user of userIdArr as string[]) {
+			seen.push({
+				user,
+				time: user != verifiedToken!.sub ? 0 : time
+			});
+			draft.push({ user, content: '' });
+		}
+
+		const newMessage = new MessageModel({
+			author: verifiedToken!.sub,
+			time,
+			content: message,
+		});
 		const newConversation = new ConversationModel({
 			name,
-			users: idArr,
-			messages: [{
-				_id: crypto.randomBytes(16).toString('hex'),
-				author: verifiedToken!.sub,
-				time,
-				content: message,
-			}],
-			seen: [{
-				user: verifiedToken!.sub,
-				time
-			}]
+			users: userIdArr,
+			messages: [newMessage],
+			seen,
+			draft
 		});
 
-		return await newConversation.save();
+		await newMessage.save();
+		await newConversation.save();
+		return await convIDLoader.load(newConversation._id);
 	}
 };
 
@@ -68,30 +78,42 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Your message'
 		}
 	},
-	resolve: async ({}, { conversationId, message }, { verifiedToken, convIDLoader }) => {
+	resolve: async ({ }, { conversationId, message }, { verifiedToken, convIDLoader }) => {
 		checkIfTokenError(verifiedToken);
-		await conversationAuthorisation(convIDLoader, verifiedToken!.sub, conversationId);
-
-		const messageAdded = {
-			_id: crypto.randomBytes(16).toString('hex'),
-			author: verifiedToken!.sub,
-			time: Date.now().toString(),
+		const authUser = await checkConvAuth(convIDLoader, verifiedToken!.sub, conversationId);
+		const time = Date.now().toString();
+		const newMessage = new MessageModel({
+			author: authUser._id,
+			time,
 			content: message,
-		};
+		});
+		const { users } = await ConversationModel.findByIdAndUpdate(
+			conversationId, { $push: { messages: newMessage._id } }
+		).catch(err => { throw err; }) as IConversation;
 
-		const seen = {
-			user: verifiedToken!.sub,
-			time: Date.now().toString()
-		};
-
-		const { users }: IConversation = await ConversationModel.findByIdAndUpdate(
-			conversationId,
-			{ $push: {messages: messageAdded, seen} },
-			{ select: 'users -_id' }
+		await ConversationModel.update(
+			{ 'seen.user': authUser._id }, { $set: { 'seen.$.time': time } }
 		).catch(err => { throw err; });
 
-		pubsub.publish('messageAdded', { messageAdded, conversationId, authorizedUsers: users });
+		await ConversationModel.update(
+			{ 'draft.user': authUser._id }, { $set: { 'draft.$.content': '' } }
+		).catch(err => { throw err; });
 
-		return messageAdded;
+		await newMessage.save().catch(err => { throw err; });
+
+		const parsedMessage = Object.assign(
+			newMessage.toObject(),
+			{
+				me: true,
+				author: {
+					_id: authUser._id,
+					name: authUser.name,
+					email: authUser.email,
+					isAdmin: authUser.isAdmin
+				}
+			}
+		);
+		pubsub.publish('messageAdded', { conversationId, authorizedUsers: users, message: parsedMessage });
+		return parsedMessage;
 	}
 };

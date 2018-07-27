@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema(
 		tokenSignature: {
 			type: String,
 			required: true,
-			default: 'undefined'
+			default: Date.now().toString()
 		},
 		isAdmin: {
 			type: Boolean,
@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
 		}
 	},
 	{
-		collection: 'user',
+		collection: 'User',
 		timestamps: true
 	}
 );
@@ -40,5 +40,5 @@ export interface IUser extends mongoose.Document {
 	isAdmin: boolean;
 }
 
-const UserModel = mongoose.model<IUser>('user', userSchema);
+const UserModel = mongoose.model<IUser>('User', userSchema);
 export default UserModel;

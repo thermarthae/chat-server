@@ -3,13 +3,12 @@ import {
 	GraphQLObjectTypeConfig,
 	GraphQLNonNull,
 	GraphQLString,
-	GraphQLInt,
 	GraphQLID,
 	GraphQLList,
 	GraphQLBoolean,
 } from 'graphql';
 import { IConversation } from '../../models/conversation';
-import { userInConversationType } from './user.types';
+import { userType } from './user.types';
 import { IContext } from '../../';
 
 export const messageType = new GraphQLObjectType({
@@ -19,19 +18,16 @@ export const messageType = new GraphQLObjectType({
 			type: new GraphQLNonNull(GraphQLID)
 		},
 		author: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		authorName: {
-			type: new GraphQLNonNull(GraphQLString)
+			type: new GraphQLNonNull(userType)
 		},
 		time: {
 			type: new GraphQLNonNull(GraphQLString)
 		},
-		me: {
-			type: new GraphQLNonNull(GraphQLBoolean)
-		},
 		content: {
 			type: GraphQLString
+		},
+		me: {
+			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 	})
 });
@@ -44,60 +40,51 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		},
 		name: {
 			type: GraphQLString,
-			resolve: async ({ users }: IConversation, { }, { verifiedToken, userIDLoader }) => {
-				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!.sub);
-				const usersFromDB = await userIDLoader.loadMany(usersWithoutCurrent);
-				const names = usersFromDB.map(user => user.name);
-				return names.join(', ');
+			resolve: ({ name, users }: IConversation, { }, { verifiedToken }) => {
+
+				if (name) return name;
+				const usersWithoutCurrent = users.filter(user => user._id != verifiedToken!.sub);
+				const usersName = usersWithoutCurrent.map(user => user.name);
+				return usersName.join(', ');
 			}
 		},
 		users: {
-			type: new GraphQLNonNull(new GraphQLList(userInConversationType)),
-			resolve: async ({ users }: IConversation, { }, { verifiedToken, userIDLoader }) => {
-				const usersWithoutCurrent = users.filter(user => user !== verifiedToken!.sub);
-				return await userIDLoader.loadMany(usersWithoutCurrent);
+			type: new GraphQLNonNull(new GraphQLList(userType)),
+			resolve: ({ users }: IConversation, { }, { verifiedToken }) => {
+				const usersWithoutCurrent = users.filter(user => user._id != verifiedToken!.sub);
+				return usersWithoutCurrent;
 			}
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: (result: IConversation, { }, { verifiedToken }) => {
-				const seen = result.seen.find(r => r.user == verifiedToken!.sub);
-				if (!seen) return false;
-				const messages = result.messages.slice(0);
-				const messageArr = messages.reverse();
-				const unreaded = messageArr.find(msg => msg.time > seen!.time);
+			resolve: ({ seen, messages }: IConversation, { }, { verifiedToken }) => {
+				const seenByUser = seen.find(s => s.user == verifiedToken!.sub);
+				if (!seenByUser) return false;
+				const messageArr = messages.slice(0).reverse(); // duplicate arr then reverse
+				const unreaded = messageArr.find(msg => msg.time > seenByUser.time);
 				if (unreaded) return false;
 				return true;
 			}
 		},
 		draft: {
-			type: new GraphQLObjectType({
-				name: 'Draft',
-				fields: () => ({
-					time: {
-						type: new GraphQLNonNull(GraphQLString)
-					},
-					content: {
-						type: GraphQLString
-					},
-				})
-			}),
+			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ draft }: IConversation, { }, { verifiedToken }) => {
-				return draft.find(userDraft => userDraft._id == verifiedToken!.sub);
+				const userDraft = draft.find(draftObj => draftObj.user == verifiedToken!.sub);
+				if (!userDraft) return '';
+				return userDraft.content;
 			}
 		},
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType)),
-			resolve: async ({ messages }: IConversation, { }, { verifiedToken, userIDLoader }) => {
+			resolve: async ({ messages }: IConversation, { }, { verifiedToken }) => {
 				const messagesFromDB = [];
 				for (const message of messages) {
 					let me = false;
 					if (message.author == verifiedToken!.sub) me = true;
-					const author = await userIDLoader.load(message.author);
 					messagesFromDB.push({
-						...(message as any)._doc,
+						...message,
 						me,
-						authorName: author.name,
+						author: message.author,
 					});
 				}
 				return messagesFromDB;
@@ -105,29 +92,12 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		},
 		lastMessage: {
 			type: new GraphQLNonNull(messageType),
-			resolve: async ({ messages }: IConversation, { }, { verifiedToken, userIDLoader }) => {
+			resolve: async ({ messages }: IConversation, { }, { verifiedToken }) => {
 				const lastMessage = messages[messages.length - 1];
 				let me = false;
 				if (lastMessage.author == verifiedToken!.sub) me = true;
-				const author = await userIDLoader.load(lastMessage.author);
-				return {
-					...(lastMessage as any)._doc,
-					me,
-					authorName: author.name,
-				};
+				return Object.assign(lastMessage, { me, author: lastMessage.author });
 			}
-		},
-		messagesCount: {
-			type: new GraphQLNonNull(GraphQLInt),
-			resolve: (result: IConversation) => result.messages.length
-		},
-		unreadCount: {
-			type: new GraphQLNonNull(GraphQLInt),
-			resolve: (result: IConversation, { }, { verifiedToken }) => {
-				const seen = result.seen.find(r => r.user == verifiedToken!.sub);
-				const messageArr = result.messages.reverse();
-				return messageArr.findIndex(msg => msg.time < seen!.time);
-			}
-		},
+		}
 	})
 } as GraphQLObjectTypeConfig<any, IContext>);

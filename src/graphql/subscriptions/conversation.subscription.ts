@@ -20,7 +20,7 @@ export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {
 			return payload.conversationId === variables.conversationId;
 		}
 	),
-	resolve: async (payload, {}, { verifiedToken }) => {
+	resolve: async (payload, { }, { verifiedToken }) => {
 		console.log('verifiedToken on conversation.subscription', verifiedToken);
 		if (payload.authorizedUsers.includes(verifiedToken!.sub)) return payload.messageAdded;
 		throw new Error('No access');

@@ -19,7 +19,7 @@ interface ISecretKeys {
 	secondary: string;
 }
 
-export interface IRootValue {}
+export interface IRootValue { }
 export interface IContext extends IDataLoaders {
 	res: express.Response;
 	verifiedToken: IUserToken | undefined;
