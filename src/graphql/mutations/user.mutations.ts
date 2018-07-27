@@ -6,7 +6,7 @@ import { userType, userInputType } from '../types/user.types';
 import { checkIfTokenError, tokenAuthorisation } from '../../utils/token.utils';
 import { IRootValue, IContext } from '../../';
 
-export const addUser: GraphQLFieldConfig<IRootValue, IContext> = {
+export const createNewUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Add new user',
 	args: {
