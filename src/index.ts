@@ -12,7 +12,7 @@ import DataLoader = require('dataloader');
 import { parseToken } from './utils/token.utils';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn, convUsersFn } from './dataloaders';
-import { IUserToken } from './graphql/types/user.types';
+import { IUser } from './models/user';
 
 interface ISecretKeys {
 	primary: string;
@@ -22,7 +22,7 @@ interface ISecretKeys {
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
 	res: express.Response;
-	verifiedToken: IUserToken | undefined;
+	tokenOwner: IUser | undefined;
 }
 console.clear();
 cachegoose(mongoose, {
@@ -52,14 +52,15 @@ const server = new ApolloServer({
 	schema,
 	tracing: true,
 	context: async ({ req, res }: any) => {
+		const tokenOwner = await parseToken(req!, res!);
 
 		return {
 			res,
 			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
 			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
 			convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
-			verifiedToken,
-		};
+			tokenOwner,
+		} as IContext;
 	},
 	subscriptions: {
 		onConnect: async ({ }, { }, context: any) => {// TODO Auth cookie
@@ -70,10 +71,8 @@ const server = new ApolloServer({
 				const signCookie = cookies.match(RegExp('sign_token=([^;]*)'))[0].split('=')[1];
 				const parsedRefreshToken = refreshCookie + signCookie;
 
-				return { verifiedToken: parsedRefreshToken };
-			} catch (err) {
-				throw err;
-			}
+				return { tokenOwner: parsedRefreshToken }; // TODO
+			} catch (err) { throw err; }
 		}
 	}
 });

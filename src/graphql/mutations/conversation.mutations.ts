@@ -10,8 +10,12 @@ import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
 import { pubsub } from '../';
 import { conversationType, messageType } from '../types/conversation.types';
-import { checkIfTokenError } from '../../utils/token.utils';
-import { checkConvAuth, checkConvPerm } from '../../utils/conversation.utils';
+import {
+	checkIfUsersExist,
+	// checkIfIdBelongsToUser,
+	checkUserRightsToConv,
+	checkIfNoTokenOwnerErr
+} from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
 export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -32,22 +36,25 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			defaultValue: null
 		}
 	},
-	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, verifiedToken }) => {
-		checkIfTokenError(verifiedToken);
-		await checkConvPerm(verifiedToken!, userIDLoader, userIdArr);
+	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, tokenOwner }) => {
+		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		await checkIfUsersExist(userIdArr, userIDLoader);
+		// checkIfIdBelongsToUser(userIdArr, verifiedUser);
+		// TODO: verifiedUser + userIdArr;
+
 		const time = Date.now().toString();
 		const seen = [];
 		const draft = [];
 		for (const user of userIdArr as string[]) {
 			seen.push({
 				user,
-				time: user != verifiedToken!.sub ? 0 : time
+				time: user != verifiedUser._id ? 0 : time
 			});
 			draft.push({ user, content: '' });
 		}
 
 		const newMessage = new MessageModel({
-			author: verifiedToken!.sub,
+			author: verifiedUser._id,
 			time,
 			content: message,
 		});
@@ -78,12 +85,12 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Your message'
 		}
 	},
-	resolve: async ({ }, { conversationId, message }, { verifiedToken, convIDLoader }) => {
-		checkIfTokenError(verifiedToken);
-		const authUser = await checkConvAuth(convIDLoader, verifiedToken!.sub, conversationId);
+	resolve: async ({ }, { conversationId, message }, { tokenOwner, convIDLoader }) => {
+		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
 		const time = Date.now().toString();
 		const newMessage = new MessageModel({
-			author: authUser._id,
+			author: verifiedUser._id,
 			time,
 			content: message,
 		});
@@ -92,11 +99,11 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 		).catch(err => { throw err; }) as IConversation;
 
 		await ConversationModel.update(
-			{ 'seen.user': authUser._id }, { $set: { 'seen.$.time': time } }
+			{ 'seen.user': verifiedUser._id }, { $set: { 'seen.$.time': time } }
 		).catch(err => { throw err; });
 
 		await ConversationModel.update(
-			{ 'draft.user': authUser._id }, { $set: { 'draft.$.content': '' } }
+			{ 'draft.user': verifiedUser._id }, { $set: { 'draft.$.content': '' } }
 		).catch(err => { throw err; });
 
 		await newMessage.save().catch(err => { throw err; });
@@ -106,10 +113,10 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			{
 				me: true,
 				author: {
-					_id: authUser._id,
-					name: authUser.name,
-					email: authUser.email,
-					isAdmin: authUser.isAdmin
+					_id: verifiedUser._id,
+					name: verifiedUser.name,
+					email: verifiedUser.email,
+					isAdmin: verifiedUser.isAdmin
 				}
 			}
 		);

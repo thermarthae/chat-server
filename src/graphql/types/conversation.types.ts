@@ -40,25 +40,25 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		},
 		name: {
 			type: GraphQLString,
-			resolve: ({ name, users }: IConversation, { }, { verifiedToken }) => {
+			resolve: ({ name, users }: IConversation, { }, { tokenOwner }) => {
 
 				if (name) return name;
-				const usersWithoutCurrent = users.filter(user => user._id != verifiedToken!.sub);
+				const usersWithoutCurrent = users.filter(user => user._id != tokenOwner!._id);
 				const usersName = usersWithoutCurrent.map(user => user.name);
 				return usersName.join(', ');
 			}
 		},
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userType)),
-			resolve: ({ users }: IConversation, { }, { verifiedToken }) => {
-				const usersWithoutCurrent = users.filter(user => user._id != verifiedToken!.sub);
+			resolve: ({ users }: IConversation, { }, { tokenOwner }) => {
+				const usersWithoutCurrent = users.filter(user => user._id != tokenOwner!._id);
 				return usersWithoutCurrent;
 			}
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ seen, messages }: IConversation, { }, { verifiedToken }) => {
-				const seenByUser = seen.find(s => s.user == verifiedToken!.sub);
+			resolve: ({ seen, messages }: IConversation, { }, { tokenOwner }) => {
+				const seenByUser = seen.find(s => s.user == tokenOwner!._id);
 				if (!seenByUser) return false;
 				const messageArr = messages.slice(0).reverse(); // duplicate arr then reverse
 				const unreaded = messageArr.find(msg => msg.time > seenByUser.time);
@@ -68,19 +68,19 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		},
 		draft: {
 			type: new GraphQLNonNull(GraphQLString),
-			resolve: ({ draft }: IConversation, { }, { verifiedToken }) => {
-				const userDraft = draft.find(draftObj => draftObj.user == verifiedToken!.sub);
+			resolve: ({ draft }: IConversation, { }, { tokenOwner }) => {
+				const userDraft = draft.find(draftObj => draftObj.user == tokenOwner!._id);
 				if (!userDraft) return '';
 				return userDraft.content;
 			}
 		},
 		messages: {
 			type: new GraphQLNonNull(new GraphQLList(messageType)),
-			resolve: async ({ messages }: IConversation, { }, { verifiedToken }) => {
+			resolve: async ({ messages }: IConversation, { }, { tokenOwner }) => {
 				const messagesFromDB = [];
 				for (const message of messages) {
 					let me = false;
-					if (message.author == verifiedToken!.sub) me = true;
+					if (message.author == tokenOwner!._id) me = true;
 					messagesFromDB.push({
 						...message,
 						me,
@@ -92,10 +92,10 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		},
 		lastMessage: {
 			type: new GraphQLNonNull(messageType),
-			resolve: async ({ messages }: IConversation, { }, { verifiedToken }) => {
+			resolve: async ({ messages }: IConversation, { }, { tokenOwner }) => {
 				const lastMessage = messages[messages.length - 1];
 				let me = false;
-				if (lastMessage.author == verifiedToken!.sub) me = true;
+				if (lastMessage.author == tokenOwner!._id) me = true;
 				return Object.assign(lastMessage, { me, author: lastMessage.author });
 			}
 		}

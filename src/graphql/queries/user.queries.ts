@@ -9,7 +9,8 @@ import {
 import { userType, userInConversationType, userTokenType } from '../types/user.types';
 import UserModel from '../../models/user';
 import { IRootValue, IContext } from '../../';
-import { checkIfTokenError, makeNewTokens, setTokenCookies } from '../../utils/token.utils';
+import { makeNewTokens, setTokenCookies } from '../../utils/token.utils';
+import { checkIfNoTokenOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 
 enum Errors {
 	userNotFound = 100,
@@ -27,8 +28,9 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({ }, { id }, { verifiedToken, userIDLoader }) => {
-		checkIfTokenError(verifiedToken);
+	resolve: async ({ }, { id }, { tokenOwner, userIDLoader }) => {
+		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		checkUserRightsToId(id, verifiedUser);
 		return await userIDLoader.load(id);
 	}
 };
@@ -36,10 +38,7 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userInConversationType,
 	description: 'Get current user data',
-	resolve: async ({ }, { }, { verifiedToken, userIDLoader }) => {
-		checkIfTokenError(verifiedToken);
-		return await userIDLoader.load(verifiedToken!.sub);
-	}
+	resolve: async ({ }, { }, { tokenOwner }) => checkIfNoTokenOwnerErr(tokenOwner)
 };
 
 export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {

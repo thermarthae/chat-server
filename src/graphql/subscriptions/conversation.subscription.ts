@@ -20,9 +20,9 @@ export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {
 			return payload.conversationId === variables.conversationId;
 		}
 	),
-	resolve: async (payload, { }, { verifiedToken }) => {
-		console.log('verifiedToken on conversation.subscription', verifiedToken);
-		if (payload.authorizedUsers.includes(verifiedToken!.sub)) return payload.messageAdded;
+	resolve: async (payload, { }, { tokenOwner }) => {
+		console.log('tokenOwner on conversation.subscription', tokenOwner);
+		if (payload.authorizedUsers.includes(tokenOwner!._id)) return payload.messageAdded;
 		throw new Error('No access');
 	}
 };

@@ -3,7 +3,7 @@ import bcrypt = require('bcrypt');
 
 import UserModel from '../../models/user';
 import { userType, userInputType } from '../types/user.types';
-import { checkIfTokenError, tokenAuthorisation } from '../../utils/token.utils';
+import { checkIfNoTokenOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
 export const createNewUser: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -34,9 +34,9 @@ export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({}, { id }, { verifiedToken }) => {
-		checkIfTokenError(verifiedToken);
-		tokenAuthorisation(id, verifiedToken!);
+	resolve: async ({}, { id }, { tokenOwner }) => {
+		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		checkUserRightsToId(id, verifiedUser);
 		return await UserModel.findByIdAndRemove(id);
 	}
 };
@@ -54,9 +54,9 @@ export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'user updated data'
 		}
 	},
-	resolve: async ({}, { id, payload }, { verifiedToken }) => {
-		checkIfTokenError(verifiedToken);
-		tokenAuthorisation(id, verifiedToken!);
+	resolve: async ({}, { id, payload }, { tokenOwner }) => {
+		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		checkUserRightsToId(id, verifiedUser);
 
 		return await UserModel.findByIdAndUpdate(
 			id,

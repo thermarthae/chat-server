@@ -15,11 +15,6 @@ interface ITokens extends IRefreshAndSignToken {
 	access_token: string;
 }
 
-interface IVerifiedTokenAndUser {
-	encodedToken: IUserToken;
-	userFromDB: IUser;
-}
-
 const makeAccessToken = (payload: IUserToken, secret: string): Promise<string> => {
 	return new Promise((resolve, reject) =>
 		jwt.sign(
@@ -54,11 +49,11 @@ const makeRefreshAndSignToken = (payload: IUserToken, secret: string): Promise<I
 	);
 };
 
-export const makeNewTokens = async (verifiedToken: IUserToken | IUser) => {
+export const makeNewTokens = async (tokenOwner: IUser) => {
 	const newTokenSignature = new Date().getTime();
 	const payload = {
-		sub: (verifiedToken as IUserToken).sub || (verifiedToken as IUser)._id,
-		isAdmin: verifiedToken.isAdmin
+		sub: tokenOwner._id,
+		isAdmin: tokenOwner.isAdmin
 	};
 
 	await UserModel.findByIdAndUpdate(
@@ -100,24 +95,23 @@ const tokenHeader = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.';
 export const parseToken = async (req: Request, res: Response) => {
 	try {
 		const accessCookie = req.cookies.access_token;
-		if (!accessCookie) throw new Error('No token');
+		if (!accessCookie) throw new Error('No access cookie');
 
-		const { encodedToken } = await verifyToken(accessCookie, secretKeys.primary);
-		return encodedToken;
+		return await verifyToken(accessCookie, secretKeys.primary);
 	} catch (err) {
 		const refreshCookie = req.cookies.refresh_token;
 		const signCookie = req.cookies.sign_token;
 		if (!refreshCookie || !signCookie) return;
 
-		const { encodedToken } = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
-		const newTokens = await makeNewTokens(encodedToken);
+		const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
+		const newTokens = await makeNewTokens(tokenOwner);
 		setTokenCookies(res, newTokens);
-		return decodeTokenUNSAFE(newTokens.access_token);
+		return tokenOwner;
 	}
 };
 
 const verifyToken = async (tokenBody: string, secret: string) => {
-	const decoded = decodeTokenUNSAFE(tokenBody);
+	const decoded = jwt.decode(tokenHeader + tokenBody) as IUserToken;
 	if (decoded.exp! < new Date().getTime() / 1000) throw new Error('Token expired');
 
 	const userFromDB = await UserModel.findOne({ _id: decoded.sub }) as IUser;
@@ -126,30 +120,10 @@ const verifyToken = async (tokenBody: string, secret: string) => {
 		jwt.verify(
 			tokenHeader + tokenBody,
 			secret + userFromDB.tokenSignature,
-			(err, encodedToken) => {
+			err => {
 				if (err) reject(err);
-				else resolve({
-					encodedToken: encodedToken as IUserToken,
-					userFromDB
-				});
+				else resolve(userFromDB);
 			}
 		)
-	) as Promise<IVerifiedTokenAndUser>;
-};
-
-const decodeTokenUNSAFE = (tokenBody: string) => {
-	return jwt.decode(tokenHeader + tokenBody) as IUserToken;
-};
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export const checkIfTokenError = (verifiedToken: IUserToken | undefined) => {
-	if (!verifiedToken || !verifiedToken.sub) throw new Error('Access token error');
-};
-
-export const tokenAuthorisation = (id: string, verifiedToken: IUserToken) => {
-	checkIfTokenError(verifiedToken);
-	const permission = verifiedToken.sub === id || verifiedToken.isAdmin;
-	if (!permission) throw new Error('Permission error');
-	return permission;
+	) as Promise<IUser>;
 };
