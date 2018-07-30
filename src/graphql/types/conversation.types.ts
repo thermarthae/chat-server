@@ -43,7 +43,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: ({ name, users }: IConversation, { }, { tokenOwner }) => {
 
 				if (name) return name;
-				const usersWithoutCurrent = users.filter(user => user._id != tokenOwner!._id);
+				const usersWithoutCurrent = users.filter(user => String(user._id) != String(tokenOwner!._id));
 				const usersName = usersWithoutCurrent.map(user => user.name);
 				return usersName.join(', ');
 			}
@@ -51,14 +51,14 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userType)),
 			resolve: ({ users }: IConversation, { }, { tokenOwner }) => {
-				const usersWithoutCurrent = users.filter(user => user._id != tokenOwner!._id);
+				const usersWithoutCurrent = users.filter(user => String(user._id) != String(tokenOwner!._id));
 				return usersWithoutCurrent;
 			}
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: ({ seen, messages }: IConversation, { }, { tokenOwner }) => {
-				const seenByUser = seen.find(s => s.user == tokenOwner!._id);
+				const seenByUser = seen.find(s => String(s.user) == String(tokenOwner!._id));
 				if (!seenByUser) return false;
 				const messageArr = messages.slice(0).reverse(); // duplicate arr then reverse
 				const unreaded = messageArr.find(msg => msg.time > seenByUser.time);
@@ -69,7 +69,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 		draft: {
 			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ draft }: IConversation, { }, { tokenOwner }) => {
-				const userDraft = draft.find(draftObj => draftObj.user == tokenOwner!._id);
+				const userDraft = draft.find(draftObj => String(draftObj.user) == String(tokenOwner!._id));
 				if (!userDraft) return '';
 				return userDraft.content;
 			}
@@ -80,7 +80,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 				const messagesFromDB = [];
 				for (const message of messages) {
 					let me = false;
-					if (message.author == tokenOwner!._id) me = true;
+					if (String(message.author) == String(tokenOwner!._id)) me = true;
 					messagesFromDB.push({
 						...message,
 						me,
@@ -95,7 +95,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: async ({ messages }: IConversation, { }, { tokenOwner }) => {
 				const lastMessage = messages[messages.length - 1];
 				let me = false;
-				if (lastMessage.author == tokenOwner!._id) me = true;
+				if (String(lastMessage.author) == String(tokenOwner!._id)) me = true;
 				return Object.assign(lastMessage, { me, author: lastMessage.author });
 			}
 		}

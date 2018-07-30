@@ -82,16 +82,16 @@ export const userInConversationType = new GraphQLObjectType({
 				},
 			},
 			resolve: async (user: IUser, { filter }, { convUsersLoader }) => {
-				const userID = user._id;
+				const userID = String(user._id);
 				const result = await convUsersLoader.load(userID);
 				const draftArr = [];
 				const unreadArr = [];
 
 				for (const conversation of result) {
 					const lastMessage = conversation.messages[conversation.messages.length - 1];
-					const seen = conversation.seen.find(r => r.user == userID);
+					const seen = conversation.seen.find(r => String(r.user) == userID);
 
-					if (conversation.draft.some(d => d.user == userID)) draftArr.push(conversation);
+					if (conversation.draft.some(d => String(d.user) == userID)) draftArr.push(conversation);
 					if (!seen || lastMessage.time > seen.time) unreadArr.push(conversation);
 				}
 

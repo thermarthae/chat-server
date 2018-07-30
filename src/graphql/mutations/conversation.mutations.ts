@@ -48,7 +48,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 		for (const user of userIdArr as string[]) {
 			seen.push({
 				user,
-				time: user != verifiedUser._id ? 0 : time
+				time: user != String(verifiedUser._id) ? 0 : time
 			});
 			draft.push({ user, content: '' });
 		}
