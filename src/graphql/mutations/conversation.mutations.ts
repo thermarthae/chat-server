@@ -10,12 +10,7 @@ import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
 import { pubsub } from '../';
 import { conversationType, messageType } from '../types/conversation.types';
-import {
-	checkIfUsersExist,
-	// checkIfIdBelongsToUser,
-	checkUserRightsToConv,
-	checkIfNoTokenOwnerErr
-} from '../../utils/access.utils';
+import { checkIfUsersExist, checkUserRightsToConv, checkIfNoTokenOwnerErr } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
 export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -38,14 +33,13 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	},
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, tokenOwner }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
-		await checkIfUsersExist(userIdArr, userIDLoader);
-		// checkIfIdBelongsToUser(userIdArr, verifiedUser);
-		// TODO: verifiedUser + userIdArr;
+		const parsedUserIds = [...new Set(userIdArr as string).add(String(verifiedUser._id))];
+		await checkIfUsersExist(parsedUserIds, userIDLoader);
 
 		const time = Date.now().toString();
 		const seen = [];
 		const draft = [];
-		for (const user of userIdArr as string[]) {
+		for (const user of parsedUserIds as string[]) {
 			seen.push({
 				user,
 				time: user != String(verifiedUser._id) ? 0 : time
@@ -60,7 +54,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 		});
 		const newConversation = new ConversationModel({
 			name,
-			users: userIdArr,
+			users: parsedUserIds,
 			messages: [newMessage],
 			seen,
 			draft
