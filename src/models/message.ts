@@ -1,4 +1,5 @@
 import mongoose = require('mongoose');
+import { IUser } from './user';
 
 const messageSchema = new mongoose.Schema(
 	{
@@ -13,7 +14,7 @@ const messageSchema = new mongoose.Schema(
 );
 
 export interface IMessage extends mongoose.Document {
-	author: string;
+	author: IUser;
 	time: string;
 	content: string;
 }

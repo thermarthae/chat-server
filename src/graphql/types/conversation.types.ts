@@ -80,12 +80,8 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 				const messagesFromDB = [];
 				for (const message of messages) {
 					let me = false;
-					if (String(message.author) == String(tokenOwner!._id)) me = true;
-					messagesFromDB.push({
-						...message,
-						me,
-						author: message.author,
-					});
+					if (String(message.author._id) == String(tokenOwner!._id)) me = true;
+					messagesFromDB.push(Object.assign(message, { me, author: message.author }));
 				}
 				return messagesFromDB;
 			}
@@ -95,7 +91,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: async ({ messages }: IConversation, { }, { tokenOwner }) => {
 				const lastMessage = messages[messages.length - 1];
 				let me = false;
-				if (String(lastMessage.author) == String(tokenOwner!._id)) me = true;
+				if (String(lastMessage.author._id) == String(tokenOwner!._id)) me = true;
 				return Object.assign(lastMessage, { me, author: lastMessage.author });
 			}
 		}
