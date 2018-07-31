@@ -43,6 +43,10 @@ export const convIDFn = async (ids: Array<{}>) => {
 };
 export const convUsersFn = async (ids: Array<{}>) => {
 	const result = await ConversationModel.find({ users: { $all: ids } })
+		.populate([
+			'users',
+			{ path: 'messages', populate: { path: 'author' } }
+		])
 		.lean()
 		.cache(10)
 		.catch(err => {
