@@ -32,6 +32,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 		}
 	},
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, tokenOwner }) => {
+		if (!message) throw new Error('Empty message');
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		const parsedUserIds = [...new Set(userIdArr as string).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
@@ -80,6 +81,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 		}
 	},
 	resolve: async ({ }, { conversationId, message }, { tokenOwner, convIDLoader }) => {
+		if (!message) throw new Error('Empty message');
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
 		const time = Date.now().toString();
