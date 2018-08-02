@@ -6,7 +6,7 @@ import {
 	GraphQLFieldConfig
 } from 'graphql';
 
-import { userType, userInConversationType, userTokenType } from '../types/user.types';
+import { userType, userTokenType } from '../types/user.types';
 import UserModel from '../../models/user';
 import { IRootValue, IContext } from '../../';
 import { makeNewTokens, setTokenCookies } from '../../utils/token.utils';
@@ -36,9 +36,9 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 };
 
 export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userInConversationType,
+	type: userType,
 	description: 'Get current user data',
-	resolve: async ({ }, { }, { tokenOwner }) => checkIfNoTokenOwnerErr(tokenOwner)
+	resolve: ({ }, { }, { tokenOwner }) => checkIfNoTokenOwnerErr(tokenOwner)
 };
 
 export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {

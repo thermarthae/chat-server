@@ -6,6 +6,7 @@ import {
 	GraphQLID,
 	GraphQLList,
 	GraphQLBoolean,
+	GraphQLInt,
 } from 'graphql';
 import { IConversation } from '../../models/conversation';
 import { userType } from './user.types';
@@ -94,6 +95,27 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 				if (String(lastMessage.author._id) == String(tokenOwner!._id)) me = true;
 				return Object.assign(lastMessage, { me, author: lastMessage.author });
 			}
+		}
+	})
+} as GraphQLObjectTypeConfig<any, IContext>);
+
+export const userConversationsType = new GraphQLObjectType({
+	name: 'userConversations',
+	description: 'Data of conversation that user belongs to',
+	fields: () => ({
+		conversationArr: {
+			type: new GraphQLList(conversationType),
+			description: 'Conversation that user belongs to'
+		},
+		conversationCount: {
+			type: new GraphQLNonNull(GraphQLInt),
+			description: 'Count of all conversation that user belongs to'
+		},
+		draftCount: {
+			type: new GraphQLNonNull(GraphQLInt)
+		},
+		unreadCount: {
+			type: new GraphQLNonNull(GraphQLInt)
 		}
 	})
 } as GraphQLObjectTypeConfig<any, IContext>);
