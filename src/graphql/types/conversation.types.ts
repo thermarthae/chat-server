@@ -61,7 +61,7 @@ export const conversationType = new GraphQLObjectType({ //TODO Pagination
 			resolve: ({ seen, messages }: IConversation, { }, { tokenOwner }) => {
 				const seenByUser = seen.find(s => String(s.user) == String(tokenOwner!._id));
 				if (!seenByUser) return false;
-				const messageArr = messages.slice(0).reverse(); // duplicate arr then reverse
+				const messageArr = messages.slice().reverse(); // duplicate arr then reverse
 				const unreaded = messageArr.find(msg => msg.time > seenByUser.time);
 				if (unreaded) return false;
 				return true;
