@@ -92,15 +92,16 @@ export const setTokenCookies = (res: Response, tokens: ITokens) => {
 
 const tokenHeader = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.';
 
-export const parseToken = async (req: Request, res: Response) => {
+export const parseToken = async (req: Request | undefined, res: Response) => {
 	try {
+		if (!req || !req.cookies) return;
 		const accessCookie = req.cookies.access_token;
 		if (!accessCookie) throw new Error('No access cookie');
 
 		return await verifyToken(accessCookie, secretKeys.primary);
 	} catch (err) {
-		const refreshCookie = req.cookies.refresh_token;
-		const signCookie = req.cookies.sign_token;
+		const refreshCookie = req!.cookies.refresh_token;
+		const signCookie = req!.cookies.sign_token;
 		if (!refreshCookie || !signCookie) return;
 
 		const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
@@ -110,7 +111,7 @@ export const parseToken = async (req: Request, res: Response) => {
 	}
 };
 
-const verifyToken = async (tokenBody: string, secret: string) => {
+export const verifyToken = async (tokenBody: string, secret: string) => {
 	const decoded = jwt.decode(tokenHeader + tokenBody) as IUserToken;
 	if (decoded.exp! < new Date().getTime() / 1000) throw new Error('Token expired');
 

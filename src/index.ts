@@ -9,7 +9,7 @@ import http = require('http');
 import cachegoose = require('cachegoose');
 import DataLoader = require('dataloader');
 
-import { parseToken } from './utils/token.utils';
+import { parseToken, verifyToken } from './utils/token.utils';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn, convUsersFn } from './dataloaders';
 import { IUser } from './models/user';
@@ -51,28 +51,23 @@ app.use(morgan('dev'));
 const server = new ApolloServer({
 	schema,
 	tracing: true,
-	context: async ({ req, res }: any) => {
-		const tokenOwner = await parseToken(req!, res!);
-
-		return {
-			res,
-			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
-			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-			convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
-			tokenOwner,
-		} as IContext;
-	},
+	context: async ({ req, res }: any) =>  ({
+		res,
+		userIDLoader: new DataLoader(async ids => userIDFn(ids)),
+		convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+		convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
+		tokenOwner: await parseToken(req, res),
+	} as IContext),
 	subscriptions: {
-		onConnect: async ({ }, { }, context: any) => {// TODO Auth cookie
+		onConnect: async ({ }, { }, context: any) => {
 			try {
 				const cookies = context.request.headers.cookie;
-				if (!cookies) throw new Error('Missing auth token!');
+				if (!cookies) throw new Error('Missing auth cookie!');
 				const refreshCookie = cookies.match(RegExp('refresh_token=([^;]*)'))[0].split('=')[1];
 				const signCookie = cookies.match(RegExp('sign_token=([^;]*)'))[0].split('=')[1];
-				const parsedRefreshToken = refreshCookie + signCookie;
-
-				return { tokenOwner: parsedRefreshToken }; // TODO
-			} catch (err) { throw err; }
+				const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
+				return { tokenOwner };
+			} catch (err) { } // tslint:disable-line
 		}
 	}
 });

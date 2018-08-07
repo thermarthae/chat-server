@@ -5,6 +5,7 @@ import { withFilter } from 'graphql-subscriptions';
 import { IContext } from '../../';
 import { messageType } from '../types/conversation.types';
 
+import { checkIfNoTokenOwnerErr } from '../../utils/access.utils';
 export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {
 	type: messageType,
 	description: 'Sync messages',
@@ -16,13 +17,12 @@ export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {
 	},
 	subscribe: withFilter(
 		() => pubsub.asyncIterator('messageAdded'),
-		(payload, variables) => {
-			return payload.conversationId === variables.conversationId;
-		}
+		(payload, variables) => payload.conversationId === variables.conversationId
 	),
 	resolve: async (payload, { }, { tokenOwner }) => {
-		console.log('tokenOwner on conversation.subscription', tokenOwner);
-		if (payload.authorizedUsers.includes(tokenOwner!._id)) return payload.messageAdded;
+		const verifyToken = checkIfNoTokenOwnerErr(tokenOwner);
+		const condition = payload.authorizedUsers.find((id: string) => String(id) === String(verifyToken!._id));
+		if (condition) return payload.message;
 		throw new Error('No access');
 	}
 };
