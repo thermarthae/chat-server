@@ -5,6 +5,7 @@ import {
 	GraphQLString,
 	GraphQLList
 } from 'graphql';
+import mongoose = require('mongoose');
 
 import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
@@ -48,12 +49,15 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			draft.push({ user, content: '' });
 		}
 
+		const newConversationID = new mongoose.mongo.ObjectId();
 		const newMessage = new MessageModel({
 			author: verifiedUser._id,
+			conversation: newConversationID,
 			time,
 			content: message,
 		});
 		const newConversation = new ConversationModel({
+			_id: newConversationID,
 			name,
 			users: parsedUserIds,
 			messages: [newMessage],
@@ -87,6 +91,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 		const time = Date.now().toString();
 		const newMessage = new MessageModel({
 			author: verifiedUser._id,
+			conversation: conversationId,
 			time,
 			content: message,
 		});

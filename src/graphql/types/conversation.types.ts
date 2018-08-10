@@ -21,6 +21,9 @@ export const messageType = new GraphQLObjectType({
 		author: {
 			type: new GraphQLNonNull(userType)
 		},
+		conversation: {
+			type: new GraphQLNonNull(GraphQLString)
+		},
 		time: {
 			type: new GraphQLNonNull(GraphQLString)
 		},
