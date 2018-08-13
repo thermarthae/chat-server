@@ -1,4 +1,4 @@
-import { GraphQLFieldConfig, GraphQLNonNull, GraphQLID } from 'graphql';
+import { GraphQLFieldConfig } from 'graphql';
 import { pubsub } from '../';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -6,23 +6,16 @@ import { IContext } from '../../';
 import { messageType } from '../types/conversation.types';
 
 import { checkIfNoTokenOwnerErr } from '../../utils/access.utils';
-export const messageAdded: GraphQLFieldConfig<any, IContext, any> = {
+
+export const newMessageAdded: GraphQLFieldConfig<any, IContext, any> = {
 	type: messageType,
-	description: 'Sync messages',
-	args: {
-		conversationId: {
-			type: new GraphQLNonNull(GraphQLID),
-			description: 'Conversation Id'
-		},
-	},
+	description: 'Get new added message',
 	subscribe: withFilter(
-		() => pubsub.asyncIterator('messageAdded'),
-		(payload, variables) => payload.conversationId === variables.conversationId
+		() => pubsub.asyncIterator('newMessageAdded'),
+		({ authorizedUsers }, { }, { tokenOwner }: IContext) => {
+			const verifyToken = checkIfNoTokenOwnerErr(tokenOwner);
+			return !!authorizedUsers.find((id: string) => String(id) == String(verifyToken._id));
+		}
 	),
-	resolve: async (payload, { }, { tokenOwner }) => {
-		const verifyToken = checkIfNoTokenOwnerErr(tokenOwner);
-		const condition = payload.authorizedUsers.find((id: string) => String(id) === String(verifyToken!._id));
-		if (condition) return payload.message;
-		throw new Error('No access');
-	}
+	resolve: async payload => payload.message
 };

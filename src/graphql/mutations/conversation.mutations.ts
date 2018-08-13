@@ -121,7 +121,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 				}
 			}
 		);
-		pubsub.publish('messageAdded', { conversationId, authorizedUsers: users, message: parsedMessage });
+		pubsub.publish('newMessageAdded', { conversationId, authorizedUsers: users, message: parsedMessage });
 		return parsedMessage;
 	}
 };
