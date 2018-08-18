@@ -96,18 +96,21 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
 			content: message,
 		});
 		const { users } = await ConversationModel.findByIdAndUpdate(
-			conversationId, { $push: { messages: newMessage._id } }
-		).catch(err => { throw err; }) as IConversation;
+			conversationId,
+			{ $push: { messages: newMessage._id } }
+		) as IConversation;
 
 		await ConversationModel.update(
-			{ 'seen.user': verifiedUser._id }, { $set: { 'seen.$.time': time } }
-		).catch(err => { throw err; });
+			{ 'seen.user': verifiedUser._id },
+			{ $set: { 'seen.$.time': time } }
+		);
 
 		await ConversationModel.update(
-			{ 'draft.user': verifiedUser._id }, { $set: { 'draft.$.content': '' } }
-		).catch(err => { throw err; });
+			{ 'draft.user': verifiedUser._id },
+			{ $set: { 'draft.$.content': '' } }
+		);
 
-		await newMessage.save().catch(err => { throw err; });
+		await newMessage.save();
 
 		const parsedMessage = Object.assign(
 			newMessage.toObject(),
