@@ -11,7 +11,7 @@ import DataLoader = require('dataloader');
 
 import { parseToken, verifyToken } from './utils/token.utils';
 import schema from './graphql';
-import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
+import { IDataLoaders, userIDFn, convIDFn, convUsersFn } from './dataloaders';
 import { IUser } from './models/user';
 
 interface ISecretKeys {
@@ -51,10 +51,11 @@ app.use(morgan('dev'));
 const server = new ApolloServer({
 	schema,
 	tracing: true,
-	context: async ({ req, res }: any) => ({
+	context: async ({ req, res }: any) =>  ({
 		res,
 		userIDLoader: new DataLoader(async ids => userIDFn(ids)),
 		convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+		convUsersLoader: new DataLoader(async ids => convUsersFn(ids)),
 		tokenOwner: await parseToken(req, res),
 	} as IContext),
 	subscriptions: {
