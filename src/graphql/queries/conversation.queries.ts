@@ -2,12 +2,12 @@ import {
 	GraphQLID,
 	GraphQLNonNull,
 	GraphQLFieldConfig,
-	GraphQLEnumType
 } from 'graphql';
 
 import { IRootValue, IContext } from '../../';
-import { conversationType, userConversationsType } from '../types/conversation.types';
+import { conversationType, userConversationsCountType } from '../types/conversation.types';
 import { checkIfNoTokenOwnerErr, checkUserRightsToConv } from '../../utils/access.utils';
+import ConversationModel from '../../models/conversation';
 
 export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: conversationType,
@@ -24,43 +24,62 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userConversationsType,
-	description: 'Get current user conversations',
-	args: {
-		filter: {
-			defaultValue: 'all',
-			type: new GraphQLEnumType({
-				name: 'conversationFilter',
-				values: {
-					ALL: { value: 'all' },
-					UNREAD: { value: 'unread' },
-					DRAFT: { value: 'draft' },
-				}
-			}),
-		},
-	},
-	resolve: async ({ }, { filter }, { tokenOwner, convUsersLoader }) => {
+export const userConversationsCount: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: userConversationsCountType,
+	description: 'Count of current user conversations',
+	resolve: async ({ }, { }, { tokenOwner }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
-		const result = await convUsersLoader.load(verifiedUser._id);
-		const draftArr = [];
-		const unreadArr = [];
-
-		for (const conversation of result) {
-			const lastMessage = conversation.messages![conversation.messages!.length - 1];
-			const seen = conversation.seen.find(r => String(r.user) == String(verifiedUser._id));
-			const userDraft = conversation.draft.find(d => String(d.user) == String(verifiedUser._id));
-
-			if (userDraft && userDraft.content) draftArr.push(conversation);
-			if (!seen || lastMessage.time > seen.time) unreadArr.push(conversation);
-		}
-
-		const conversationArr = (filter === 'unread') ? unreadArr : ((filter === 'draft') ? draftArr : result);
-		return {
-			conversationArr,
-			conversationCount: result.length,
-			draftCount: draftArr.length,
-			unreadCount: unreadArr.length,
-		};
+		const result = await ConversationModel.aggregate(
+			[
+				{ $match: { users: verifiedUser._id } },
+				{
+					$project: {
+						_id: 0,
+						lastMessage: { $arrayElemAt: ['$messages', -1] },
+						draft: {
+							$filter: { input: '$draft', cond: { $eq: ['$$this.user', verifiedUser._id] } }
+						},
+						seen: {
+							$filter: { input: '$seen', cond: { $eq: ['$$this.user', verifiedUser._id] } }
+						}
+					}
+				},
+				{
+					$lookup: {
+						from: 'Message',
+						localField: 'lastMessage',
+						foreignField: '_id',
+						as: 'lastMessage'
+					}
+				},
+				{
+					$project: {
+						lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
+						draft: { $arrayElemAt: ['$draft', 0] },
+						seen: { $arrayElemAt: ['$seen', 0] },
+					}
+				},
+				{
+					$project: {
+						unread: {
+							$cond: { if: { $lt: ['$lastMessage.time', '$seen.time'] }, then: 1, else: 0 }
+						},
+						draft: {
+							$cond: { if: { $ne: ['$draft.content', ''] }, then: 1, else: 0 }
+						},
+					}
+				},
+				{
+					$group: {
+						_id: null,
+						conversationCount: { $sum: 1 },
+						draftCount: { $sum: '$draft' },
+						unreadCount: { $sum: '$unread' },
+					}
+				},
+			]
+		);
+		if (!result[0]) throw new Error('404 (Not Found)');
+		return result[0];
 	}
 };

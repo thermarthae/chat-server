@@ -129,17 +129,12 @@ export const conversationType = new GraphQLObjectType({
 	})
 } as GraphQLObjectTypeConfig<any, IContext>);
 
-export const userConversationsType = new GraphQLObjectType({
-	name: 'userConversations',
-	description: 'Data of conversation that user belongs to',
+export const userConversationsCountType = new GraphQLObjectType({
+	name: 'userConversationsCount',
+	description: 'Count of current user conversations',
 	fields: () => ({
-		conversationArr: {
-			type: new GraphQLList(conversationType),
-			description: 'Conversation that user belongs to'
-		},
 		conversationCount: {
-			type: new GraphQLNonNull(GraphQLInt),
-			description: 'Count of all conversation that user belongs to'
+			type: new GraphQLNonNull(GraphQLInt)
 		},
 		draftCount: {
 			type: new GraphQLNonNull(GraphQLInt)
