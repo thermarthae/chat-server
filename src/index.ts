@@ -68,7 +68,10 @@ const server = new ApolloServer({
 				return { tokenOwner };
 			} catch (err) { } // tslint:disable-line
 		}
-	}
+	},
+	playground: {
+		settings: { 'request.credentials': 'include' } as any
+	},
 });
 
 server.applyMiddleware({
