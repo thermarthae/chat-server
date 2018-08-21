@@ -25,12 +25,12 @@ const conversationSchema = new mongoose.Schema(
 
 export interface IConversation extends mongoose.Document {
 	name: string;
-	users: [IUser];
+	users?: [IUser];
 	draft: [{
 		user: string;
 		content: string;
 	}];
-	messages: [IMessage];
+	messages?: [IMessage];
 	seen: [{
 		user: string;
 		time: string;

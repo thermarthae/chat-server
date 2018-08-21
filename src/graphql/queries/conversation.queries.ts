@@ -18,7 +18,7 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Conversation ID'
 		}
 	},
-	resolve: async ({}, { id }, { tokenOwner, convIDLoader }) => {
+	resolve: async ({ }, { id }, { tokenOwner, convIDLoader }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		return await checkUserRightsToConv(id, verifiedUser, convIDLoader);
 	}
@@ -47,7 +47,7 @@ export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 		const unreadArr = [];
 
 		for (const conversation of result) {
-			const lastMessage = conversation.messages[conversation.messages.length - 1];
+			const lastMessage = conversation.messages![conversation.messages!.length - 1];
 			const seen = conversation.seen.find(r => String(r.user) == String(verifiedUser._id));
 			const userDraft = conversation.draft.find(d => String(d.user) == String(verifiedUser._id));
 

@@ -3,7 +3,7 @@ import { IUser } from '../models/user';
 
 export const checkUserRightsToConv = async (conversationId: string, verifiedUser: IUser, convIDLoader: TConvLoader) => {
 	const conversation = await convIDLoader.load(conversationId);
-	const userInConv = conversation.users.find(usr => String(usr._id) == String(verifiedUser._id));
+	const userInConv = conversation.users!.find(usr => String(usr._id) == String(verifiedUser._id));
 	if (!userInConv) throw new Error('Authorisation error');
 	return conversation;
 };
