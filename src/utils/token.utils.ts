@@ -104,7 +104,7 @@ export const parseToken = async (req: Request | undefined, res: Response) => {
 		const signCookie = req!.cookies.sign_token;
 		if (!refreshCookie || !signCookie) return;
 
-		const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
+		const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary).catch(err => err);
 		const newTokens = await makeNewTokens(tokenOwner);
 		setTokenCookies(res, newTokens);
 		return tokenOwner;
