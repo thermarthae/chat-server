@@ -1,3 +1,4 @@
+import mongoose = require('mongoose');
 import DataLoader = require('dataloader');
 
 import UserModel, { IUser } from './models/user';
@@ -24,13 +25,12 @@ export const userIDFn = async (ids: Array<{}>) => {
 	if (!result[0]) throw new Error('404 (Not Found)');
 	return result;
 };
+
 export const convIDFn = async (ids: Array<{}>) => {
-	const result = await ConversationModel.find({ _id: { $in: ids } })
-		.cache(10)
-		.catch(err => {
-			if (err.name === 'CastError') throw new Error('404 (Not Found)');
-			throw err;
-		}) as IConversation[];
+	const result = await ConversationModel.aggregate([
+		{ $match: { _id: { $in: ids.map(id => mongoose.Types.ObjectId(id as any)) } } },
+		{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } },
+	]).cache(10);
 
 	if (!result[0]) throw new Error('404 (Not Found)');
 	return result;

@@ -3,7 +3,7 @@ import { IUser } from '../models/user';
 
 export const checkUserRightsToConv = async (conversationId: string, verifiedUser: IUser, convIDLoader: TConvLoader) => {
 	const conversation = await convIDLoader.load(conversationId);
-	const userInConv = conversation.users!.find(usr => String(usr._id) == String(verifiedUser._id));
+	const userInConv = conversation.users!.find(usr => verifiedUser._id.equals(usr._id));
 	if (!userInConv) throw new Error('Authorisation error');
 	return conversation;
 };
@@ -18,6 +18,6 @@ export const checkIfNoTokenOwnerErr = (tokenOwner: IUser | undefined) => {
 };
 
 export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {
-	if (String(verifiedUser._id) == String(idToCheck)) return;
+	if (verifiedUser._id.equals(idToCheck)) return;
 	throw new Error('Permission error');
 };

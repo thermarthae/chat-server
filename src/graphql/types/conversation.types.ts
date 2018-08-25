@@ -8,8 +8,9 @@ import {
 	GraphQLBoolean,
 	GraphQLInt,
 } from 'graphql';
+import mongoose = require('mongoose');
 import { IConversation } from '../../models/conversation';
-import { IMessage } from '../../models/message';
+import MessageModel, { IMessage } from '../../models/message';
 import { userType } from './user.types';
 import { IContext } from '../../';
 
@@ -32,23 +33,9 @@ export const messageType = new GraphQLObjectType({
 			type: GraphQLString
 		},
 		me: {
-			type: new GraphQLNonNull(GraphQLBoolean)
+			type: new GraphQLNonNull(GraphQLBoolean),
+			resolve: ({ author }: IMessage, { }, { tokenOwner }) => tokenOwner!._id.equals(author._id) ? true : false
 		},
-	})
-});
-
-const messagesType = new GraphQLObjectType({
-	name: 'Messages',
-	fields: () => ({
-		cursor: {
-			type: new GraphQLNonNull(GraphQLID),
-			description: 'Message ID cursor',
-			resolve: (messages: [IMessage]) => messages[0]._id
-		},
-		data: {
-			type: new GraphQLNonNull(new GraphQLList(messageType)),
-			resolve: (messages: [IMessage]) => messages
-		}
 	})
 });
 
@@ -62,79 +49,75 @@ export const conversationType = new GraphQLObjectType({
 			type: GraphQLString,
 			resolve: ({ name, users }: IConversation, { }, { tokenOwner }) => {
 				if (name) return name;
-				const usersWithoutCurrent = users!.filter(user => String(user._id) != String(tokenOwner!._id));
+				const usersWithoutCurrent = users!.filter(user => !tokenOwner!._id.equals(user._id));
 				const usersName = usersWithoutCurrent.map(user => user.name);
 				return usersName.join(', ');
 			}
 		},
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userType)),
-			resolve: async (conversation: IConversation, { }, { tokenOwner }) => {
-				const { users } = await conversation.populate('users').execPopulate();
-				const usersWithoutCurrent = users!.filter(user => String(user._id) != String(tokenOwner!._id));
-				return usersWithoutCurrent;
-			}
+			resolve: ({ users }: IConversation, { }, { tokenOwner }) =>
+				users!.filter(user => !tokenOwner!._id.equals(user._id))
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: ({ seen, messages }: IConversation, { }, { tokenOwner }) => {
-				const seenByUser = seen.find(s => String(s.user) == String(tokenOwner!._id));
-				if (!seenByUser) return false;
-				const messageArr = messages!.slice().reverse(); // duplicate arr then reverse
-				const unreaded = messageArr.find(msg => msg.time > seenByUser.time);
-				if (unreaded) return false;
-				return true;
+				const userS = Array.isArray(seen) ? seen.find(s => tokenOwner!._id.equals(s.user)) : seen;
+				return userS && !messages!.find(msg => msg.time > userS.time) ? true : false;
 			}
 		},
 		draft: {
 			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ draft }: IConversation, { }, { tokenOwner }) => {
-				const userDraft = draft.find(draftObj => String(draftObj.user) == String(tokenOwner!._id));
-				if (!userDraft) return '';
-				return userDraft.content;
+				const userD = Array.isArray(draft) ? draft.find(d => tokenOwner!._id.equals(d.user)) : draft;
+				return !userD ? '' : userD.content;
 			}
 		},
 		messages: {
-			type: new GraphQLNonNull(messagesType),
+			type: new GraphQLNonNull(new GraphQLList(messageType)),
 			args: {
-				first: {
+				limit: {
 					type: new GraphQLNonNull(GraphQLInt),
-					description: 'Number of messages to fetch (limit)'
+					description: 'Number of messages to fetch'
 				},
-				cursor: {
-					type: GraphQLID,
-					description: 'Message ID cursor'
+				skip: {
+					type: new GraphQLNonNull(GraphQLInt),
+					description: 'Cursor'
 				},
 			},
-			resolve: async (conversation: IConversation, { first, cursor }, { tokenOwner }) => {
-				const { messages } = await conversation.populate({
-					path: 'messages',
-					options: {
-						sort: { _id: -1 },
-						limit: first,
-						match: { _id: { $lt: cursor || 'ffffffffffffffffffffffff' } }
-					},
-					populate: { path: 'author' }
-				}).execPopulate();
-				messages!.reverse();
-
-				const messagesFromDB = [];
-				for (const message of messages!) {
-					const me = String(message.author._id) == String(tokenOwner!._id) ? true : false;
-					messagesFromDB.push(Object.assign(message, { me, author: message.author }));
+			resolve: async ({ _id, messages, users }: IConversation, { skip, limit }) => {
+				if (!messages![0].time) {
+					messages = await MessageModel.aggregate([
+						{ $match: { conversation: mongoose.Types.ObjectId(_id as any) } },
+						{ $sort: { _id: -1 } },
+						{ $skip: skip },
+						{ $limit: limit },
+						{ $sort: { _id: 1 } }
+					]).cache(10) as any;
+					if (!messages![0]) throw new Error('404 (Not Found)');
 				}
-				return messagesFromDB;
+				else messages = messages!.reverse().splice(skip, limit).reverse();
+
+				messages!.forEach(msg =>
+					msg.author = users!.find(usr => String(usr._id) == String(msg.author._id || msg.author))!
+				);
+				return messages!;
 			}
 		}
 	})
 } as GraphQLObjectTypeConfig<any, IContext>);
 
-export const userConversationsCountType = new GraphQLObjectType({
-	name: 'userConversationsCount',
-	description: 'Count of current user conversations',
+export const userConversationsType = new GraphQLObjectType({
+	name: 'userConversations',
+	description: 'Data of conversation that user belongs to',
 	fields: () => ({
+		conversationArr: {
+			type: new GraphQLList(conversationType),
+			description: 'Conversation that user belongs to'
+		},
 		conversationCount: {
-			type: new GraphQLNonNull(GraphQLInt)
+			type: new GraphQLNonNull(GraphQLInt),
+			description: 'Count of all conversation that user belongs to'
 		},
 		draftCount: {
 			type: new GraphQLNonNull(GraphQLInt)

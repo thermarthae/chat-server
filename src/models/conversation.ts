@@ -23,18 +23,22 @@ const conversationSchema = new mongoose.Schema(
 	}
 );
 
+interface IDraft {
+	user: string;
+	content: string;
+}
+
+interface ISeen {
+	user: string;
+	time: string;
+}
+
 export interface IConversation extends mongoose.Document {
 	name: string;
-	users?: [IUser];
-	draft: [{
-		user: string;
-		content: string;
-	}];
-	messages?: [IMessage];
-	seen: [{
-		user: string;
-		time: string;
-	}];
+	users?: IUser[];
+	draft: IDraft | IDraft[];
+	messages?: IMessage[];
+	seen: ISeen | ISeen[];
 }
 
 const ConversationModel = mongoose.model<IConversation>('Conversation', conversationSchema);

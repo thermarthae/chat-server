@@ -5,7 +5,7 @@ import {
 } from 'graphql';
 
 import { IRootValue, IContext } from '../../';
-import { conversationType, userConversationsCountType } from '../types/conversation.types';
+import { conversationType, userConversationsType } from '../types/conversation.types';
 import { checkIfNoTokenOwnerErr, checkUserRightsToConv } from '../../utils/access.utils';
 import ConversationModel from '../../models/conversation';
 
@@ -24,61 +24,45 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const userConversationsCount: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userConversationsCountType,
-	description: 'Count of current user conversations',
+export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: userConversationsType,
+	description: 'Get current user conversations',
 	resolve: async ({ }, { }, { tokenOwner }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
-		const result = await ConversationModel.aggregate(
-			[
-				{ $match: { users: verifiedUser._id } },
-				{
-					$project: {
-						_id: 0,
-						lastMessage: { $arrayElemAt: ['$messages', -1] },
-						draft: {
+		const result = await ConversationModel.aggregate([
+			{ $match: { users: verifiedUser._id } },
+			{
+				$addFields: {
+					draft: {
+						$arrayElemAt: [{
 							$filter: { input: '$draft', cond: { $eq: ['$$this.user', verifiedUser._id] } }
-						},
-						seen: {
+						}, 0]
+					},
+					seen: {
+						$arrayElemAt: [{
 							$filter: { input: '$seen', cond: { $eq: ['$$this.user', verifiedUser._id] } }
+						}, 0]
+					}
+				}
+			},
+			{ $lookup: { from: 'Message', localField: 'messages', foreignField: '_id', as: 'messages' } },
+			{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } },
+			{
+				$group: {
+					_id: null,
+					conversationArr: { $push: '$$ROOT' },
+					conversationCount: { $sum: 1 },
+					draftCount: { $sum: { $cond: { if: { $ne: ['$draft.content', ''] }, then: 1, else: 0 } } },
+					unreadCount: {
+						$sum: {
+							$cond: {
+								if: { $gt: [{ $arrayElemAt: ['$messages.time', -1] }, '$seen.time'] }, then: 1, else: 0
+							}
 						}
-					}
+					},
 				},
-				{
-					$lookup: {
-						from: 'Message',
-						localField: 'lastMessage',
-						foreignField: '_id',
-						as: 'lastMessage'
-					}
-				},
-				{
-					$project: {
-						lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
-						draft: { $arrayElemAt: ['$draft', 0] },
-						seen: { $arrayElemAt: ['$seen', 0] },
-					}
-				},
-				{
-					$project: {
-						unread: {
-							$cond: { if: { $lt: ['$lastMessage.time', '$seen.time'] }, then: 1, else: 0 }
-						},
-						draft: {
-							$cond: { if: { $ne: ['$draft.content', ''] }, then: 1, else: 0 }
-						},
-					}
-				},
-				{
-					$group: {
-						_id: null,
-						conversationCount: { $sum: 1 },
-						draftCount: { $sum: '$draft' },
-						unreadCount: { $sum: '$unread' },
-					}
-				},
-			]
-		);
+			}
+		]).cache(10);
 		if (!result[0]) throw new Error('404 (Not Found)');
 		return result[0];
 	}

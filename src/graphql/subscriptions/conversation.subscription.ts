@@ -13,8 +13,8 @@ export const newMessageAdded: GraphQLFieldConfig<any, IContext, any> = {
 	subscribe: withFilter(
 		() => pubsub.asyncIterator('newMessageAdded'),
 		({ authorizedUsers }, { }, { tokenOwner }: IContext) => {
-			const verifyToken = checkIfNoTokenOwnerErr(tokenOwner);
-			return !!authorizedUsers.find((id: string) => String(id) == String(verifyToken._id));
+			const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+			return !!authorizedUsers.find((id: string) => verifiedUser._id.equals(id));
 		}
 	),
 	resolve: async payload => payload.message
