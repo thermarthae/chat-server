@@ -14,7 +14,11 @@ declare module 'cachegoose' {
 declare module 'mongoose' {
 	export function cache(time: number): void;
 
-	export interface DocumentQuery { // tslint:disable-line
+	export interface DocumentQuery {
+		cache(time: number, entryName?: string): this;
+	}
+
+	export interface Aggregate {
 		cache(time: number, entryName?: string): this;
 	}
 }
