@@ -81,8 +81,9 @@ export const conversationType = new GraphQLObjectType({
 					description: 'Number of messages to fetch'
 				},
 				skip: {
-					type: new GraphQLNonNull(GraphQLInt),
-					description: 'Cursor'
+					type: GraphQLInt,
+					description: 'Messages to skip (cursor)',
+					defaultValue: 0
 				},
 			},
 			resolve: async ({ _id, messages, users }: IConversation, { skip, limit }) => {
