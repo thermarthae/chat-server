@@ -74,7 +74,7 @@ export const conversationType = new GraphQLObjectType({
 			}
 		},
 		messages: {
-			type: new GraphQLNonNull(new GraphQLList(messageType)),
+			type: new GraphQLList(messageType),
 			args: {
 				limit: {
 					type: new GraphQLNonNull(GraphQLInt),
@@ -95,7 +95,7 @@ export const conversationType = new GraphQLObjectType({
 						{ $limit: limit },
 						{ $sort: { _id: 1 } }
 					]).cache(10) as any;
-					if (!messages![0]) throw new Error('404 (Not Found)');
+					if (!messages![0]) return null;
 				}
 				else messages = messages!.reverse().splice(skip, limit).reverse();
 
