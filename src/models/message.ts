@@ -16,6 +16,7 @@ const messageSchema = new mongoose.Schema(
 
 export interface IMessage extends mongoose.Document {
 	author: IUser;
+	conversation: string;
 	time: string;
 	content: string;
 }
