@@ -15,7 +15,7 @@
 		"cookie-parser": "^1.4.3",
 		"dataloader": "^1.4.0",
 		"express": "^4.16.3",
-		"graphql": "^0.13.1",
+		"graphql": "^14.0.0",
 		"graphql-subscriptions": "^0.5.8",
 		"jsonwebtoken": "^8.3.0",
 		"mongoose": "^5.2.12",

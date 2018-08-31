@@ -8,6 +8,7 @@ import {
 	GraphQLBoolean,
 	GraphQLInt,
 } from 'graphql';
+import { IUser } from '../../models/user';
 import { IContext } from '../../';
 
 export interface IUserToken {
@@ -20,7 +21,8 @@ export const userType = new GraphQLObjectType({
 	name: 'User',
 	fields: () => ({
 		_id: {
-			type: new GraphQLNonNull(GraphQLID)
+			type: new GraphQLNonNull(GraphQLID),
+			resolve: ({ _id }) => String(_id)
 		},
 		name: {
 			type: new GraphQLNonNull(GraphQLString)
@@ -35,7 +37,7 @@ export const userType = new GraphQLObjectType({
 			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 	})
-} as GraphQLObjectTypeConfig<any, IContext>);
+} as GraphQLObjectTypeConfig<IUser, IContext>);
 
 export const userTokenType = new GraphQLObjectType({
 	name: 'UserToken',

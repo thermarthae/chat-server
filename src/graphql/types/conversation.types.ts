@@ -18,13 +18,15 @@ export const messageType = new GraphQLObjectType({
 	name: 'Message',
 	fields: () => ({
 		_id: {
-			type: new GraphQLNonNull(GraphQLID)
+			type: new GraphQLNonNull(GraphQLID),
+			resolve: ({ _id }) => String(_id)
 		},
 		author: {
 			type: new GraphQLNonNull(userType)
 		},
 		conversation: {
-			type: new GraphQLNonNull(GraphQLString)
+			type: new GraphQLNonNull(GraphQLString),
+			resolve: ({ conversation }) => String(conversation)
 		},
 		time: {
 			type: new GraphQLNonNull(GraphQLString)
@@ -34,20 +36,21 @@ export const messageType = new GraphQLObjectType({
 		},
 		me: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ author }: IMessage, { }, { tokenOwner }) => tokenOwner!._id.equals(author._id) ? true : false
+			resolve: ({ author }, { }, { tokenOwner }) => tokenOwner!._id.equals(author._id) ? true : false
 		},
 	})
-});
+} as GraphQLObjectTypeConfig<IMessage, IContext>);
 
 export const conversationType = new GraphQLObjectType({
 	name: 'Conversation',
 	fields: () => ({
 		_id: {
-			type: new GraphQLNonNull(GraphQLID)
+			type: new GraphQLNonNull(GraphQLID),
+			resolve: ({ _id }) => String(_id)
 		},
 		name: {
 			type: GraphQLString,
-			resolve: ({ name, users }: IConversation, { }, { tokenOwner }) => {
+			resolve: ({ name, users }, { }, { tokenOwner }) => {
 				if (name) return name;
 				const usersWithoutCurrent = users!.filter(user => !tokenOwner!._id.equals(user._id));
 				const usersName = usersWithoutCurrent.map(user => user.name);
@@ -56,19 +59,19 @@ export const conversationType = new GraphQLObjectType({
 		},
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userType)),
-			resolve: ({ users }: IConversation, { }, { tokenOwner }) =>
+			resolve: ({ users }, { }, { tokenOwner }) =>
 				users!.filter(user => !tokenOwner!._id.equals(user._id))
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ seen, messages }: IConversation, { }, { tokenOwner }) => {
+			resolve: ({ seen, messages }, { }, { tokenOwner }) => {
 				const userS = Array.isArray(seen) ? seen.find(s => tokenOwner!._id.equals(s.user)) : seen;
 				return userS && !messages!.find(msg => msg.time > userS.time) ? true : false;
 			}
 		},
 		draft: {
 			type: new GraphQLNonNull(GraphQLString),
-			resolve: ({ draft }: IConversation, { }, { tokenOwner }) => {
+			resolve: ({ draft }, { }, { tokenOwner }) => {
 				const userD = Array.isArray(draft) ? draft.find(d => tokenOwner!._id.equals(d.user)) : draft;
 				return !userD ? '' : userD.content;
 			}
@@ -86,7 +89,7 @@ export const conversationType = new GraphQLObjectType({
 					defaultValue: 0
 				},
 			},
-			resolve: async ({ _id, messages, users }: IConversation, { skip, limit }) => {
+			resolve: async ({ _id, messages, users }, { skip, limit }) => {
 				if (!messages![0].time) {
 					messages = await MessageModel.aggregate([
 						{ $match: { conversation: mongoose.Types.ObjectId(_id as any) } },
@@ -106,7 +109,7 @@ export const conversationType = new GraphQLObjectType({
 			}
 		}
 	})
-} as GraphQLObjectTypeConfig<any, IContext>);
+} as GraphQLObjectTypeConfig<IConversation, IContext>);
 
 export const userConversationsType = new GraphQLObjectType({
 	name: 'userConversations',
