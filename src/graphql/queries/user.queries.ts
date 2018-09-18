@@ -3,7 +3,8 @@ import {
 	GraphQLID,
 	GraphQLNonNull,
 	GraphQLString,
-	GraphQLFieldConfig
+	GraphQLFieldConfig,
+	GraphQLList
 } from 'graphql';
 
 import { userType, userTokenType } from '../types/user.types';
@@ -32,6 +33,17 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		checkUserRightsToId(id, verifiedUser);
 		return await userIDLoader.load(id);
+	}
+};
+
+export const findUser: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: new GraphQLList(userType),
+	description: 'Find user',
+	args: { query: { type: GraphQLString } },
+	resolve: async ({ }, { query }, { tokenOwner }) => {
+		checkIfNoTokenOwnerErr(tokenOwner);
+		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
+		return await UserModel.find({ name: { $regex: query, $options: 'i' } }).cache(10);
 	}
 };
 
