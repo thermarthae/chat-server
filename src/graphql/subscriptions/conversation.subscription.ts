@@ -3,7 +3,7 @@ import { pubsub } from '../';
 import { withFilter } from 'graphql-subscriptions';
 
 import { IContext } from '../../';
-import { messageType } from '../types/conversation.types';
+import { messageType } from '../types/message.types';
 
 import { checkIfNoTokenOwnerErr } from '../../utils/access.utils';
 
