@@ -10,7 +10,8 @@ import mongoose = require('mongoose');
 import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
 import { pubsub } from '../';
-import { conversationType, messageType } from '../types/conversation.types';
+import { conversationType } from '../types/conversation.types';
+import { messageType } from '../types/message.types';
 import { checkIfUsersExist, checkUserRightsToConv, checkIfNoTokenOwnerErr } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 

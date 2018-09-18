@@ -10,36 +10,10 @@ import {
 } from 'graphql';
 import mongoose = require('mongoose');
 import { IConversation } from '../../models/conversation';
-import MessageModel, { IMessage } from '../../models/message';
+import MessageModel from '../../models/message';
 import { userType } from './user.types';
+import { messageType } from './message.types';
 import { IContext } from '../../';
-
-export const messageType = new GraphQLObjectType({
-	name: 'Message',
-	fields: () => ({
-		_id: {
-			type: new GraphQLNonNull(GraphQLID),
-			resolve: ({ _id }) => String(_id)
-		},
-		author: {
-			type: new GraphQLNonNull(userType)
-		},
-		conversation: {
-			type: new GraphQLNonNull(GraphQLString),
-			resolve: ({ conversation }) => String(conversation)
-		},
-		time: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		content: {
-			type: GraphQLString
-		},
-		me: {
-			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ author }, { }, { tokenOwner }) => tokenOwner!._id.equals(author._id) ? true : false
-		},
-	})
-} as GraphQLObjectTypeConfig<IMessage, IContext>);
 
 export const conversationType = new GraphQLObjectType({
 	name: 'Conversation',
