@@ -1,7 +1,9 @@
 import {
 	GraphQLID,
+	GraphQLString,
 	GraphQLNonNull,
 	GraphQLFieldConfig,
+	GraphQLList
 } from 'graphql';
 
 import { IRootValue, IContext } from '../../';
@@ -21,6 +23,47 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: async ({ }, { id }, { tokenOwner, convIDLoader }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		return await checkUserRightsToConv(id, verifiedUser, convIDLoader);
+	}
+};
+
+export const findConversation: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: new GraphQLList(conversationType),
+	description: 'Find conversation',
+	args: { query: { type: GraphQLString } },
+	resolve: async ({ }, { query }, { tokenOwner }) => {
+		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
+		return await ConversationModel.aggregate([
+			{ $match: { users: verifiedUser._id } },
+			{
+				$addFields: {
+					messages: { $slice: ['$messages', -1] },
+					draft: {
+						$arrayElemAt: [{
+							$filter: { input: '$draft', cond: { $eq: ['$$this.user', verifiedUser._id] } }
+						}, 0]
+					},
+					seen: {
+						$arrayElemAt: [{
+							$filter: { input: '$seen', cond: { $eq: ['$$this.user', verifiedUser._id] } }
+						}, 0]
+					}
+				}
+			},
+			{ $lookup: { from: 'Message', localField: 'messages', foreignField: '_id', as: 'messages' } },
+			{ $unwind: '$messages' },
+			{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } },
+			{
+				$match: {
+					$or: [
+						{ name: { $regex: query, $options: 'i' } },
+						{ 'messages.content': { $regex: query, $options: 'i' } },
+						{ 'users.name': { $regex: query, $options: 'i' } }
+					]
+				}
+			},
+			{ $addFields: { messages: ['$messages'] } },
+		]).cache(10);
 	}
 };
 
