@@ -70,7 +70,10 @@ const server = new ApolloServer({
 		}
 	},
 	playground: {
-		settings: { 'request.credentials': 'include' } as any
+		settings: {
+			'request.credentials': 'include',
+			'editor.cursorShape': 'line'
+		} as any
 	},
 });
 
