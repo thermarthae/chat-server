@@ -88,7 +88,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = { //TODO: p
 	resolve: async ({ }, { conversationId, message }, { tokenOwner, convIDLoader }) => {
 		if (!message) throw new Error('Empty message');
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
-		await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
+		const conversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
 		const time = Date.now().toString();
 		const newMessage = new MessageModel({
 			author: verifiedUser._id,
@@ -113,7 +113,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = { //TODO: p
 
 		await newMessage.save();
 
-		const parsedMessage = Object.assign(
+		const parsedMessage = Object.assign({},
 			newMessage.toObject(),
 			{
 				me: true,
@@ -125,7 +125,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = { //TODO: p
 				}
 			}
 		);
-		pubsub.publish('newMessageAdded', { conversationId, authorizedUsers: users, message: parsedMessage });
+		pubsub.publish('newMessageAdded', { conversation, authorizedUsers: users, message: parsedMessage });
 		return parsedMessage;
 	}
 };
