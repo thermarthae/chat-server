@@ -106,7 +106,12 @@ export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 				},
 			}
 		]).cache(10);
-		if (!result[0]) throw new Error('404 (Not Found)');
+		if (!result[0]) return {
+			conversationArr: [],
+			conversationCount: 0,
+			draftCount: 0,
+			unreadCount: 0,
+		};
 		return result[0];
 	}
 };
