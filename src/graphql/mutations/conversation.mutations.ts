@@ -59,7 +59,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 		});
 		const newConversation = new ConversationModel({
 			_id: newConversationID,
-			name,
+			name, //TODO: not null
 			users: parsedUserIds,
 			messages: [newMessage],
 			seen,
@@ -72,7 +72,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = {
+export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = { //TODO: prevent empty msg
 	type: messageType,
 	description: 'Send message in given conversation',
 	args: {
