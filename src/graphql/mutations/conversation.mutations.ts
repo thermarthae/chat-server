@@ -66,8 +66,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			draft
 		});
 
-		await newMessage.save();
-		await newConversation.save();
+		await Promise.all([newMessage.save(), newConversation.save()]);
 		return await convIDLoader.load(newConversation._id);
 	}
 };
