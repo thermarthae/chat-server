@@ -51,12 +51,15 @@ app.use(morgan('dev'));
 const server = new ApolloServer({
 	schema,
 	tracing: true,
-	context: async ({ req, res }: any) => ({
-		res,
-		userIDLoader: new DataLoader(async ids => userIDFn(ids)),
-		convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-		tokenOwner: await parseToken(req, res),
-	} as IContext),
+	context: async ({ req, res, connection }: any) => {
+		if (connection) return connection.context;
+		return {
+			res,
+			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
+			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+			tokenOwner: await parseToken(req, res),
+		} as IContext;
+	},
 	subscriptions: {
 		onConnect: async ({ }, { }, context: any) => {
 			try {
