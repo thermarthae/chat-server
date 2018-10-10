@@ -71,7 +71,7 @@ export const conversationType = new GraphQLObjectType({
 						{ $skip: skip },
 						{ $limit: limit },
 						{ $sort: { _id: 1 } }
-					]).cache(10) as any;
+					]);
 					if (!messages![0]) return null;
 				}
 				else messages = messages!.reverse().splice(skip, limit).reverse();
