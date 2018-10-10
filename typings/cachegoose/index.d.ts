@@ -1,19 +1,21 @@
 declare module 'cachegoose' {
-	import mongoose = require('mongoose');
-	interface ISettings {
-		engine?: 'redis';
-		port: number;
-		host: string;
-	}
-
-	function cachegoose(mongoose: mongoose.Mongoose, settings: ISettings): void;
-
 	export = cachegoose;
+
+	import mongoose = require('mongoose');
+	function cachegoose(mongoose: mongoose.Mongoose, settings: cachegoose.ISettings): void;
+
+	namespace cachegoose {
+		export interface ISettings {
+			engine?: 'memory' | 'redis' | 'mongo' | 'file';
+			port: number;
+			host: string;
+		}
+
+		export function clearCache(entryName?: string): void;
+	}
 }
 
 declare module 'mongoose' {
-	export function cache(time: number): void;
-
 	export interface DocumentQuery {
 		cache(time: number, entryName?: string): this;
 	}
