@@ -15,7 +15,7 @@ export const createNewUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User data'
 		}
 	},
-	resolve: async ({}, { payload }) => {
+	resolve: async ({ }, { payload }) => {
 		const newUser = new UserModel({
 			...payload,
 			password: bcrypt.hashSync(payload.password, 10)
@@ -34,7 +34,7 @@ export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({}, { id }, { tokenOwner }) => {
+	resolve: async ({ }, { id }, { tokenOwner }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		checkUserRightsToId(id, verifiedUser);
 		return await UserModel.findByIdAndRemove(id);
@@ -54,7 +54,7 @@ export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'user updated data'
 		}
 	},
-	resolve: async ({}, { id, payload }, { tokenOwner }) => {
+	resolve: async ({ }, { id, payload }, { tokenOwner }) => {
 		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
 		checkUserRightsToId(id, verifiedUser);
 

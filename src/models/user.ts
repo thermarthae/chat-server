@@ -1,4 +1,5 @@
 import mongoose = require('mongoose');
+import cachegoose = require('cachegoose');
 
 const userSchema = new mongoose.Schema(
 	{
@@ -31,6 +32,14 @@ const userSchema = new mongoose.Schema(
 		timestamps: true
 	}
 );
+
+const clearUserCache = (usr: IUser) => {
+	cachegoose.clearCache(usr._id + '-token');
+	cachegoose.clearCache(usr.email + '-access');
+};
+
+userSchema.post('findOneAndUpdate', clearUserCache);
+userSchema.post('findOneAndRemove', clearUserCache);
 
 export interface IUser extends mongoose.Document {
 	name: string;

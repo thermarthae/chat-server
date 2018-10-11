@@ -115,7 +115,7 @@ export const verifyToken = async (tokenBody: string, secret: string) => {
 	const decoded = jwt.decode(tokenHeader + tokenBody) as IUserToken;
 	if (decoded.exp! < new Date().getTime() / 1000) throw new Error('Token expired');
 
-	const userFromDB = await UserModel.findOne({ _id: decoded.sub }) as IUser;
+	const userFromDB = await UserModel.findOne({ _id: decoded.sub }).cache(60, decoded.sub + '-token') as IUser;
 
 	return new Promise((resolve, reject) =>
 		jwt.verify(

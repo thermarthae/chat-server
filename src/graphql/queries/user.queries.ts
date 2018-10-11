@@ -43,7 +43,7 @@ export const findUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: async ({ }, { query }, { tokenOwner }) => {
 		checkIfNoTokenOwnerErr(tokenOwner);
 		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
-		return await UserModel.find({ name: { $regex: query, $options: 'i' } }).cache(10);
+		return await UserModel.find({ name: { $regex: query, $options: 'i' } }).cache(30);
 	}
 };
 
@@ -61,7 +61,7 @@ export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
 	resolve: async ({ }, { username, password }, { res }) => {
-		const userFromDB = await UserModel.findOne({ email: username }).cache(5);
+		const userFromDB = await UserModel.findOne({ email: username }).cache(30, username + '-access');
 		if (!userFromDB) return {
 			error: {
 				code: Errors.userNotFound,
