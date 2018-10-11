@@ -4,7 +4,10 @@ import { IUser } from './user';
 
 const conversationSchema = new mongoose.Schema(
 	{
-		name: String,
+		name: {
+			type: String,
+			trim: true
+		},
 		users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 		draft: [{
 			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -6,7 +6,10 @@ const messageSchema = new mongoose.Schema(
 		author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
 		time: String,
-		content: String,
+		content: {
+			type: String,
+			trim: true
+		}
 	},
 	{
 		collection: 'Message',
