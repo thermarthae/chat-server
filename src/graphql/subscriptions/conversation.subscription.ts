@@ -1,4 +1,4 @@
-import { GraphQLFieldConfig, GraphQLNonNull, GraphQLID } from 'graphql';
+import { GraphQLFieldConfig } from 'graphql';
 import { pubsub } from '../';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -11,17 +11,10 @@ import { checkIfNoTokenOwnerErr } from '../../utils/access.utils';
 export const newMessageAdded: GraphQLFieldConfig<any, IContext, any> = {
 	type: messageType,
 	description: 'Get new added message',
-	args: {
-		conversationId: {
-			type: new GraphQLNonNull(GraphQLID),
-			description: 'Conversation Id'
-		}
-	},
 	subscribe: withFilter(
 		() => pubsub.asyncIterator('newMessageAdded'),
-		({ message, authorizedUsers }, { conversationId }, { tokenOwner }: IContext) => {
+		({ authorizedUsers }, { }, { tokenOwner }: IContext) => {
 			const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
-			if (!message.conversation.equals(conversationId)) return false;
 			return !!authorizedUsers.find((id: string) => verifiedUser._id.equals(id));
 		}
 	),
