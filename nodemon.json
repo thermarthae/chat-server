@@ -1,7 +1,4 @@
 {
-	"env": {
-		"MONGO_ATLAS_URI": "mongodb://admin:admin1@node-rest-shard-00-00-9xprq.mongodb.net:27017,node-rest-shard-00-01-9xprq.mongodb.net:27017,node-rest-shard-00-02-9xprq.mongodb.net:27017/test?ssl=true&replicaSet=node-rest-shard-0&authSource=admin"
-	},
 	"ext": "ts,js",
 	"execMap": {
 		"ts": "ts-node --pretty"

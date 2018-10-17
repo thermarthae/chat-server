@@ -11,15 +11,11 @@ import http = require('http');
 import cachegoose = require('cachegoose');
 import DataLoader = require('dataloader');
 
+import { mongodbURI, secretKeys } from '../SECRETS';
 import { parseToken, verifyToken } from './utils/token.utils';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
 import { IUser } from './models/user';
-
-interface ISecretKeys {
-	primary: string;
-	secondary: string;
-}
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
@@ -33,19 +29,13 @@ cachegoose(mongoose, {
 	host: 'localhost'
 });
 
-mongoose.connect(process.env.MONGO_ATLAS_URI as string, { useNewUrlParser: true })
-	.then(() => console.log('Connected to DB. '));
+mongoose.connect(mongodbURI, { useNewUrlParser: true }).then(() => console.log('Connected to DB. '));
 mongoose.set('debug', true);
 
 const port = process.env.PORT || 3000;
 const adress = 'localhost';
 const url = `${adress}:${port}`;
 const app = express();
-
-export const secretKeys: ISecretKeys = {
-	primary: '461b2697-e354-4b45-9500-cb4b410ca993',
-	secondary: '1f8bbfcb-3505-42b7-9f57-e7563eff8f25'
-};
 
 app.use(cookieParser());
 app.use(morgan('dev'));

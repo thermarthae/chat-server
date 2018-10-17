@@ -1,6 +1,6 @@
 import jwt = require('jsonwebtoken');
 
-import { secretKeys } from '../';
+import { secretKeys } from '../../SECRETS';
 import UserModel, { IUser } from '../models/user';
 import { IUserToken } from '../graphql/types/user.types';
 
