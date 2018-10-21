@@ -3,6 +3,9 @@
 // TODO: add mark as seen
 
 import express = require('express');
+import session = require('express-session');
+import connectMongo = require('connect-mongo');
+const MongoStore = connectMongo(session);
 import cookieParser = require('cookie-parser');
 import { ApolloServer } from 'apollo-server-express';
 import morgan = require('morgan');
@@ -11,8 +14,8 @@ import http = require('http');
 import cachegoose = require('cachegoose');
 import DataLoader = require('dataloader');
 
+import initPassport from './passport';
 import { mongodbURI, secretKeys } from '../SECRETS';
-import { parseToken, verifyToken } from './utils/token.utils';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
 import { IUser } from './models/user';
@@ -36,9 +39,25 @@ const port = process.env.PORT || 3000;
 const adress = 'localhost';
 const url = `${adress}:${port}`;
 const app = express();
-
 app.use(cookieParser());
 app.use(morgan('dev'));
+app.use(session({
+	store: new MongoStore({
+		mongooseConnection: mongoose.connection,
+		touchAfter: 12 * 3600 // 12h
+	}),
+	name: 'chatid',
+	secret: 'SECRET', //TODO
+	resave: false,
+	saveUninitialized: false,
+	cookie: {
+		httpOnly: true,
+		secure: false, //TODO
+		sameSite: true,
+		maxAge: 1000 * 60 * 60 * 24 * 14 // 14 days
+	}
+}));
+initPassport(app);
 
 const server = new ApolloServer({
 	schema,
