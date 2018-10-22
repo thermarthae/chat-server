@@ -1,8 +1,16 @@
+// Type definitions for cachegoose
+// Project: https://github.com/boblauer/cachegoose
+// Definitions by: thermarthae <https://github.com/thermarthae>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 3.0.3
+
+/// <reference types="mongoose" />
+
 declare module 'cachegoose' {
 	export = cachegoose;
 
 	import mongoose = require('mongoose');
-	function cachegoose(mongoose: mongoose.Mongoose, settings: cachegoose.ISettings): void;
+	function cachegoose(mongoose: mongoose.Mongoose, settings?: cachegoose.ISettings | {}): void;
 
 	namespace cachegoose {
 		export interface ISettings {
@@ -16,11 +24,11 @@ declare module 'cachegoose' {
 }
 
 declare module 'mongoose' {
-	export interface DocumentQuery {
+	interface ICachegoose {
 		cache(time: number, entryName?: string): this;
+		getCacheKey(): string;
 	}
 
-	export interface Aggregate {
-		cache(time: number, entryName?: string): this;
-	}
+	export interface DocumentQuery<T, DocType extends Document> extends ICachegoose { }
+	export interface Aggregate<T> extends ICachegoose { }
 }
