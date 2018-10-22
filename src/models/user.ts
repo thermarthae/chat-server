@@ -1,7 +1,8 @@
 import mongoose = require('mongoose');
+import passportLocalMongoose = require('passport-local-mongoose');
 import cachegoose = require('cachegoose');
 
-const userSchema = new mongoose.Schema(
+const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 	{
 		name: {
 			type: String,
@@ -13,15 +14,6 @@ const userSchema = new mongoose.Schema(
 			required: true,
 			unique: true,
 			trim: true
-		},
-		password: {
-			type: String,
-			required: true
-		},
-		tokenSignature: {
-			type: String,
-			required: true,
-			default: Date.now().toString()
 		},
 		isAdmin: {
 			type: Boolean,
@@ -36,19 +28,24 @@ const userSchema = new mongoose.Schema(
 );
 
 const clearUserCache = (usr: IUser) => {
-	cachegoose.clearCache(usr._id + '-token');
-	cachegoose.clearCache(usr.email + '-access');
+	cachegoose.clearCache(usr._id + '-token'); //TODO
+	cachegoose.clearCache(usr.email + '-access'); //TODO
 };
 
 userSchema.post('findOneAndUpdate', clearUserCache);
 userSchema.post('findOneAndRemove', clearUserCache);
 
-export interface IUser extends mongoose.Document {
+userSchema.plugin(passportLocalMongoose, {
+	usernameField: 'email',
+});
+
+
+export interface IUser extends mongoose.PassportLocalDocument {
 	name: string;
 	email: string;
-	password: string;
-	tokenSignature: string;
 	isAdmin: boolean;
+	hash?: string;
+	salt?: string;
 }
 
 const UserModel = mongoose.model<IUser>('User', userSchema);
