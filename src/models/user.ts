@@ -27,6 +27,21 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 	}
 );
 
+export enum UserErrors {
+	UserExistsError,
+	MissingUsernameError,
+	IncorrectUsernameError,
+	MissingPasswordError,
+	IncorrectPasswordError,
+	AttemptTooSoonError,
+	TooManyAttemptsError,
+	NoSaltValueStoredError,
+	AlreadyLoggedIn,
+	AlreadyLoggedOut,
+	UnknownError,
+}
+
+
 const clearUserCache = (usr: IUser) => {
 	cachegoose.clearCache(usr._id + '-token'); //TODO
 	cachegoose.clearCache(usr.email + '-access'); //TODO
@@ -37,6 +52,16 @@ userSchema.post('findOneAndRemove', clearUserCache);
 
 userSchema.plugin(passportLocalMongoose, {
 	usernameField: 'email',
+	errorMessages: {
+		UserExistsError: 'User with the given username is already registered',
+		MissingUsernameError: 'No username was given',
+		IncorrectUsernameError: 'Incorrect username',
+		MissingPasswordError: 'No password was given',
+		IncorrectPasswordError: 'Incorrect password',
+		AttemptTooSoonError: 'Account is currently locked. Try again later',
+		TooManyAttemptsError: 'Account locked due to too many failed login attempts',
+		NoSaltValueStoredError: 'Authentication not possible. No salt value stored',
+	},
 });
 
 
