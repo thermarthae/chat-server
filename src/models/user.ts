@@ -43,8 +43,7 @@ export enum UserErrors {
 
 
 const clearUserCache = (usr: IUser) => {
-	cachegoose.clearCache(usr._id + '-token'); //TODO
-	cachegoose.clearCache(usr.email + '-access'); //TODO
+	cachegoose.clearCache(usr.email + '-passport');
 };
 
 userSchema.post('findOneAndUpdate', clearUserCache);
@@ -61,6 +60,10 @@ userSchema.plugin(passportLocalMongoose, {
 		AttemptTooSoonError: 'Account is currently locked. Try again later',
 		TooManyAttemptsError: 'Account locked due to too many failed login attempts',
 		NoSaltValueStoredError: 'Authentication not possible. No salt value stored',
+	},
+	findByUsername: (model, queryParameters) => {
+		const userEmail = queryParameters.$or[0].email as string;
+		return model.findOne(queryParameters).select('+salt +hash').cache(30, userEmail + '-passport');
 	},
 });
 
