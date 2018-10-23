@@ -2,6 +2,8 @@
 // TODO: split updateUser into smaller 'updates' + clear cache after
 // TODO: add mark as seen
 
+import dotenv = require('dotenv');
+dotenv.config();
 import express = require('express');
 import session = require('express-session');
 import connectMongo = require('connect-mongo');
@@ -15,7 +17,6 @@ import cachegoose = require('cachegoose');
 import DataLoader = require('dataloader');
 
 import initPassport from './passport';
-import { mongodbURI, secretKeys } from '../SECRETS';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
 import { IUser } from './models/user';
@@ -26,19 +27,19 @@ export interface IContext extends IDataLoaders {
 	req: express.Request;
 	tokenOwner: IUser | undefined;
 }
-console.clear();
+
+const isDev = process.env.NODE_ENV !== 'production';
+if (isDev) console.log('\x1b[31m%s\x1b[0m', 'DEVELOPMENT MODE');
+
 cachegoose(mongoose, {
-	// engine: 'redis',
-	port: 6379,
-	host: 'localhost'
+	engine: isDev ? 'memory' : 'redis',
+	port: process.env.REDIS_PORT,
+	host: process.env.REDIS_ADDRESS
 });
 
-mongoose.connect(mongodbURI, { useNewUrlParser: true }).then(() => console.log('Connected to DB. '));
-mongoose.set('debug', true);
+mongoose.connect(process.env.MONGODB_URI!, { useNewUrlParser: true }).then(() => console.log('Connected to DB. '));
+if (isDev) mongoose.set('debug', true);
 
-const port = process.env.PORT || 3000;
-const adress = 'localhost';
-const url = `${adress}:${port}`;
 const app = express();
 app.use(cookieParser());
 app.use(morgan('dev'));
@@ -48,12 +49,12 @@ app.use(session({
 		touchAfter: 12 * 3600 // 12h
 	}),
 	name: 'chatid',
-	secret: 'SECRET', //TODO
+	secret: process.env.SESSION_SECRET!,
 	resave: false,
 	saveUninitialized: false,
 	cookie: {
 		httpOnly: true,
-		secure: false, //TODO
+		secure: !isDev,
 		sameSite: true,
 		maxAge: 1000 * 60 * 60 * 24 * 14 // 14 days
 	}
@@ -61,6 +62,7 @@ app.use(session({
 initPassport(app);
 
 const server = new ApolloServer({
+	debug: isDev,
 	schema,
 	tracing: true,
 	context: async ({ req, connection }: any) => {
@@ -98,7 +100,7 @@ const server = new ApolloServer({
 server.applyMiddleware({
 	app,
 	cors: {
-		origin: `http://${adress}:8080`,
+		origin: process.env.CORS_ORGIN,
 		credentials: true
 	}
 });
@@ -106,7 +108,9 @@ server.applyMiddleware({
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
-httpServer.listen(port, () => {
+httpServer.listen(process.env.SERVER_PORT as any, process.env.SERVER_ADDRESS, () => {
+	const { address, port } = httpServer.address() as any;
+	const url = address + ':' + port;
 	console.log(
 		'\x1b[36m%s\x1b[0m',
 		`GraphQL Server is now running on http://${url + server.graphqlPath}`
