@@ -1,5 +1,4 @@
 import { GraphQLFieldConfig, GraphQLNonNull, GraphQLID } from 'graphql';
-import bcrypt = require('bcrypt');
 
 import UserModel from '../../models/user';
 import { userType, userInputType } from '../types/user.types';
@@ -16,12 +15,8 @@ export const createNewUser: GraphQLFieldConfig<IRootValue, IContext> = {
 		}
 	},
 	resolve: async ({ }, { payload }) => {
-		const newUser = new UserModel({
-			...payload,
-			password: bcrypt.hashSync(payload.password, 10)
-		});
-
-		return await newUser.save();
+		const newUser = new UserModel(payload);
+		return await UserModel.register(newUser, payload.password);
 	}
 };
 
