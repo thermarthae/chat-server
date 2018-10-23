@@ -1,4 +1,3 @@
-import bcrypt = require('bcrypt');
 import {
 	GraphQLID,
 	GraphQLNonNull,
@@ -6,19 +5,12 @@ import {
 	GraphQLFieldConfig,
 	GraphQLList
 } from 'graphql';
+import { ApolloError } from 'apollo-server-core';
 
-import { userType, userTokenType } from '../types/user.types';
-import UserModel from '../../models/user';
+import { userType } from '../types/user.types';
+import UserModel, { UserErrors } from '../../models/user';
 import { IRootValue, IContext } from '../../';
-import { makeNewTokens, setTokenCookies } from '../../utils/token.utils';
 import { checkIfNoTokenOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
-
-enum Errors {
-	userNotFound = 100,
-	usersNotFound = 101,
-	wrongPassword = 200,
-	unknown = 999,
-}
 
 export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
@@ -53,32 +45,46 @@ export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: ({ }, { }, { tokenOwner }) => checkIfNoTokenOwnerErr(tokenOwner)
 };
 
-export const getAccess: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userTokenType,
-	description: 'Get access and refresh token',
+export const login: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: userType,
+	description: 'Log in',
 	args: {
 		username: { type: new GraphQLNonNull(GraphQLString) },
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
-	resolve: async ({ }, { username, password }, { res }) => {
-		const userFromDB = await UserModel.findOne({ email: username }).cache(30, username + '-access');
-		if (!userFromDB) return {
-			error: {
-				code: Errors.userNotFound,
-				message: 'User not found'
-			}
-		};
+	resolve: async ({ }, { username, password }, { req }) => {
+		if (req.isAuthenticated()) throw new ApolloError(
+			'You are already logged in. Try to log out first',
+			UserErrors.AlreadyLoggedIn as any,
+			{ name: 'AlreadyLoggedIn' }
+		);
 
-		const validPassword = await bcrypt.compare(password, userFromDB.password);
-		if (!validPassword) return {
-			error: {
-				code: Errors.wrongPassword,
-				message: 'Wrong password'
-			}
-		};
+		const { user, error } = await UserModel.authenticate()(username, password);
+		if (!user) throw new ApolloError(
+			error!.message,
+			UserErrors[error!.name as any] || UserErrors.UnknownError as any,
+			{ name: error!.name }
+		);
 
-		const newTokens = await makeNewTokens(userFromDB);
-		setTokenCookies(res, newTokens);
-		return newTokens;
+		req.logIn(user, err => {
+			if (err) throw new ApolloError(err.message, UserErrors.UnknownError as any, { name: err.name });
+		});
+		return user;
+	}
+};
+
+export const logout: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: userType,
+	description: 'Log out',
+	resolve: async ({ }, { }, { req }) => {
+		if (req.isUnauthenticated()) throw new ApolloError(
+			'You are already logged out',
+			UserErrors.AlreadyLoggedOut as any,
+			{ name: 'AlreadyLoggedOut' }
+		);
+
+		const user = req.user;
+		req.logOut();
+		return user;
 	}
 };
