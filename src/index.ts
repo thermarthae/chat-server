@@ -19,10 +19,11 @@ import { mongodbURI, secretKeys } from '../SECRETS';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
 import { IUser } from './models/user';
+import { ConnectionContext } from 'subscriptions-transport-ws';
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
-	res: express.Response;
+	req: express.Request;
 	tokenOwner: IUser | undefined;
 }
 console.clear();
@@ -62,24 +63,27 @@ initPassport(app);
 const server = new ApolloServer({
 	schema,
 	tracing: true,
-	context: async ({ req, res, connection }: any) => {
+	context: async ({ req, connection }: any) => {
 		if (connection) return connection.context;
 		return {
-			res,
+			req,
 			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
 			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-			tokenOwner: await parseToken(req, res),
+			tokenOwner: req.user, //TODO: rename to loggedUser
 		} as IContext;
 	},
 	subscriptions: {
-		onConnect: async ({ }, { }, context: any) => {
+		onConnect: async ({ }, { }, context: ConnectionContext) => {
 			try {
+				//TODO: Get session cookie, find in db, then return user from db
+
 				const cookies = context.request.headers.cookie;
 				if (!cookies) throw new Error('Missing auth cookie!');
-				const refreshCookie = cookies.match(RegExp('refresh_token=([^;]*)'))[0].split('=')[1];
-				const signCookie = cookies.match(RegExp('sign_token=([^;]*)'))[0].split('=')[1];
-				const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
-				return { tokenOwner };
+
+				// const refreshCookie = cookies.match(RegExp('refresh_token=([^;]*)'))[0].split('=')[1];
+				// const signCookie = cookies.match(RegExp('sign_token=([^;]*)'))[0].split('=')[1];
+				// const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
+				// return { tokenOwner };
 			} catch (err) { } // tslint:disable-line
 		}
 	},
