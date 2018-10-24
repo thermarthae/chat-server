@@ -23,7 +23,14 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 	},
 	{
 		collection: 'User',
-		timestamps: true
+		timestamps: true,
+		toObject: {
+			transform: ({ }, user: IUser) => {
+				delete user.salt;
+				delete user.hash;
+				return user;
+			}
+		}
 	}
 );
 
