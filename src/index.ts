@@ -7,7 +7,7 @@ dotenv.config();
 import express = require('express');
 import session = require('express-session');
 import connectMongo = require('connect-mongo');
-const MongoStore = connectMongo(session);
+import cookie = require('cookie');
 import cookieParser = require('cookie-parser');
 import { ApolloServer } from 'apollo-server-express';
 import morgan = require('morgan');
@@ -15,12 +15,13 @@ import mongoose = require('mongoose');
 import http = require('http');
 import cachegoose = require('cachegoose');
 import DataLoader = require('dataloader');
+import { ConnectionContext } from 'subscriptions-transport-ws';
 
 import initPassport from './passport';
 import schema from './graphql';
 import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
+import { getUsernameFromSession, deserializeUser } from './utils/access.utils';
 import { IUser } from './models/user';
-import { ConnectionContext } from 'subscriptions-transport-ws';
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
@@ -40,14 +41,16 @@ cachegoose(mongoose, {
 mongoose.connect(process.env.MONGODB_URI!, { useNewUrlParser: true }).then(() => console.log('Connected to DB. '));
 if (isDev) mongoose.set('debug', true);
 
+const sessionStore = new (connectMongo(session))({
+	mongooseConnection: mongoose.connection,
+	touchAfter: 12 * 3600, // 12h
+});
+
 const app = express();
 app.use(cookieParser());
 app.use(morgan('dev'));
 app.use(session({
-	store: new MongoStore({
-		mongooseConnection: mongoose.connection,
-		touchAfter: 12 * 3600 // 12h
-	}),
+	store: sessionStore,
 	name: 'chatid',
 	secret: process.env.SESSION_SECRET!,
 	resave: false,
@@ -77,16 +80,16 @@ const server = new ApolloServer({
 	subscriptions: {
 		onConnect: async ({ }, { }, context: ConnectionContext) => {
 			try {
-				//TODO: Get session cookie, find in db, then return user from db
+				const { chatid } = cookie.parse(context.request.headers.cookie as string || '');
+				const sid = cookieParser.signedCookie(chatid, process.env.SESSION_SECRET!);
+				if (!sid) throw {};
 
-				const cookies = context.request.headers.cookie;
-				if (!cookies) throw new Error('Missing auth cookie!');
-
-				// const refreshCookie = cookies.match(RegExp('refresh_token=([^;]*)'))[0].split('=')[1];
-				// const signCookie = cookies.match(RegExp('sign_token=([^;]*)'))[0].split('=')[1];
-				// const tokenOwner = await verifyToken(refreshCookie + signCookie, secretKeys.secondary);
-				// return { tokenOwner };
-			} catch (err) { } // tslint:disable-line
+				const username = await getUsernameFromSession(sid, sessionStore);
+				const user = await deserializeUser(username);
+				return { tokenOwner: user, }; //TODO: rename to loggedUser
+			} catch (err) {
+				throw new Error('Session error or auth cookie is missing');
+			}
 		}
 	},
 	playground: {
