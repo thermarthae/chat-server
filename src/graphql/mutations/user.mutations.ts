@@ -35,28 +35,3 @@ export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 		return await UserModel.findByIdAndRemove(id);
 	}
 };
-
-export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: userType,
-	description: 'Update user data',
-	args: {
-		id: {
-			type: new GraphQLNonNull(GraphQLID),
-			description: 'User ID'
-		},
-		payload: {
-			type: new GraphQLNonNull(userInputType),
-			description: 'user updated data'
-		}
-	},
-	resolve: async ({ }, { id, payload }, { sessionOwner }) => {
-		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
-		checkUserRightsToId(id, verifiedUser);
-
-		return await UserModel.findByIdAndUpdate(
-			id,
-			{ $set: { ...payload } },
-			{ new: true }
-		);
-	}
-};

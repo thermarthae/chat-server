@@ -1,5 +1,4 @@
 // TODO: new apollo errors throw
-// TODO: split updateUser into smaller 'updates' + clear cache after
 // TODO: add mark as seen
 
 import dotenv = require('dotenv');
