@@ -10,7 +10,7 @@ import { ApolloError } from 'apollo-server-core';
 import { userType } from '../types/user.types';
 import UserModel, { UserErrors } from '../../models/user';
 import { IRootValue, IContext } from '../../';
-import { checkIfNoTokenOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
+import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 
 export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
@@ -21,8 +21,8 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({ }, { id }, { tokenOwner, userIDLoader }) => {
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { id }, { sessionOwner, userIDLoader }) => {
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		checkUserRightsToId(id, verifiedUser);
 		return await userIDLoader.load(id);
 	}
@@ -32,8 +32,8 @@ export const findUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: new GraphQLList(userType),
 	description: 'Find user',
 	args: { query: { type: GraphQLString } },
-	resolve: async ({ }, { query }, { tokenOwner }) => {
-		checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { query }, { sessionOwner }) => {
+		checkIfNoSessionOwnerErr(sessionOwner);
 		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
 		return await UserModel.find({ name: { $regex: query, $options: 'i' } }).cache(30);
 	}
@@ -42,7 +42,7 @@ export const findUser: GraphQLFieldConfig<IRootValue, IContext> = {
 export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Get current user data',
-	resolve: ({ }, { }, { tokenOwner }) => checkIfNoTokenOwnerErr(tokenOwner)
+	resolve: ({ }, { }, { sessionOwner }) => checkIfNoSessionOwnerErr(sessionOwner)
 };
 
 export const login: GraphQLFieldConfig<IRootValue, IContext> = {

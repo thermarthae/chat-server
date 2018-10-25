@@ -33,7 +33,7 @@ export const messageType = new GraphQLObjectType({
 		},
 		me: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ author }, { }, { tokenOwner }) => tokenOwner!._id.equals(author._id) ? true : false
+			resolve: ({ author }, { }, { sessionOwner }) => sessionOwner!._id.equals(author._id) ? true : false
 		},
 	})
 } as GraphQLObjectTypeConfig<IMessage, IContext>);

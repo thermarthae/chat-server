@@ -8,7 +8,7 @@ import {
 
 import { IRootValue, IContext } from '../../';
 import { conversationType, userConversationsType } from '../types/conversation.types';
-import { checkIfNoTokenOwnerErr, checkUserRightsToConv } from '../../utils/access.utils';
+import { checkIfNoSessionOwnerErr, checkUserRightsToConv } from '../../utils/access.utils';
 import ConversationModel from '../../models/conversation';
 
 export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -20,8 +20,8 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'Conversation ID'
 		}
 	},
-	resolve: async ({ }, { id }, { tokenOwner, convIDLoader }) => {
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { id }, { sessionOwner, convIDLoader }) => {
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		return await checkUserRightsToConv(id, verifiedUser, convIDLoader);
 	}
 };
@@ -30,8 +30,8 @@ export const findConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: new GraphQLList(conversationType),
 	description: 'Find conversation',
 	args: { query: { type: GraphQLString } },
-	resolve: async ({ }, { query }, { tokenOwner }) => {
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { query }, { sessionOwner }) => {
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
 		return await ConversationModel.aggregate([
 			{ $match: { users: verifiedUser._id } },
@@ -70,8 +70,8 @@ export const findConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userConversationsType,
 	description: 'Get current user conversations',
-	resolve: async ({ }, { }, { tokenOwner }) => {
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { }, { sessionOwner }) => {
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const result = await ConversationModel.aggregate([
 			{ $match: { users: verifiedUser._id } },
 			{

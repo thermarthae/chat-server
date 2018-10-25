@@ -13,9 +13,9 @@ export const checkIfUsersExist = async (userIdArr: string[], userIDLoader: TUser
 	return await userIDLoader.loadMany(userIdArr).catch(() => { throw new Error('Users not exist'); });
 };
 
-export const checkIfNoTokenOwnerErr = (tokenOwner: IUser | undefined) => {
-	if (!tokenOwner || !tokenOwner._id) throw new Error('Access token error'); //TODO rename
-	return tokenOwner;
+export const checkIfNoSessionOwnerErr = (sessionOwner: IUser | undefined) => {
+	if (!sessionOwner || !sessionOwner._id) throw new Error('Session error');
+	return sessionOwner;
 };
 
 export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {

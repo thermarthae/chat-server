@@ -24,29 +24,29 @@ export const conversationType = new GraphQLObjectType({
 		},
 		name: {
 			type: GraphQLString,
-			resolve: ({ name, users }, { }, { tokenOwner }) => {
+			resolve: ({ name, users }, { }, { sessionOwner }) => {
 				if (name) return name;
-				const usersWithoutCurrent = users!.filter(user => !tokenOwner!._id.equals(user._id));
+				const usersWithoutCurrent = users!.filter(user => !sessionOwner!._id.equals(user._id));
 				const usersName = usersWithoutCurrent.map(user => user.name);
 				return usersName.join(', ');
 			}
 		},
 		users: {
 			type: new GraphQLNonNull(new GraphQLList(userType)),
-			resolve: ({ users }, { }, { tokenOwner }) =>
-				users!.filter(user => !tokenOwner!._id.equals(user._id))
+			resolve: ({ users }, { }, { sessionOwner }) =>
+				users!.filter(user => !sessionOwner!._id.equals(user._id))
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ seen, messages }, { }, { tokenOwner }) => {
-				const userS = Array.isArray(seen) ? seen.find(s => tokenOwner!._id.equals(s.user)) : seen;
+			resolve: ({ seen, messages }, { }, { sessionOwner }) => {
+				const userS = Array.isArray(seen) ? seen.find(s => sessionOwner!._id.equals(s.user)) : seen;
 				return userS && !messages!.find(msg => msg.time > userS.time) ? true : false;
 			}
 		},
 		draft: {
 			type: new GraphQLNonNull(GraphQLString),
-			resolve: ({ draft }, { }, { tokenOwner }) => {
-				const userD = Array.isArray(draft) ? draft.find(d => tokenOwner!._id.equals(d.user)) : draft;
+			resolve: ({ draft }, { }, { sessionOwner }) => {
+				const userD = Array.isArray(draft) ? draft.find(d => sessionOwner!._id.equals(d.user)) : draft;
 				return !userD ? '' : userD.content;
 			}
 		},

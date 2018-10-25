@@ -2,7 +2,7 @@ import { GraphQLFieldConfig, GraphQLNonNull, GraphQLID } from 'graphql';
 
 import UserModel from '../../models/user';
 import { userType, userInputType } from '../types/user.types';
-import { checkIfNoTokenOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
+import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
 export const createNewUser: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -29,8 +29,8 @@ export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'User ID'
 		}
 	},
-	resolve: async ({ }, { id }, { tokenOwner }) => {
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { id }, { sessionOwner }) => {
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		checkUserRightsToId(id, verifiedUser);
 		return await UserModel.findByIdAndRemove(id);
 	}
@@ -49,8 +49,8 @@ export const updateUser: GraphQLFieldConfig<IRootValue, IContext> = {
 			description: 'user updated data'
 		}
 	},
-	resolve: async ({ }, { id, payload }, { tokenOwner }) => {
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+	resolve: async ({ }, { id, payload }, { sessionOwner }) => {
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		checkUserRightsToId(id, verifiedUser);
 
 		return await UserModel.findByIdAndUpdate(

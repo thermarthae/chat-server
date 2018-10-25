@@ -26,7 +26,7 @@ import { IUser } from './models/user';
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
 	req: express.Request;
-	tokenOwner: IUser | undefined;
+	sessionOwner: IUser | undefined;
 }
 
 const isDev = process.env.NODE_ENV !== 'production';
@@ -74,7 +74,7 @@ const server = new ApolloServer({
 			req,
 			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
 			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-			tokenOwner: req.user.toObject(), //TODO: rename to loggedUser
+			sessionOwner: req.user.toObject(),
 		} as IContext;
 	},
 	subscriptions: {
@@ -86,7 +86,7 @@ const server = new ApolloServer({
 
 				const username = await getUsernameFromSession(sid, sessionStore);
 				const user = await deserializeUser(username);
-				return { tokenOwner: user.toObject(), }; //TODO: rename to loggedUser
+				return { sessionOwner: user.toObject(), };
 			} catch (err) {
 				throw new Error('Session error or auth cookie is missing');
 			}

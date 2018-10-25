@@ -12,7 +12,7 @@ import MessageModel from '../../models/message';
 import { pubsub } from '../';
 import { conversationType } from '../types/conversation.types';
 import { messageType } from '../types/message.types';
-import { checkIfUsersExist, checkUserRightsToConv, checkIfNoTokenOwnerErr } from '../../utils/access.utils';
+import { checkIfUsersExist, checkUserRightsToConv, checkIfNoSessionOwnerErr } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
 export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
@@ -33,9 +33,9 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 			defaultValue: null
 		}
 	},
-	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, tokenOwner }) => {
+	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, sessionOwner }) => {
 		if (!message) throw new Error('Empty message');
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const parsedUserIds = [...new Set(userIdArr as string).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
 
@@ -84,9 +84,9 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = { //TODO: p
 			description: 'Your message'
 		}
 	},
-	resolve: async ({ }, { conversationId, message }, { tokenOwner, convIDLoader }) => {
+	resolve: async ({ }, { conversationId, message }, { sessionOwner, convIDLoader }) => {
 		if (!message) throw new Error('Empty message');
-		const verifiedUser = checkIfNoTokenOwnerErr(tokenOwner);
+		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const conversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
 		const time = Date.now().toString();
 		const newMessage = new MessageModel({
