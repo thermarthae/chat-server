@@ -12,7 +12,7 @@ import UserModel, { UserErrors } from '../../models/user';
 import { IRootValue, IContext } from '../../';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 
-export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
+export const getUser: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {
 	type: userType,
 	description: 'Get user by ID',
 	args: {
@@ -28,10 +28,10 @@ export const getUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const findUser: GraphQLFieldConfig<IRootValue, IContext> = {
+export const findUser: GraphQLFieldConfig<IRootValue, IContext, { query: string }> = {
 	type: new GraphQLList(userType),
 	description: 'Find user',
-	args: { query: { type: GraphQLString } },
+	args: { query: { type: new GraphQLNonNull(GraphQLString) } },
 	resolve: async ({ }, { query }, { sessionOwner }) => {
 		checkIfNoSessionOwnerErr(sessionOwner);
 		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
@@ -45,7 +45,11 @@ export const currentUser: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: ({ }, { }, { sessionOwner }) => checkIfNoSessionOwnerErr(sessionOwner)
 };
 
-export const login: GraphQLFieldConfig<IRootValue, IContext> = {
+interface ILoginArgs {
+	username: string;
+	password: string;
+}
+export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
 	type: userType,
 	description: 'Log in',
 	args: {

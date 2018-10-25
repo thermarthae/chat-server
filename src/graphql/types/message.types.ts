@@ -20,7 +20,6 @@ export const messageType = new GraphQLObjectType({
 		author: {
 			type: new GraphQLNonNull(userType)
 		},
-		// author: { type: userType },
 		conversation: {
 			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ conversation }) => String(conversation)

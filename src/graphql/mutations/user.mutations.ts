@@ -10,7 +10,12 @@ import { userType } from '../types/user.types';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
-export const register: GraphQLFieldConfig<IRootValue, IContext> = {
+interface IRegisterArgs {
+	name: string;
+	message: string;
+	password: string;
+}
+export const register: GraphQLFieldConfig<IRootValue, IContext, IRegisterArgs> = {
 	type: userType,
 	description: 'Register new user',
 	args: {
@@ -30,7 +35,7 @@ export const register: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const deleteUserAccount: GraphQLFieldConfig<IRootValue, IContext> = {
+export const deleteUserAccount: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {
 	type: userType,
 	description: 'Delete user account',
 	args: {

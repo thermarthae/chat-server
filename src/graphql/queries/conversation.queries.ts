@@ -11,7 +11,7 @@ import { conversationType, userConversationsType } from '../types/conversation.t
 import { checkIfNoSessionOwnerErr, checkUserRightsToConv } from '../../utils/access.utils';
 import ConversationModel from '../../models/conversation';
 
-export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
+export const getConversation: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {
 	type: conversationType,
 	description: 'Get conversation by ID',
 	args: {
@@ -26,10 +26,10 @@ export const getConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const findConversation: GraphQLFieldConfig<IRootValue, IContext> = {
+export const findConversation: GraphQLFieldConfig<IRootValue, IContext, { query: string }> = {
 	type: new GraphQLList(conversationType),
 	description: 'Find conversation',
-	args: { query: { type: GraphQLString } },
+	args: { query: { type: new GraphQLNonNull(GraphQLString) } },
 	resolve: async ({ }, { query }, { sessionOwner }) => {
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		if (query.length < 3) throw new Error('Query must be at least 3 characters long');

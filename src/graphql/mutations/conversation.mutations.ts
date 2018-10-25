@@ -15,7 +15,12 @@ import { messageType } from '../types/message.types';
 import { checkIfUsersExist, checkUserRightsToConv, checkIfNoSessionOwnerErr } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
-export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
+interface IInitConversationArgs {
+	userIdArr: string[];
+	message: string;
+	name: null | string;
+}
+export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitConversationArgs> = {
 	type: conversationType,
 	description: 'Send message to initialize conversation with given users',
 	args: {
@@ -36,13 +41,13 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, sessionOwner }) => {
 		if (!message) throw new Error('Empty message');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
-		const parsedUserIds = [...new Set(userIdArr as string).add(String(verifiedUser._id))];
+		const parsedUserIds = [...new Set(userIdArr).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
 
 		const time = Date.now().toString();
 		const seen = [];
 		const draft = [];
-		for (const user of parsedUserIds as string[]) {
+		for (const user of parsedUserIds) {
 			seen.push({
 				user,
 				time: verifiedUser._id.equals(user) ? 0 : time
@@ -71,7 +76,11 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const sendMessage: GraphQLFieldConfig<IRootValue, IContext> = { //TODO: prevent empty msg
+interface ISendMessageArgs {
+	conversationId: string;
+	message: string;
+}
+export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageArgs> = { //TODO: prevent empty msg
 	type: messageType,
 	description: 'Send message in given conversation',
 	args: {

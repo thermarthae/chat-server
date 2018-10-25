@@ -23,18 +23,18 @@ export default new GraphQLSchema({
 		name: 'Query',
 		fields: {
 			...queries
-		}
+		} as any
 	}),
 	mutation: new GraphQLObjectType({
 		name: 'Mutation',
 		fields: {
 			...mutations
-		}
+		} as any
 	}),
 	subscription: new GraphQLObjectType({
 		name: 'Subscription',
 		fields: {
 			...subscriptions
-		}
+		} as any
 	})
 });
