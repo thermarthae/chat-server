@@ -27,6 +27,9 @@ export interface IContext extends IDataLoaders {
 	req: express.Request;
 	sessionOwner: IUser | undefined;
 }
+export interface ISubContext {
+	sessionOwner: IUser | undefined;
+}
 
 const isDev = process.env.NODE_ENV !== 'production';
 if (isDev) console.log('\x1b[31m%s\x1b[0m', 'DEVELOPMENT MODE');
@@ -85,7 +88,7 @@ const server = new ApolloServer({
 
 				const username = await getUsernameFromSession(sid, sessionStore);
 				const user = await deserializeUser(username);
-				return { sessionOwner: user.toObject(), };
+				return { sessionOwner: user.toObject(), } as ISubContext;
 			} catch (err) {
 				throw new Error('Session error or auth cookie is missing');
 			}
