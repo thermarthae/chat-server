@@ -10,9 +10,9 @@ import { userType } from '../types/user.types';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
 
-export const createNewUser: GraphQLFieldConfig<IRootValue, IContext> = {
+export const register: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
-	description: 'Add new user',
+	description: 'Register new user',
 	args: {
 		name: {
 			type: new GraphQLNonNull(GraphQLString)
