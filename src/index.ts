@@ -74,7 +74,7 @@ const server = new ApolloServer({
 			req,
 			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
 			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-			tokenOwner: req.user, //TODO: rename to loggedUser
+			tokenOwner: req.user.toObject(), //TODO: rename to loggedUser
 		} as IContext;
 	},
 	subscriptions: {
@@ -86,7 +86,7 @@ const server = new ApolloServer({
 
 				const username = await getUsernameFromSession(sid, sessionStore);
 				const user = await deserializeUser(username);
-				return { tokenOwner: user, }; //TODO: rename to loggedUser
+				return { tokenOwner: user.toObject(), }; //TODO: rename to loggedUser
 			} catch (err) {
 				throw new Error('Session error or auth cookie is missing');
 			}
