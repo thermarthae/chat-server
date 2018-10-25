@@ -30,9 +30,9 @@ export const register: GraphQLFieldConfig<IRootValue, IContext> = {
 	}
 };
 
-export const removeUser: GraphQLFieldConfig<IRootValue, IContext> = {
+export const deleteUserAccount: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
-	description: 'Remove existing user',
+	description: 'Delete user account',
 	args: {
 		id: {
 			type: new GraphQLNonNull(GraphQLID),
