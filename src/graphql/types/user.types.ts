@@ -1,7 +1,6 @@
 import {
 	GraphQLObjectType,
 	GraphQLObjectTypeConfig,
-	GraphQLInputObjectType,
 	GraphQLNonNull,
 	GraphQLString,
 	GraphQLID,
@@ -28,15 +27,3 @@ export const userType = new GraphQLObjectType({
 		},
 	})
 } as GraphQLObjectTypeConfig<IUser, IContext>);
-
-export const userInputType = new GraphQLInputObjectType({
-	name: 'UserInput',
-	fields: () => ({
-		name: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-		email: {
-			type: new GraphQLNonNull(GraphQLString)
-		},
-	})
-});
