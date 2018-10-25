@@ -74,13 +74,24 @@ userSchema.plugin(passportLocalMongoose, {
 	},
 });
 
-
 export interface IUser extends mongoose.PassportLocalDocument {
 	name: string;
 	email: string;
 	isAdmin: boolean;
 	hash?: string;
 	salt?: string;
+}
+
+declare global {
+	namespace Express {
+		interface Request { // tslint:disable-line:interface-name
+			user?: IUser;
+			login(user: IUser, done: (err: any) => void): void;
+			login(user: IUser, options: any, done: (err: any) => void): void;
+			logIn(user: IUser, done: (err: any) => void): void;
+			logIn(user: IUser, options: any, done: (err: any) => void): void;
+		}
+	}
 }
 
 const UserModel = mongoose.model<IUser>('User', userSchema);
