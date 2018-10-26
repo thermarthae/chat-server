@@ -23,6 +23,8 @@ export interface IMessage extends mongoose.Document {
 	conversation: string;
 	time: string;
 	content: string;
+	updatedAt: Date;
+	createdAt: Date;
 }
 
 const MessageModel = mongoose.model<IMessage>('Message', messageSchema);

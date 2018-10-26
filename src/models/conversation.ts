@@ -42,6 +42,8 @@ export interface IConversation extends mongoose.Document {
 	draft: IDraft | IDraft[];
 	messages?: IMessage[];
 	seen: ISeen | ISeen[];
+	updatedAt: Date;
+	createdAt: Date;
 }
 
 const ConversationModel = mongoose.model<IConversation>('Conversation', conversationSchema);

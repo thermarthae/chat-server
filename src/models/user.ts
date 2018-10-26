@@ -80,6 +80,8 @@ export interface IUser extends mongoose.PassportLocalDocument {
 	isAdmin: boolean;
 	hash?: string;
 	salt?: string;
+	updatedAt: Date;
+	createdAt: Date;
 }
 
 declare global {
