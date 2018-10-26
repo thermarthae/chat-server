@@ -6,6 +6,7 @@ import {
 	GraphQLID,
 	GraphQLBoolean,
 } from 'graphql';
+import { GraphQLDateTime } from 'graphql-iso-date';
 import { IMessage } from '../../models/message';
 import { userType } from './user.types';
 import { IContext } from '../..';
@@ -25,7 +26,8 @@ export const messageType = new GraphQLObjectType({
 			resolve: ({ conversation }) => String(conversation)
 		},
 		time: {
-			type: new GraphQLNonNull(GraphQLString)
+			type: new GraphQLNonNull(GraphQLDateTime),
+			description: 'String in simplified extended ISO format (ISO 8601)'
 		},
 		content: {
 			type: GraphQLString

@@ -5,7 +5,7 @@ const messageSchema = new mongoose.Schema(
 	{
 		author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 		conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
-		time: String,
+		time: Date,
 		content: {
 			type: String,
 			required: true,
@@ -21,7 +21,7 @@ const messageSchema = new mongoose.Schema(
 export interface IMessage extends mongoose.Document {
 	author: IUser;
 	conversation: string;
-	time: string;
+	time: Date;
 	content: string;
 	updatedAt: Date;
 	createdAt: Date;

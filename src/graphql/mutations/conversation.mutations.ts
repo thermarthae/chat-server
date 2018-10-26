@@ -44,13 +44,13 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		const parsedUserIds = [...new Set(userIdArr).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
 
-		const time = Date.now().toString();
+		const time = new Date();
 		const seen = [];
 		const draft = [];
 		for (const user of parsedUserIds) {
 			seen.push({
 				user,
-				time: verifiedUser._id.equals(user) ? time : 0
+				time: verifiedUser._id.equals(user) ? time : new Date(0)
 			});
 			draft.push({ user, content: '' });
 		}
@@ -97,7 +97,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 		if (!message) throw new Error('Empty message');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const conversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
-		const time = Date.now().toString();
+		const time = new Date();
 		const newMessage = new MessageModel({
 			author: verifiedUser._id,
 			conversation: conversationId,

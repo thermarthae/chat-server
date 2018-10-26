@@ -11,13 +11,13 @@ const conversationSchema = new mongoose.Schema(
 		users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 		draft: [{
 			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-			time: String,
+			time: Date,
 			content: String,
 		}],
 		messages: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Message' }],
 		seen: [{
 			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-			time: String
+			time: Date
 		}]
 	},
 	{
@@ -33,7 +33,7 @@ interface IDraft {
 
 interface ISeen {
 	user: string;
-	time: string;
+	time: Date;
 }
 
 export interface IConversation extends mongoose.Document {
