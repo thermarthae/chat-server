@@ -14,7 +14,7 @@ import mongoose = require('mongoose');
 import http = require('http');
 import cachegoose = require('cachegoose');
 import DataLoader = require('dataloader');
-import { ConnectionContext } from 'subscriptions-transport-ws';
+import { ConnectionContext, ExecutionParams } from 'subscriptions-transport-ws';
 
 import initPassport from './passport';
 import schema from './graphql';
@@ -66,11 +66,16 @@ app.use(session({
 }));
 initPassport(app);
 
+interface IApolloContext {
+	res: express.Response;
+	req: express.Request;
+	connection?: ExecutionParams;
+}
 const server = new ApolloServer({
 	debug: isDev,
 	schema,
 	tracing: true,
-	context: async ({ req, connection }: any) => {
+	context: async ({ req, connection }: IApolloContext) => {
 		if (connection) return connection.context;
 		return {
 			req,
