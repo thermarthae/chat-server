@@ -50,7 +50,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		for (const user of parsedUserIds) {
 			seen.push({
 				user,
-				time: verifiedUser._id.equals(user) ? 0 : time
+				time: verifiedUser._id.equals(user) ? time : 0
 			});
 			draft.push({ user, content: '' });
 		}
