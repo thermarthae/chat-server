@@ -81,7 +81,7 @@ const server = new ApolloServer({
 			req,
 			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
 			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
-			sessionOwner: req.user.toObject(),
+			sessionOwner: req.user ? req.user.toObject() : undefined,
 		} as IContext;
 	},
 	subscriptions: {
