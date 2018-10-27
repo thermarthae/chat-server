@@ -3,9 +3,18 @@ import UserModel, { IUser, UserErrors } from '../models/user';
 import { ForbiddenError, ApolloError } from 'apollo-server-core';
 import { Store } from 'express-session';
 
+export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {
+	if (
+		verifiedUser.role === 'ADMIN'
+		|| verifiedUser._id.equals(idToCheck)
+	) return;
+	throw new ForbiddenError('Access denied');
+};
+
 export const checkUserRightsToConv = async (conversationId: string, verifiedUser: IUser, convIDLoader: TConvLoader) => {
 	try {
 		const conversation = await convIDLoader.load(conversationId);
+		if (verifiedUser.role === 'ADMIN') return conversation;
 		const userInConv = conversation.users!.find(usr => verifiedUser._id.equals(usr._id));
 		if (!userInConv) throw {};
 		return conversation;
@@ -29,11 +38,6 @@ export const checkIfNoSessionOwnerErr = (sessionOwner: IUser | undefined) => {
 		'AlreadyLoggedOut',
 	);
 	return sessionOwner;
-};
-
-export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {
-	if (verifiedUser._id.equals(idToCheck)) return;
-	throw new ForbiddenError('Access denied');
 };
 
 /////////////////////////////////////////////////
