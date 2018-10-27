@@ -15,6 +15,12 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 			unique: true,
 			trim: true
 		},
+		role: {
+			type: String,
+			enum: ['USER', 'ADMIN'],
+			default: 'USER',
+			required: true,
+		}
 	},
 	{
 		collection: 'User',
@@ -65,6 +71,7 @@ userSchema.plugin(passportLocalMongoose, {
 export interface IUser extends mongoose.PassportLocalDocument {
 	name: string;
 	email: string;
+	role: 'USER' | 'ADMIN';
 	hash?: string;
 	salt?: string;
 	updatedAt: Date;
