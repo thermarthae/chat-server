@@ -15,11 +15,6 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 			unique: true,
 			trim: true
 		},
-		isAdmin: {
-			type: Boolean,
-			required: true,
-			default: false
-		}
 	},
 	{
 		collection: 'User',
@@ -70,7 +65,6 @@ userSchema.plugin(passportLocalMongoose, {
 export interface IUser extends mongoose.PassportLocalDocument {
 	name: string;
 	email: string;
-	isAdmin: boolean;
 	hash?: string;
 	salt?: string;
 	updatedAt: Date;

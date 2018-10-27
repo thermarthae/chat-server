@@ -4,7 +4,6 @@ import {
 	GraphQLNonNull,
 	GraphQLString,
 	GraphQLID,
-	GraphQLBoolean,
 } from 'graphql';
 import { IUser } from '../../models/user';
 import { IContext } from '../../';
@@ -21,9 +20,6 @@ export const userType = new GraphQLObjectType({
 		},
 		email: {
 			type: new GraphQLNonNull(GraphQLString)
-		},
-		isAdmin: {
-			type: new GraphQLNonNull(GraphQLBoolean)
 		},
 	})
 } as GraphQLObjectTypeConfig<IUser, IContext>);

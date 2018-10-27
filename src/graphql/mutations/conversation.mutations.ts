@@ -133,7 +133,6 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 					_id: verifiedUser._id,
 					name: verifiedUser.name,
 					email: verifiedUser.email,
-					isAdmin: verifiedUser.isAdmin
 				}
 			}
 		);
