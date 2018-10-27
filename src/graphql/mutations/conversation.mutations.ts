@@ -35,8 +35,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		},
 		name: {
 			type: GraphQLString,
-			description: 'Name of the conversation',
-			defaultValue: null
+			description: 'Name of the conversation'
 		}
 	},
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, sessionOwner }) => {
@@ -65,7 +64,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		});
 		const newConversation = new ConversationModel({
 			_id: newConversationID,
-			name, //TODO: not null
+			name,
 			users: parsedUserIds,
 			messages: [newMessage],
 			seen,
