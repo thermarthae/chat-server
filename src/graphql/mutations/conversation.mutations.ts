@@ -68,7 +68,8 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 			users: parsedUserIds,
 			messages: [newMessage],
 			seen,
-			draft
+			draft,
+			significantlyUpdatedAt: time,
 		});
 
 		await Promise.all([newMessage.save(), newConversation.save()]);
@@ -111,6 +112,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 				{
 					$push: { messages: newMessage._id },
 					$set: {
+						'significantlyUpdatedAt': time,
 						'draft.$[d].content': '',
 						'seen.$[s].time': time,
 					}

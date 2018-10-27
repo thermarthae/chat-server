@@ -18,7 +18,8 @@ const conversationSchema = new mongoose.Schema(
 		seen: [{
 			user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 			time: Date
-		}]
+		}],
+		significantlyUpdatedAt: Date
 	},
 	{
 		collection: 'Conversation',
@@ -44,6 +45,7 @@ export interface IConversation extends mongoose.Document {
 	seen: ISeen | ISeen[];
 	updatedAt: Date;
 	createdAt: Date;
+	significantlyUpdatedAt: Date;
 }
 
 const ConversationModel = mongoose.model<IConversation>('Conversation', conversationSchema);
