@@ -38,12 +38,10 @@ export const conversationType = new GraphQLObjectType({
 		},
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
-			resolve: ({ seen, messages, updatedAt }, { }, { sessionOwner }) => {
+			resolve: ({ seen, significantlyUpdatedAt }, { }, { sessionOwner }) => {
 				const userSeen = Array.isArray(seen) ? seen.find(s => sessionOwner!._id.equals(s.user))! : seen;
-				const lastMsg = messages![messages!.length - 1];
 				if (!userSeen) return false;
-				if (lastMsg.time) return lastMsg.time.getTime() < userSeen.time.getTime();
-				return updatedAt.getTime() - 500 < userSeen.time.getTime();
+				return significantlyUpdatedAt.getTime() < userSeen.time.getTime();
 			}
 		},
 		draft: {
