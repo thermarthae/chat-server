@@ -35,18 +35,18 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 );
 
 export enum UserErrors {
-	UnknownError,
-	UserExistsError,
-	MissingUsernameError,
-	IncorrectUsernameError,
-	MissingPasswordError,
-	IncorrectPasswordError,
-	AttemptTooSoonError,
-	TooManyAttemptsError,
-	NoSaltValueStoredError,
-	AlreadyLoggedIn,
-	AlreadyLoggedOut,
-	PasswordIsTooShort,
+	UnknownError = 'An unknown error has occurred',
+	UserExistsError = 'User with the given username is already registered',
+	MissingUsernameError = 'No username was given',
+	IncorrectUsernameError = 'Incorrect username',
+	MissingPasswordError = 'No password was given',
+	IncorrectPasswordError = 'Incorrect password',
+	AttemptTooSoonError = 'Account is currently locked. Try again later',
+	TooManyAttemptsError = 'Account locked due to too many failed login attempts',
+	NoSaltValueStoredError = 'Authentication not possible. No salt value stored',
+	AlreadyLoggedIn = 'You are already logged in. Try to log out first',
+	AlreadyLoggedOut = 'You are already logged out',
+	PasswordIsTooShort = 'Password is too short (minimum is 8 characters)',
 }
 
 
@@ -59,16 +59,7 @@ userSchema.post('findOneAndRemove', clearUserCache);
 
 userSchema.plugin(passportLocalMongoose, {
 	usernameField: 'email',
-	errorMessages: {
-		UserExistsError: 'User with the given username is already registered',
-		MissingUsernameError: 'No username was given',
-		IncorrectUsernameError: 'Incorrect username',
-		MissingPasswordError: 'No password was given',
-		IncorrectPasswordError: 'Incorrect password',
-		AttemptTooSoonError: 'Account is currently locked. Try again later',
-		TooManyAttemptsError: 'Account locked due to too many failed login attempts',
-		NoSaltValueStoredError: 'Authentication not possible. No salt value stored',
-	},
+	errorMessages: UserErrors,
 	findByUsername: (model, queryParameters) => {
 		const userEmail = queryParameters.$or[0].email as string;
 		return model.findOne(queryParameters).select('+salt +hash').cache(30, userEmail + '-passport');

@@ -4,12 +4,12 @@ import {
 	GraphQLID,
 	GraphQLString,
 } from 'graphql';
+import { ApolloError } from 'apollo-server-core';
 
 import UserModel, { UserErrors } from '../../models/user';
 import { userType } from '../types/user.types';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 import { IRootValue, IContext } from '../../';
-import { ApolloError } from 'apollo-server-core';
 
 interface IRegisterArgs {
 	name: string;
@@ -32,9 +32,8 @@ export const register: GraphQLFieldConfig<IRootValue, IContext, IRegisterArgs> =
 	},
 	resolve: async ({ }, payload) => {
 		if (payload.password.length < 8) throw new ApolloError(
-			'Password is too short (minimum is 8 characters)',
-			UserErrors.PasswordIsTooShort as any,
-			{ name: 'PasswordIsTooShort' }
+			UserErrors.PasswordIsTooShort,
+			'PasswordIsTooShort'
 		);
 		const newUser = new UserModel(payload);
 		return await UserModel.register(newUser, payload.password);

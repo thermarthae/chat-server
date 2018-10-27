@@ -58,20 +58,15 @@ export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
 	},
 	resolve: async ({ }, { username, password }, { req }) => {
 		if (req.isAuthenticated()) throw new ApolloError(
-			'You are already logged in. Try to log out first',
-			UserErrors.AlreadyLoggedIn as any,
-			{ name: 'AlreadyLoggedIn' }
+			UserErrors.AlreadyLoggedIn,
+			'AlreadyLoggedIn'
 		);
 
 		const { user, error } = await UserModel.authenticate()(username, password);
-		if (!user) throw new ApolloError(
-			error!.message,
-			UserErrors[error!.name as any] || UserErrors.UnknownError as any,
-			{ name: error!.name }
-		);
+		if (!user) throw new ApolloError(error!.message, error!.name);
 
 		req.logIn(user, err => {
-			if (err) throw new ApolloError(err.message, UserErrors.UnknownError as any, { name: err.name });
+			if (err) throw new ApolloError(err.message, err.name);
 		});
 		return user;
 	}
@@ -83,8 +78,7 @@ export const logout: GraphQLFieldConfig<IRootValue, IContext> = {
 	resolve: async ({ }, { }, { req }) => {
 		if (req.isUnauthenticated()) throw new ApolloError(
 			'You are already logged out',
-			UserErrors.AlreadyLoggedOut as any,
-			{ name: 'AlreadyLoggedOut' }
+			'AlreadyLoggedOut'
 		);
 
 		const user = req.user;
