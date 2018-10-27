@@ -6,6 +6,7 @@ import {
 	GraphQLList
 } from 'graphql';
 import mongoose = require('mongoose');
+import { UserInputError } from 'apollo-server-core';
 
 import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
@@ -39,7 +40,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		}
 	},
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, sessionOwner }) => {
-		if (!message) throw new Error('Empty message');
+		if (!message || message.length < 1) throw new UserInputError('Message could not be empty');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const parsedUserIds = [...new Set(userIdArr).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
@@ -80,7 +81,7 @@ interface ISendMessageArgs {
 	conversationId: string;
 	message: string;
 }
-export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageArgs> = { //TODO: prevent empty msg
+export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageArgs> = {
 	type: messageType,
 	description: 'Send message in given conversation',
 	args: {
@@ -94,7 +95,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 		}
 	},
 	resolve: async ({ }, { conversationId, message }, { sessionOwner, convIDLoader }) => {
-		if (!message) throw new Error('Empty message');
+		if (!message || message.length < 1) throw new UserInputError('Message could not be empty');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const conversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
 		const time = new Date();

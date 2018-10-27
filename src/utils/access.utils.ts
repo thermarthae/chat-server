@@ -1,26 +1,39 @@
 import { TUserLoader, TConvLoader } from '../dataloaders';
-import UserModel, { IUser } from '../models/user';
+import UserModel, { IUser, UserErrors } from '../models/user';
+import { ForbiddenError, ApolloError } from 'apollo-server-core';
 import { Store } from 'express-session';
 
 export const checkUserRightsToConv = async (conversationId: string, verifiedUser: IUser, convIDLoader: TConvLoader) => {
-	const conversation = await convIDLoader.load(conversationId);
-	const userInConv = conversation.users!.find(usr => verifiedUser._id.equals(usr._id));
-	if (!userInConv) throw new Error('Authorisation error');
-	return conversation;
+	try {
+		const conversation = await convIDLoader.load(conversationId);
+		const userInConv = conversation.users!.find(usr => verifiedUser._id.equals(usr._id));
+		if (!userInConv) throw {};
+		return conversation;
+	} catch (error) {
+		throw new ForbiddenError('Conversation does not exist or access denied');
+	}
 };
 
 export const checkIfUsersExist = async (userIdArr: string[], userIDLoader: TUserLoader) => {
-	return await userIDLoader.loadMany(userIdArr).catch(() => { throw new Error('Users not exist'); });
+	return await userIDLoader.loadMany(userIdArr).catch(() => {
+		throw new ApolloError(
+			UserErrors.UserNotExistsError,
+			'UserNotExistsError',
+		);
+	});
 };
 
 export const checkIfNoSessionOwnerErr = (sessionOwner: IUser | undefined) => {
-	if (!sessionOwner || !sessionOwner._id) throw new Error('Session error');
+	if (!sessionOwner || !sessionOwner._id) throw new ApolloError(
+		UserErrors.AlreadyLoggedOut,
+		'AlreadyLoggedOut',
+	);
 	return sessionOwner;
 };
 
 export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {
 	if (verifiedUser._id.equals(idToCheck)) return;
-	throw new Error('Permission error');
+	throw new ForbiddenError('Access denied');
 };
 
 /////////////////////////////////////////////////

@@ -1,5 +1,4 @@
-// TODO: new apollo errors throw
-// TODO: add mark as seen
+// TODO: add user password change
 
 import dotenv = require('dotenv');
 dotenv.config();
@@ -8,7 +7,7 @@ import session = require('express-session');
 import connectMongo = require('connect-mongo');
 import cookie = require('cookie');
 import cookieParser = require('cookie-parser');
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer, ApolloError } from 'apollo-server-express';
 import morgan = require('morgan');
 import mongoose = require('mongoose');
 import http = require('http');
@@ -95,7 +94,7 @@ const server = new ApolloServer({
 				const user = await deserializeUser(username);
 				return { sessionOwner: user.toObject(), } as ISubContext;
 			} catch (err) {
-				throw new Error('Session error or auth cookie is missing');
+				throw new ApolloError('Session error or auth cookie is missing');
 			}
 		}
 	},

@@ -5,7 +5,7 @@ import {
 	GraphQLFieldConfig,
 	GraphQLList
 } from 'graphql';
-import { ApolloError } from 'apollo-server-core';
+import { ApolloError, UserInputError } from 'apollo-server-core';
 
 import { userType } from '../types/user.types';
 import UserModel, { UserErrors } from '../../models/user';
@@ -34,7 +34,7 @@ export const findUser: GraphQLFieldConfig<IRootValue, IContext, { query: string 
 	args: { query: { type: new GraphQLNonNull(GraphQLString) } },
 	resolve: async ({ }, { query }, { sessionOwner }) => {
 		checkIfNoSessionOwnerErr(sessionOwner);
-		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
+		if (query.length < 3) throw new UserInputError('Query must be at least 3 characters long');
 		return await UserModel.find({ name: { $regex: query, $options: 'i' } }).cache(30);
 	}
 };

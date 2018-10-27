@@ -5,6 +5,7 @@ import {
 	GraphQLFieldConfig,
 	GraphQLList
 } from 'graphql';
+import { UserInputError } from 'apollo-server-core';
 
 import { IRootValue, IContext } from '../../';
 import { conversationType, userConversationsType } from '../types/conversation.types';
@@ -32,7 +33,7 @@ export const findConversation: GraphQLFieldConfig<IRootValue, IContext, { query:
 	args: { query: { type: new GraphQLNonNull(GraphQLString) } },
 	resolve: async ({ }, { query }, { sessionOwner }) => {
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
-		if (query.length < 3) throw new Error('Query must be at least 3 characters long');
+		if (query.length < 3) throw new UserInputError('Query must be at least 3 characters long');
 		return await ConversationModel.aggregate([
 			{ $match: { users: verifiedUser._id } },
 			{
