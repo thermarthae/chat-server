@@ -35,6 +35,7 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 );
 
 export enum UserErrors {
+	UnknownError,
 	UserExistsError,
 	MissingUsernameError,
 	IncorrectUsernameError,
@@ -45,7 +46,7 @@ export enum UserErrors {
 	NoSaltValueStoredError,
 	AlreadyLoggedIn,
 	AlreadyLoggedOut,
-	UnknownError,
+	PasswordIsTooShort,
 }
 
 
