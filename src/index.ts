@@ -33,7 +33,9 @@ export interface ISubContext {
 	sessionOwner: IUser | undefined;
 }
 
-const isDev = process.env.NODE_ENV !== 'production';
+const isTest = process.env.NODE_ENV === 'test';
+const isProd = process.env.NODE_ENV === 'production';
+const isDev = process.env.NODE_ENV === 'development';
 if (isDev) console.log('\x1b[31m%s\x1b[0m', 'DEVELOPMENT MODE');
 
 cachegoose(mongoose, {
@@ -52,7 +54,7 @@ const sessionStore = new (connectMongo(session))({
 
 const app = express();
 app.use(cookieParser());
-app.use(morgan('dev'));
+if (!isTest) app.use(morgan('dev'));
 app.use(session({
 	store: sessionStore,
 	name: 'chatid',
@@ -61,7 +63,7 @@ app.use(session({
 	saveUninitialized: false,
 	cookie: {
 		httpOnly: true,
-		secure: !isDev,
+		secure: isProd,
 		sameSite: true,
 		maxAge: 1000 * 60 * 60 * 24 * 14 // 14 days
 	}
