@@ -9,7 +9,7 @@ import { ApolloError } from 'apollo-server-core';
 import UserModel, { UserErrors } from '../../models/user';
 import { userType } from '../types/user.types';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
-import { IRootValue, IContext } from '../../';
+import { IRootValue, IContext } from '../../server';
 
 interface IRegisterArgs {
 	name: string;

@@ -9,7 +9,7 @@ import { ApolloError, UserInputError } from 'apollo-server-core';
 
 import { userType } from '../types/user.types';
 import UserModel, { UserErrors } from '../../models/user';
-import { IRootValue, IContext } from '../../';
+import { IRootValue, IContext } from '../../server';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../utils/access.utils';
 
 export const getUser: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {

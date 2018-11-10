@@ -13,7 +13,7 @@ import { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
 import { userType } from './user.types';
 import { messageType } from './message.types';
-import { IContext } from '../../';
+import { IContext } from '../../server';
 
 const isArr = (arg: any): arg is any[] => !arg.user;
 export const conversationType = new GraphQLObjectType({

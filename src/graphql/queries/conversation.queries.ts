@@ -7,7 +7,7 @@ import {
 } from 'graphql';
 import { UserInputError } from 'apollo-server-core';
 
-import { IRootValue, IContext } from '../../';
+import { IRootValue, IContext } from '../../server';
 import { conversationType, userConversationsType } from '../types/conversation.types';
 import { checkIfNoSessionOwnerErr, checkUserRightsToConv } from '../../utils/access.utils';
 import ConversationModel from '../../models/conversation';

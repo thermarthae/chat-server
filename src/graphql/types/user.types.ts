@@ -6,7 +6,7 @@ import {
 	GraphQLID,
 } from 'graphql';
 import { IUser } from '../../models/user';
-import { IContext } from '../../';
+import { IContext } from '../../server';
 
 export const userType = new GraphQLObjectType({
 	name: 'User',

@@ -9,7 +9,7 @@ import {
 import { GraphQLDateTime } from 'graphql-iso-date';
 import { IMessage } from '../../models/message';
 import { userType } from './user.types';
-import { IContext } from '../..';
+import { IContext } from '../../server';
 
 export const messageType = new GraphQLObjectType({
 	name: 'Message',

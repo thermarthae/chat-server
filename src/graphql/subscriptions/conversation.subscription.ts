@@ -2,7 +2,7 @@ import { GraphQLFieldConfig } from 'graphql';
 import { pubsub } from '../';
 import { withFilter } from 'graphql-subscriptions';
 
-import { ISubContext } from '../../';
+import { ISubContext } from '../../server';
 import { messageType } from '../types/message.types';
 import { conversationType } from '../types/conversation.types';
 
