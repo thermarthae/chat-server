@@ -40,7 +40,7 @@ export enum UserErrors {
 	UserExistsError = 'User with the given username is already registered',
 	UserNotExistsError = 'User not exist',
 	MissingUsernameError = 'No username was given',
-	IncorrectUsernameError = 'Incorrect username',
+	IncorrectUsernameError = 'The specified user does not exist.',
 	MissingPasswordError = 'No password was given',
 	IncorrectPasswordError = 'Incorrect password',
 	AttemptTooSoonError = 'Account is currently locked. Try again later',
@@ -48,6 +48,8 @@ export enum UserErrors {
 	NoSaltValueStoredError = 'Authentication not possible. No salt value stored',
 	AlreadyLoggedIn = 'You are already logged in. Try to log out first',
 	AlreadyLoggedOut = 'You are already logged out',
+	NotLoggedInForbidden = 'Access forbidden. You must be logged in',
+	RightsForbidden = 'Access denied',
 	PasswordIsTooShort = 'Password is too short (minimum is 8 characters)',
 }
 
