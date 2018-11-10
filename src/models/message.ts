@@ -3,19 +3,27 @@ import { IUser } from './user';
 
 const messageSchema = new mongoose.Schema(
 	{
-		author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-		conversation: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
-		time: Date,
+		author: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'User',
+			required: true,
+		},
+		conversation: {
+			type: mongoose.Schema.Types.ObjectId,
+			ref: 'Conversation',
+			required: true,
+		},
+		time: {
+			type: Date,
+			default: new Date(),
+		},
 		content: {
 			type: String,
 			required: true,
 			trim: true
 		}
 	},
-	{
-		collection: 'Message',
-		timestamps: true
-	}
+	{ collection: 'Message' }
 );
 
 export interface IMessage extends mongoose.Document {
@@ -23,8 +31,6 @@ export interface IMessage extends mongoose.Document {
 	conversation: string;
 	time: Date;
 	content: string;
-	updatedAt: Date;
-	createdAt: Date;
 }
 
 const MessageModel = mongoose.model<IMessage>('Message', messageSchema);
