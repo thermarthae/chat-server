@@ -8,7 +8,7 @@ export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {
 		verifiedUser.role === 'ADMIN'
 		|| verifiedUser._id.equals(idToCheck)
 	) return;
-	throw new ForbiddenError('Access denied');
+	throw new ForbiddenError(UserErrors.RightsForbidden);
 };
 
 export const checkUserRightsToConv = async (conversationId: string, verifiedUser: IUser, convIDLoader: TConvLoader) => {
@@ -33,10 +33,7 @@ export const checkIfUsersExist = async (userIdArr: string[], userIDLoader: TUser
 };
 
 export const checkIfNoSessionOwnerErr = (sessionOwner: IUser | undefined) => {
-	if (!sessionOwner || !sessionOwner._id) throw new ApolloError(
-		UserErrors.AlreadyLoggedOut,
-		'AlreadyLoggedOut',
-	);
+	if (!sessionOwner || !sessionOwner._id) throw new ForbiddenError(UserErrors.NotLoggedInForbidden);
 	return sessionOwner;
 };
 
