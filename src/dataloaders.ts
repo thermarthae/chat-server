@@ -34,3 +34,12 @@ export const convIDFn = async (ids: Array<{}>) => {
 	if (!result[0]) throw new ApolloError('404 (Not Found)', 'NotFound');
 	return result;
 };
+
+////////////////////////////////////
+
+const createDataloaders = () => ({
+	userIDLoader: new DataLoader(async ids => userIDFn(ids)),
+	convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+});
+
+export default createDataloaders;

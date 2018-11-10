@@ -20,7 +20,7 @@ import { ConnectionContext, ExecutionParams } from 'subscriptions-transport-ws';
 
 import initPassport from './passport';
 import schema from './graphql';
-import { IDataLoaders, userIDFn, convIDFn } from './dataloaders';
+import createDataloaders, { IDataLoaders } from './dataloaders';
 import { getUsernameFromSession, deserializeUser } from './utils/access.utils';
 import { IUser } from './models/user';
 
@@ -81,9 +81,8 @@ const server = new ApolloServer({
 		if (connection) return connection.context;
 		return {
 			req,
-			userIDLoader: new DataLoader(async ids => userIDFn(ids)),
-			convIDLoader: new DataLoader(async ids => convIDFn(ids)),
 			sessionOwner: req.user ? req.user.toObject() : undefined,
+			...createDataloaders(),
 		} as IContext;
 	},
 	subscriptions: {
