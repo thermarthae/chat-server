@@ -121,7 +121,7 @@ server.applyMiddleware({
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
-httpServer.listen(process.env.SERVER_PORT as any, process.env.SERVER_ADDRESS, () => {
+httpServer.listen(process.env.SERVER_PORT as any, () => {
 	const { address, port } = httpServer.address() as any;
 	const url = address + ':' + port;
 	console.log(
