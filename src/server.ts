@@ -7,8 +7,6 @@ import dotenv = require('dotenv');
 dotenv.config();
 import express = require('express');
 import session = require('express-session');
-import mongoose = require('mongoose');
-import cachegoose = require('cachegoose');
 import connectMongo = require('connect-mongo');
 import cookie = require('cookie');
 import cookieParser = require('cookie-parser');
@@ -22,6 +20,7 @@ import schema from './graphql';
 import createDataloaders, { IDataLoaders } from './dataloaders';
 import { getUsernameFromSession, deserializeUser } from './utils/access.utils';
 import { IUser } from './models/user';
+import initMongoose from './initMongoose';
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
@@ -38,13 +37,7 @@ export default async () => {
 	const isDev = process.env.NODE_ENV === 'development';
 	if (isDev) console.log('\x1b[31m%s\x1b[0m', 'DEVELOPMENT MODE');
 
-	cachegoose(mongoose, {
-		engine: isDev ? 'memory' : 'redis',
-		port: process.env.REDIS_PORT,
-		host: process.env.REDIS_ADDRESS
-	});
-
-	mongoose.connect(process.env.MONGODB_URI!, { useNewUrlParser: true }).then(() => console.log('Connected to DB. '));
+	const mongoose = await initMongoose().finally(() => console.log('Connected to DB'));
 	if (isDev) mongoose.set('debug', true);
 
 	const sessionStore = isTest
