@@ -15,6 +15,7 @@ import { userType } from './user.types';
 import { messageType } from './message.types';
 import { IContext } from '../../';
 
+const isArr = (arg: any): arg is any[] => !arg.user;
 export const conversationType = new GraphQLObjectType({
 	name: 'Conversation',
 	fields: () => ({
@@ -39,7 +40,7 @@ export const conversationType = new GraphQLObjectType({
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: ({ seen, significantlyUpdatedAt }, { }, { sessionOwner }) => {
-				const userSeen = Array.isArray(seen) ? seen.find(s => sessionOwner!._id.equals(s.user))! : seen;
+				const userSeen = isArr(seen) ? seen.find(s => sessionOwner!._id.equals(s.user))! : seen;
 				if (!userSeen) return false;
 				return significantlyUpdatedAt.getTime() < userSeen.time.getTime();
 			}
@@ -47,7 +48,7 @@ export const conversationType = new GraphQLObjectType({
 		draft: {
 			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ draft }, { }, { sessionOwner }) => {
-				const userD = Array.isArray(draft) ? draft.find(d => sessionOwner!._id.equals(d.user)) : draft;
+				const userD = isArr(draft) ? draft.find(d => sessionOwner!._id.equals(d.user)) : draft;
 				return !userD ? '' : userD.content;
 			}
 		},
