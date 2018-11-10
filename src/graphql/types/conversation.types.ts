@@ -40,9 +40,11 @@ export const conversationType = new GraphQLObjectType({
 		seen: {
 			type: new GraphQLNonNull(GraphQLBoolean),
 			resolve: ({ seen, significantlyUpdatedAt }, { }, { sessionOwner }) => {
+				significantlyUpdatedAt = new Date(significantlyUpdatedAt);
 				const userSeen = isArr(seen) ? seen.find(s => sessionOwner!._id.equals(s.user))! : seen;
 				if (!userSeen) return false;
-				return significantlyUpdatedAt.getTime() < userSeen.time.getTime();
+				const seenTime = new Date(userSeen.time);
+				return significantlyUpdatedAt.getTime() <= seenTime.getTime();
 			}
 		},
 		draft: {
