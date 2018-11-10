@@ -1,4 +1,7 @@
 // TODO: add user password change
+// TODO: add RedisStore
+// TODO: rate limit
+// TODO: add setDraft with convIDLoader cache clearing
 
 import dotenv = require('dotenv');
 dotenv.config();
