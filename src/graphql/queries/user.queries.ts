@@ -57,6 +57,21 @@ export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
 		password: { type: new GraphQLNonNull(GraphQLString) }
 	},
 	resolve: async ({ }, { username, password }, { req }) => {
+		if (username.length === 0) throw new ApolloError(
+			UserErrors.MissingUsernameError,
+			'MissingUsernameError'
+		);
+
+		const pwdLen = password.length;
+		if (pwdLen === 0) throw new ApolloError(
+			UserErrors.MissingPasswordError,
+			'MissingPasswordError'
+		);
+		if (pwdLen < 8) throw new ApolloError(
+			UserErrors.PasswordIsTooShort,
+			'PasswordIsTooShort'
+		);
+
 		if (req.isAuthenticated()) throw new ApolloError(
 			UserErrors.AlreadyLoggedIn,
 			'AlreadyLoggedIn'
