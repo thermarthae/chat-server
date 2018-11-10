@@ -1,7 +1,7 @@
 import { TUserLoader, TConvLoader } from '../dataloaders';
 import UserModel, { IUser, UserErrors } from '../models/user';
 import { ForbiddenError, ApolloError } from 'apollo-server-core';
-import { Store } from 'express-session';
+import { BaseMemoryStore } from 'express-session';
 
 export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {
 	if (
@@ -39,7 +39,7 @@ export const checkIfNoSessionOwnerErr = (sessionOwner: IUser | undefined) => {
 
 /////////////////////////////////////////////////
 
-export const getUsernameFromSession = (sid: string, store: Store) => new Promise((resolve, reject) =>
+export const getUsernameFromSession = (sid: string, store: BaseMemoryStore) => new Promise((resolve, reject) =>
 	store.get(sid, (err, sess) => {
 		if (err || !sess || !sess.passport) return reject(err);
 		const { user } = sess!.passport;

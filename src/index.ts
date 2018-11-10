@@ -47,7 +47,9 @@ cachegoose(mongoose, {
 mongoose.connect(process.env.MONGODB_URI!, { useNewUrlParser: true }).then(() => console.log('Connected to DB. '));
 if (isDev) mongoose.set('debug', true);
 
-const sessionStore = new (connectMongo(session))({
+const sessionStore = isTest
+	? new session.MemoryStore()
+	: new (connectMongo(session))({
 	mongooseConnection: mongoose.connection,
 	touchAfter: 12 * 3600, // 12h
 });
