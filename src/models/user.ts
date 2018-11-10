@@ -83,7 +83,7 @@ export interface IUser extends mongoose.PassportLocalDocument {
 declare global {
 	namespace Express {
 		interface Request { // tslint:disable-line:interface-name
-			user: IUser | undefined;
+			user?: IUser;
 			login(user: IUser, done: (err: any) => void): void;
 			login(user: IUser, options: any, done: (err: any) => void): void;
 			logIn(user: IUser, done: (err: any) => void): void;
