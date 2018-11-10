@@ -3,8 +3,8 @@
 	"version": "0.0.0",
 	"scripts": {
 		"start": "yarn run development",
-		"production": "nodemon src/index.ts NODE_ENV=production",
-		"development": "nodemon src/index.ts NODE_ENV=development",
+		"production": "set NODE_ENV=production&& nodemon src/index.ts",
+		"development": "set NODE_ENV=development&& nodemon src/index.ts",
 		"build": "tsc",
 		"watch": "tsc -w"
 	},
