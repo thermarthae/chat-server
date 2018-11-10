@@ -5,7 +5,7 @@ import { IUser } from './user';
 const conversationSchema = new mongoose.Schema(
 	{
 		name: {
-			type: String,
+			type: String || null,
 			trim: true
 		},
 		users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
@@ -38,7 +38,7 @@ interface ISeen {
 }
 
 export interface IConversation extends mongoose.Document {
-	name: string;
+	name: string | null;
 	users?: IUser[];
 	draft: IDraft | IDraft[];
 	messages?: IMessage[];

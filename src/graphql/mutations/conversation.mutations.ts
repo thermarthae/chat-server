@@ -14,7 +14,7 @@ import { pubsub } from '../';
 import { conversationType } from '../types/conversation.types';
 import { messageType } from '../types/message.types';
 import { checkIfUsersExist, checkUserRightsToConv, checkIfNoSessionOwnerErr } from '../../utils/access.utils';
-import { IRootValue, IContext } from '../../';
+import { IRootValue, IContext } from '../../server';
 
 interface IInitConversationArgs {
 	userIdArr: string[];
@@ -35,7 +35,8 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		},
 		name: {
 			type: GraphQLString,
-			description: 'Name of the conversation'
+			description: 'Name of the conversation',
+			defaultValue: null,
 		}
 	},
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, sessionOwner }) => {
