@@ -68,7 +68,7 @@ export const conversationType = new GraphQLObjectType({
 				},
 			},
 			resolve: async ({ _id, messages, users }, { skip, limit }) => {
-				if (!messages![0].time) {
+				if (!messages![0].content) {
 					messages = await MessageModel.aggregate([
 						{ $match: { conversation: mongoose.Types.ObjectId(_id as any) } },
 						{ $sort: { _id: -1 } },
@@ -76,12 +76,12 @@ export const conversationType = new GraphQLObjectType({
 						{ $limit: limit },
 						{ $sort: { _id: 1 } }
 					]);
-					if (!messages![0]) return null;
+					if (!messages![0]) return [];
 				}
 				else messages = messages!.reverse().splice(skip, limit).reverse();
 
-				messages!.forEach(msg =>
-					msg.author = users!.find(usr => String(usr._id) == String(msg.author._id || msg.author))!
+				if (!messages![0].author.name) messages!.forEach(msg =>
+					msg.author = users!.find(usr => String(usr._id) == String(msg.author._id))!
 				);
 				return messages!;
 			}
