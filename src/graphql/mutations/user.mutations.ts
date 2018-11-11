@@ -13,7 +13,7 @@ import { IRootValue, IContext } from '../../server';
 
 interface IRegisterArgs {
 	name: string;
-	message: string;
+	email: string;
 	password: string;
 }
 export const register: GraphQLFieldConfig<IRootValue, IContext, IRegisterArgs> = {
