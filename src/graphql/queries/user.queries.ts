@@ -5,7 +5,7 @@ import {
 	GraphQLFieldConfig,
 	GraphQLList
 } from 'graphql';
-import { ApolloError, UserInputError } from 'apollo-server-core';
+import { ApolloError, UserInputError, toApolloError } from 'apollo-server-core';
 
 import { userType } from '../types/user.types';
 import UserModel, { UserErrors } from '../../models/user';
@@ -80,9 +80,7 @@ export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
 		const { user, error } = await UserModel.authenticate()(username, password);
 		if (!user) throw new ApolloError(error!.message, error!.name);
 
-		req.logIn(user, err => {
-			if (err) throw new ApolloError(err.message, err.name);
-		});
+		req!.logIn(user, err => { if (err) throw toApolloError(err); });
 		return user;
 	}
 };
