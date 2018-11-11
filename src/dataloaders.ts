@@ -8,11 +8,6 @@ import ConversationModel, { IConversation } from './models/conversation';
 export type TUserLoader = DataLoader<string, IUser>;
 export type TConvLoader = DataLoader<string, IConversation>;
 
-export interface IDataLoaders {
-	userIDLoader: TUserLoader;
-	convIDLoader: TConvLoader;
-}
-
 export const userIDFn = async (ids: Array<{}>) => {
 	const error = new ApolloError(
 		UserErrors.UserNotExistsError,
@@ -41,6 +36,11 @@ export const convIDFn = async (ids: Array<{}>) => {
 };
 
 ////////////////////////////////////
+
+export interface IDataLoaders {
+	userIDLoader: TUserLoader;
+	convIDLoader: TConvLoader;
+}
 
 const createDataloaders = () => ({
 	userIDLoader: new DataLoader(async ids => userIDFn(ids)),
