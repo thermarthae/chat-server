@@ -50,6 +50,7 @@ export enum UserErrors {
 	AlreadyLoggedOut = 'You are already logged out',
 	NotLoggedInForbidden = 'Access forbidden. You must be logged in',
 	RightsForbidden = 'Access denied',
+	UsernameIsTooShort = 'Username is too short (minimum is 3 characters)',
 	PasswordIsTooShort = 'Password is too short (minimum is 8 characters)',
 }
 
