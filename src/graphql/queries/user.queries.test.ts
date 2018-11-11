@@ -47,7 +47,7 @@ describe('User queries', () => {
 					{}, { id: userToFind._id }, { sessionOwner: undefined, ...dataloaders() }, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
 		});
 
@@ -58,7 +58,7 @@ describe('User queries', () => {
 					{}, { id: userToFind._id }, { sessionOwner, ...dataloaders() }, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.RightsForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.RightsForbidden));
 
 			}
 		});
@@ -79,7 +79,7 @@ describe('User queries', () => {
 					{}, { id: String(mongoose.Types.ObjectId()) }, { sessionOwner, ...dataloaders() }, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(new ApolloError(UserErrors.UserNotExistsError, 'UserNotExistsError'));
+				expect(e).toStrictEqual(new ApolloError(UserErrors.UserNotExistsError, 'UserNotExistsError'));
 			}
 		});
 	});
@@ -91,7 +91,7 @@ describe('User queries', () => {
 					{}, { query: userToFind.name }, { sessionOwner: undefined } as any, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
 		});
 
@@ -103,7 +103,7 @@ describe('User queries', () => {
 						{}, { query: userToFind.name.slice(0, 2) }, { sessionOwner } as any, {} as any
 					);
 				} catch (e) {
-					expect(e).toEqual(new UserInputError('Query must be at least 3 characters long'));
+					expect(e).toStrictEqual(new UserInputError('Query must be at least 3 characters long'));
 				}
 			});
 
@@ -128,7 +128,7 @@ describe('User queries', () => {
 			try {
 				await currentUser.resolve!({}, {}, { sessionOwner: undefined } as any, {} as any);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
 		});
 	});
@@ -155,7 +155,7 @@ describe('User queries', () => {
 				const req = { isAuthenticated: () => true };
 				await login.resolve!({}, { username: user.email, password }, { req } as any, {} as any);
 			} catch (e) {
-				expect(e).toEqual(new ApolloError(UserErrors.AlreadyLoggedIn, 'AlreadyLoggedIn'));
+				expect(e).toStrictEqual(new ApolloError(UserErrors.AlreadyLoggedIn, 'AlreadyLoggedIn'));
 			}
 		});
 
@@ -166,7 +166,7 @@ describe('User queries', () => {
 						{}, { username: '', password }, { req: reqSuccess } as any, {} as any
 					);
 				} catch (e) {
-					expect(e).toEqual(new ApolloError(UserErrors.MissingUsernameError, 'MissingUsernameError'));
+					expect(e).toStrictEqual(new ApolloError(UserErrors.MissingUsernameError, 'MissingUsernameError'));
 				}
 			});
 
@@ -176,7 +176,7 @@ describe('User queries', () => {
 						{}, { username: 'blabla', password }, { req: reqSuccess } as any, {} as any
 					);
 				} catch (e) {
-					expect(e).toEqual(new ApolloError(UserErrors.IncorrectUsernameError, 'IncorrectUsernameError'));
+					expect(e).toStrictEqual(new ApolloError(UserErrors.IncorrectUsernameError, 'IncorrectUsernameError'));
 				}
 			});
 		});
@@ -188,7 +188,7 @@ describe('User queries', () => {
 						{}, { username: user.email, password: '' }, { req: reqSuccess } as any, {} as any
 					);
 				} catch (e) {
-					expect(e).toEqual(new ApolloError(UserErrors.MissingPasswordError, 'MissingPasswordError'));
+					expect(e).toStrictEqual(new ApolloError(UserErrors.MissingPasswordError, 'MissingPasswordError'));
 				}
 			});
 
@@ -198,7 +198,7 @@ describe('User queries', () => {
 						{}, { username: user.email, password: '1234567' }, { req: reqSuccess } as any, {} as any
 					);
 				} catch (e) {
-					expect(e).toEqual(new ApolloError(UserErrors.PasswordIsTooShort, 'PasswordIsTooShort'));
+					expect(e).toStrictEqual(new ApolloError(UserErrors.PasswordIsTooShort, 'PasswordIsTooShort'));
 				}
 			});
 
@@ -208,7 +208,7 @@ describe('User queries', () => {
 						{}, { username: user.email, password: 'blablabla' }, { req: reqSuccess } as any, {} as any
 					);
 				} catch (e) {
-					expect(e).toEqual(new ApolloError(UserErrors.IncorrectPasswordError, 'IncorrectPasswordError'));
+					expect(e).toStrictEqual(new ApolloError(UserErrors.IncorrectPasswordError, 'IncorrectPasswordError'));
 				}
 			});
 		});
@@ -231,7 +231,7 @@ describe('User queries', () => {
 				const req = { isUnauthenticated: () => true };
 				await logout.resolve!({}, {}, { req } as any, {} as any);
 			} catch (e) {
-				expect(e).toEqual(new ApolloError(UserErrors.AlreadyLoggedOut, 'AlreadyLoggedOut'));
+				expect(e).toStrictEqual(new ApolloError(UserErrors.AlreadyLoggedOut, 'AlreadyLoggedOut'));
 			}
 		});
 	});

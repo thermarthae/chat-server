@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import MongoMemoryServer from 'mongodb-memory-server';
 import initMongoose from '../../initMongoose';
 
-import { ForbiddenError } from 'apollo-server-core';
+import { ForbiddenError, UserInputError } from 'apollo-server-core';
 import UserModel, { UserErrors } from '../../models/user';
 import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
@@ -71,7 +71,7 @@ describe('Conversation queries', () => {
 					{}, { id: conv.id }, { sessionOwner: userWithoutRights, ...dataloaders() }, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(convError);
+				expect(e).toStrictEqual(convError);
 			}
 		});
 
@@ -84,7 +84,7 @@ describe('Conversation queries', () => {
 					{}, { id }, { sessionOwner, ...dataloaders() }, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(convError);
+				expect(e).toStrictEqual(convError);
 			}
 		});
 
@@ -95,7 +95,7 @@ describe('Conversation queries', () => {
 					{}, { id }, { sessionOwner: undefined, ...dataloaders() }, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
 		});
 	});
@@ -134,7 +134,7 @@ describe('Conversation queries', () => {
 					{}, { query }, { sessionOwner: undefined } as any, {} as any
 				);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
 		});
 
@@ -174,9 +174,7 @@ describe('Conversation queries', () => {
 					{}, { query }, { sessionOwner: userWithAccess } as any, {} as any
 				);
 			} catch (e) {
-				const err = new Error('Query must be at least 3 characters long');
-				err.name = 'BAD_USER_INPUT';
-				expect(e).toEqual(err);
+				expect(e).toStrictEqual(new UserInputError('Query must be at least 3 characters long'));
 			}
 		});
 	});
@@ -193,7 +191,7 @@ describe('Conversation queries', () => {
 			try {
 				await userConversations.resolve!({}, {}, { sessionOwner: undefined } as any, {} as any);
 			} catch (e) {
-				expect(e).toEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
+				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
 		});
 
