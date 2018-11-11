@@ -72,7 +72,7 @@ export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
 			'PasswordIsTooShort'
 		);
 
-		if (req.isAuthenticated()) throw new ApolloError(
+		if (req!.isAuthenticated()) throw new ApolloError(
 			UserErrors.AlreadyLoggedIn,
 			'AlreadyLoggedIn'
 		);
@@ -89,13 +89,13 @@ export const logout: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: userType,
 	description: 'Log out',
 	resolve: async ({ }, { }, { req }) => {
-		if (req.isUnauthenticated()) throw new ApolloError(
+		if (req!.isUnauthenticated()) throw new ApolloError(
 			'You are already logged out',
 			'AlreadyLoggedOut'
 		);
 
-		const user = req.user;
-		req.logOut();
+		const user = req!.user;
+		req!.logOut();
 		return user;
 	}
 };
