@@ -41,7 +41,9 @@ export const register: GraphQLFieldConfig<IRootValue, IContext, IRegisterArgs> =
 		);
 		
 		const newUser = new UserModel(payload);
-		return await UserModel.register(newUser, payload.password);
+		return await UserModel.register(newUser, payload.password).catch(err => {
+			if (err.message === UserErrors.UserExistsError) err.name = 'UserExistsError';
+		});
 	}
 };
 
