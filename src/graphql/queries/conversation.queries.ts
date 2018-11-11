@@ -96,7 +96,13 @@ export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 					_id: null,
 					conversationArr: { $push: '$$ROOT' },
 					conversationCount: { $sum: 1 },
-					draftCount: { $sum: { $cond: { if: { $ne: ['$draft.content', ''] }, then: 1, else: 0 } } },
+					draftCount: {
+						$sum: {
+							$cond: {
+								if: { $and: ['$draft.content', { $ne: ['$draft.content', ''] }], }, then: 1, else: 0
+							}
+						}
+					},
 					unreadCount: {
 						$sum: {
 							$cond: {
