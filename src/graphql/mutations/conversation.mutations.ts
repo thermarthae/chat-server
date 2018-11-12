@@ -41,6 +41,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 	},
 	resolve: async ({ }, { userIdArr, message, name }, { userIDLoader, convIDLoader, sessionOwner }) => {
 		if (!message || message.length < 1) throw new UserInputError('Message could not be empty');
+		if (userIdArr.length === 0) throw new UserInputError('userIdArr must contain at least 1 user id');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const parsedUserIds = [...new Set(userIdArr).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
