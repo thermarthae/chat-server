@@ -1,6 +1,6 @@
 import mongoose = require('mongoose');
 import DataLoader = require('dataloader');
-import { ApolloError, toApolloError, ForbiddenError } from 'apollo-server-core';
+import { ApolloError, ForbiddenError } from 'apollo-server-core';
 
 import UserModel, { IUser, UserErrors } from './models/user';
 import ConversationModel, { IConversation } from './models/conversation';
@@ -14,13 +14,7 @@ export const userIDFn = async (ids: Array<{}>) => {
 		'UserNotExistsError',
 	);
 
-	const result = await UserModel.find({ _id: { $in: ids } })
-		.cache(30)
-		.catch(err => {
-			if (err.name === 'CastError') throw error;
-			throw toApolloError(err);
-		}) as IUser[];
-
+	const result = await UserModel.find({ _id: { $in: ids } }).cache(30);
 	if (!result[0]) throw error;
 	return result;
 };
