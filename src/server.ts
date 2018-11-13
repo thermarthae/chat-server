@@ -19,12 +19,12 @@ import initPassport from './passport';
 import schema from './graphql';
 import createDataloaders, { IDataLoaders } from './dataloaders';
 import { getUsernameFromSession, deserializeUser } from './utils/access.utils';
-import { IUser } from './models/user';
+import { IUser, IRequest } from './models/user';
 import initMongoose from './initMongoose';
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
-	req?: express.Request;
+	req?: IRequest;
 	sessionOwner: IUser | undefined;
 }
 export interface ISubContext {
@@ -67,7 +67,7 @@ export default async () => {
 
 	interface IApolloContext {
 		res: express.Response;
-		req: express.Request;
+		req: IRequest;
 		connection?: ExecutionParams;
 	}
 	const server = new ApolloServer({
