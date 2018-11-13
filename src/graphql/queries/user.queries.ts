@@ -61,15 +61,9 @@ export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
 			UserErrors.MissingUsernameError,
 			'MissingUsernameError'
 		);
-
-		const pwdLen = password.length;
-		if (pwdLen === 0) throw new ApolloError(
+		if (password.length === 0) throw new ApolloError(
 			UserErrors.MissingPasswordError,
 			'MissingPasswordError'
-		);
-		if (pwdLen < 8) throw new ApolloError(
-			UserErrors.PasswordIsTooShort,
-			'PasswordIsTooShort'
 		);
 
 		if (req!.isAuthenticated()) throw new ApolloError(

@@ -192,16 +192,6 @@ describe('User queries', () => {
 				}
 			});
 
-			test('password too short error', async () => {
-				try {
-					await login.resolve!(
-						{}, { username: user.email, password: '1234567' }, { req: reqSuccess } as any, {} as any
-					);
-				} catch (e) {
-					expect(e).toStrictEqual(new ApolloError(UserErrors.PasswordIsTooShort, 'PasswordIsTooShort'));
-				}
-			});
-
 			test('wrong password error', async () => {
 				try {
 					await login.resolve!(
