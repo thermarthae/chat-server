@@ -21,10 +21,16 @@
 
 		"noUnusedLocals": true,
 		"noUnusedParameters": false,
-		"noFallthroughCasesInSwitch": true
+		"noFallthroughCasesInSwitch": true,
 
+		"baseUrl": ".",
+		"paths": {
+			"Test": ["test"],
+		},
 	},
-	"include": [
-		"./src"
+	"include": ["."],
+	"exclude": [
+		"node_modules",
+		"dist"
 	]
 }

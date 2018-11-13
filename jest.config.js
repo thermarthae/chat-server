@@ -7,6 +7,9 @@ module.exports = {
 	testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$',
 	testPathIgnorePatterns: ['/node_modules/', '/dist/', '/node_modules/', '/typings/'],
 	verbose: true,
+	moduleNameMapper: {
+		"Test/(.*)": "<rootDir>/test/$1",
+	},
 	// collectCoverage: true,
 	// clearMocks: true,
 };
