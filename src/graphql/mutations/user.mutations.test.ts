@@ -1,7 +1,6 @@
 import 'ts-jest';
 import * as faker from 'faker';
-import MongoMemoryServer from 'mongodb-memory-server';
-import initMongoose from '../../initMongoose';
+import { initTestMongoose } from 'Test/initTestMongoose';
 import UserModel, { UserErrors } from '../../models/user';
 import { ApolloError, ForbiddenError } from 'apollo-server-core';
 import { register, deleteUserAccount } from './user.mutations';
@@ -15,18 +14,13 @@ const makeUser = (admin = false) => {
 };
 
 describe('User mutations', () => {
-	let mongoServer: MongoMemoryServer;
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let stopMongoose: () => Promise<void>;
 
 	beforeAll(async () => {
-		mongoServer = new MongoMemoryServer();
-		const mongoUri = await mongoServer.getConnectionString();
-		mongoose = await initMongoose(mongoUri);
+		({ stopMongoose, mongoose } = await initTestMongoose());
 	});
-	afterAll(async () => {
-		await mongoose.disconnect();
-		await mongoServer.stop();
-	});
+	afterAll(async () => await stopMongoose());
 
 	describe('register', () => {
 		test('success', async () => {

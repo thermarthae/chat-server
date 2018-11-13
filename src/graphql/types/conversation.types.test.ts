@@ -1,6 +1,5 @@
 import 'ts-jest';
-import MongoMemoryServer from 'mongodb-memory-server';
-import initMongoose from '../../initMongoose';
+import { initTestMongoose } from 'Test/initTestMongoose';
 import * as faker from 'faker';
 
 import { conversationType, userConversationsType } from './conversation.types';
@@ -17,19 +16,14 @@ const makeUser = (admin = false) => {
 };
 
 describe('Conversation Types', () => {
-	let mongoServer: MongoMemoryServer;
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
 	const types = conversationType.getFields();
+	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let stopMongoose: () => Promise<void>;
 
 	beforeAll(async () => {
-		mongoServer = new MongoMemoryServer();
-		const mongoUri = await mongoServer.getConnectionString();
-		mongoose = await initMongoose(mongoUri);
+		({ mongoose, stopMongoose } = await initTestMongoose());
 	});
-	afterAll(async () => {
-		await mongoose.disconnect();
-		await mongoServer.stop();
-	});
+	afterAll(async () => await stopMongoose());
 
 	test('_id', () => {
 		const id = 'asdasdasd';

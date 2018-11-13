@@ -1,7 +1,6 @@
 import 'ts-jest';
 import * as faker from 'faker';
-import MongoMemoryServer from 'mongodb-memory-server';
-import initMongoose from '../../initMongoose';
+import { initTestMongoose } from 'Test/initTestMongoose';
 
 import { ForbiddenError, ApolloError, UserInputError } from 'apollo-server-core';
 import UserModel, { UserErrors, IUser } from '../../models/user';
@@ -17,20 +16,15 @@ const makeUser = (admin = false) => {
 };
 
 describe('User queries', () => {
-	let mongoServer: MongoMemoryServer;
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let stopMongoose: () => Promise<void>;
 	let userToFind: IUser;
 
 	beforeAll(async () => {
-		mongoServer = new MongoMemoryServer();
-		const mongoUri = await mongoServer.getConnectionString();
-		mongoose = await initMongoose(mongoUri);
+		({ mongoose, stopMongoose } = await initTestMongoose());
 		userToFind = await makeUser().save().then(res => res.toObject());
 	});
-	afterAll(async () => {
-		await mongoose.disconnect();
-		await mongoServer.stop();
-	});
+	afterAll(async () => await stopMongoose());
 
 	describe('getUser', () => {
 		test('res when logged in', async () => {

@@ -1,7 +1,6 @@
 import 'ts-jest';
 import * as faker from 'faker';
-import MongoMemoryServer from 'mongodb-memory-server';
-import initMongoose from '../../initMongoose';
+import { initTestMongoose } from 'Test/initTestMongoose';
 import UserModel, { UserErrors } from '../../models/user';
 import dataloaders from '../../dataloaders';
 import { initConversation, sendMessage, markConversationAsRead } from './conversation.mutations';
@@ -17,19 +16,13 @@ const makeUser = (admin = false) => {
 };
 
 describe('Conversation mutations', () => {
-	let mongoServer: MongoMemoryServer;
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let stopMongoose: () => Promise<void>;
 	const initDate = new Date().getTime();
 
 	beforeAll(async () => {
-		mongoServer = new MongoMemoryServer();
-		const mongoUri = await mongoServer.getConnectionString();
-		mongoose = await initMongoose(mongoUri);
+		({ stopMongoose } = await initTestMongoose());
 	});
-	afterAll(async () => {
-		await mongoose.disconnect();
-		await mongoServer.stop();
-	});
+	afterAll(async () => await stopMongoose());
 
 	describe('initConversation', () => {
 		test('conversation in database', async () => {
