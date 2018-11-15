@@ -18,7 +18,7 @@ import { ConnectionContext, ExecutionParams } from 'subscriptions-transport-ws';
 import initPassport from './passport';
 import schema from './graphql';
 import createDataloaders, { IDataLoaders } from './dataloaders';
-import { getUsernameFromSession, deserializeUser } from './utils/access.utils';
+import { getUsernameFromSession, deserializeUser } from './utils/auth.utils';
 import { IUser, IRequest } from './models/user';
 import initMongoose from './initMongoose';
 
