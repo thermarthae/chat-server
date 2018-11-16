@@ -2,10 +2,10 @@ import 'ts-jest';
 import * as faker from 'faker';
 import { initTestMongoose } from 'Test/initTestMongoose';
 import UserModel, { UserErrors } from '../../models/user';
-import dataloaders from '../../dataloaders';
 import { initConversation, sendMessage, markConversationAsRead } from './conversation.mutations';
 import ConversationModel from '../../models/conversation';
 import { ForbiddenError, UserInputError, ApolloError } from 'apollo-server-core';
+import { fakeCtx } from 'Test/utils';
 
 const makeUser = (admin = false) => {
 	return new UserModel({
@@ -35,7 +35,7 @@ describe('Conversation mutations', () => {
 			const name = faker.lorem.words(3);
 
 			const res = await initConversation.resolve!(
-				{}, { userIdArr, message, name }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { userIdArr, message, name }, fakeCtx({ sessionOwner }), {} as any
 			);
 			const convInDB = await ConversationModel.findById(res._id).populate(['users', 'messages']);
 			const any = expect.anything(); // tslint:disable-line:variable-name
@@ -66,7 +66,7 @@ describe('Conversation mutations', () => {
 			const name = null;
 
 			const res = await initConversation.resolve!(
-				{}, { userIdArr, message, name }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { userIdArr, message, name }, fakeCtx({ sessionOwner }), {} as any
 			);
 			const convInDB = await ConversationModel.findById(res._id).populate(['users', 'messages']);
 			expect(convInDB!.users).toHaveLength(2);
@@ -84,7 +84,7 @@ describe('Conversation mutations', () => {
 				const name = null;
 
 				await initConversation.resolve!(
-					{}, { userIdArr, message, name }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { userIdArr, message, name }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
@@ -99,7 +99,7 @@ describe('Conversation mutations', () => {
 				const name = null;
 
 				await initConversation.resolve!(
-					{}, { userIdArr, message, name }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { userIdArr, message, name }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new UserInputError('Message could not be empty'));
@@ -114,7 +114,7 @@ describe('Conversation mutations', () => {
 				const name = null;
 
 				await initConversation.resolve!(
-					{}, { userIdArr, message, name }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { userIdArr, message, name }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new UserInputError('userIdArr must contain at least 1 user id'));
@@ -130,7 +130,7 @@ describe('Conversation mutations', () => {
 				const name = null;
 
 				await initConversation.resolve!(
-					{}, { userIdArr, message, name }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { userIdArr, message, name }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.UserNotExistsError, 'UserNotExistsError'));
@@ -152,7 +152,7 @@ describe('Conversation mutations', () => {
 
 			const message = faker.lorem.words(4);
 			const res = await sendMessage.resolve!(
-				{}, { conversationId: conversation.id, message }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { conversationId: conversation.id, message }, fakeCtx({ sessionOwner }), {} as any
 			);
 			expect(res).toMatchObject({
 				author: {
@@ -186,7 +186,7 @@ describe('Conversation mutations', () => {
 				const conversationId = '123';
 				const message = '123';
 
-				await sendMessage.resolve!({}, { conversationId, message }, { sessionOwner } as any, {} as any);
+				await sendMessage.resolve!({}, { conversationId, message }, fakeCtx({ sessionOwner }), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
@@ -198,7 +198,7 @@ describe('Conversation mutations', () => {
 				const conversationId = '123';
 				const message = '';
 
-				await sendMessage.resolve!({}, { conversationId, message }, { sessionOwner } as any, {} as any);
+				await sendMessage.resolve!({}, { conversationId, message }, fakeCtx({ sessionOwner }), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new UserInputError('Message could not be empty'));
 			}
@@ -215,7 +215,7 @@ describe('Conversation mutations', () => {
 				]);
 
 				await sendMessage.resolve!(
-					{}, { conversationId: conv.id, message: '123' }, { sessionOwner } as any, {} as any
+					{}, { conversationId: conv.id, message: '123' }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError('Conversation does not exist or access denied'));
@@ -237,7 +237,7 @@ describe('Conversation mutations', () => {
 
 		test('success', async () => {
 			const res = await markConversationAsRead.resolve!(
-				{}, { conversationId }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { conversationId }, fakeCtx({ sessionOwner }), {} as any
 			);
 			expect(res).toBe('Success!');
 
@@ -250,7 +250,7 @@ describe('Conversation mutations', () => {
 		test('error when unlogged', async () => {
 			try {
 				await markConversationAsRead.resolve!(
-					{}, { conversationId: '123' }, { sessionOwner: undefined } as any, {} as any
+					{}, { conversationId: '123' }, fakeCtx(), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
@@ -260,7 +260,7 @@ describe('Conversation mutations', () => {
 		test('error when no rights', async () => {
 			try {
 				await markConversationAsRead.resolve!(
-					{}, { conversationId }, { sessionOwner: makeUser(), ...dataloaders() }, {} as any
+					{}, { conversationId }, fakeCtx({ sessionOwner: makeUser() }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError('Conversation does not exist or access denied'));

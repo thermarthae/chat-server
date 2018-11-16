@@ -6,8 +6,8 @@ import { ForbiddenError, UserInputError } from 'apollo-server-core';
 import UserModel, { UserErrors } from '../../models/user';
 import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
-import dataloaders from '../../dataloaders';
 import { getConversation, findConversation, userConversations } from './conversation.queries';
+import { fakeCtx } from 'Test/utils';
 
 const makeUser = (admin = false) => {
 	return new UserModel({
@@ -35,7 +35,7 @@ describe('Conversation queries', () => {
 			await Promise.all([sessionOwner.save(), conv.save()]);
 
 			const res = await getConversation.resolve!(
-				{}, { id: conv.id }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { id: conv.id }, fakeCtx({ sessionOwner }), {} as any
 			);
 			expect(res).toEqual(conv.toObject());
 		});
@@ -46,7 +46,7 @@ describe('Conversation queries', () => {
 			await conv.save();
 
 			const res = await getConversation.resolve!(
-				{}, { id: conv.id }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { id: conv.id }, fakeCtx({ sessionOwner }), {} as any
 			);
 			expect(res).toEqual(conv.toObject());
 		});
@@ -62,7 +62,7 @@ describe('Conversation queries', () => {
 				]);
 
 				await getConversation.resolve!(
-					{}, { id: conv.id }, { sessionOwner: userWithoutRights, ...dataloaders() }, {} as any
+					{}, { id: conv.id }, fakeCtx({ sessionOwner: userWithoutRights }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(convError);
@@ -75,7 +75,7 @@ describe('Conversation queries', () => {
 				const id = mongoose.Types.ObjectId() as any;
 
 				await getConversation.resolve!(
-					{}, { id }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { id }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(convError);
@@ -86,7 +86,7 @@ describe('Conversation queries', () => {
 			try {
 				const id = mongoose.Types.ObjectId() as any;
 				await getConversation.resolve!(
-					{}, { id }, { sessionOwner: undefined, ...dataloaders() }, {} as any
+					{}, { id }, fakeCtx(), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
@@ -191,7 +191,7 @@ describe('Conversation queries', () => {
 
 		test('empty when no user conversations found', async () => {
 			const sessionOwner = makeUser();
-			const res = await userConversations.resolve!({}, {}, { sessionOwner } as any, {} as any);
+			const res = await userConversations.resolve!({}, {}, fakeCtx({ sessionOwner }) as any, {} as any);
 			expect(res).toEqual(emptyResponse);
 		});
 
@@ -243,7 +243,7 @@ describe('Conversation queries', () => {
 				msg.save(),
 			]);
 
-			const res = await userConversations.resolve!({}, {}, { sessionOwner } as any, {} as any);
+			const res = await userConversations.resolve!({}, {}, fakeCtx({ sessionOwner }) as any, {} as any);
 			expect(res).toMatchObject({
 				conversationArr: expect.arrayContaining([
 					expect.objectContaining({ _id: emptyConv._id }),

@@ -5,7 +5,7 @@ import { initTestMongoose } from 'Test/initTestMongoose';
 import { ForbiddenError, ApolloError, UserInputError } from 'apollo-server-core';
 import UserModel, { UserErrors, IUser } from '../../models/user';
 import { getUser, findUser, currentUser, login, logout } from './user.queries';
-import dataloaders from '../../dataloaders';
+import { fakeCtx } from 'Test/utils';
 
 const makeUser = (admin = false) => {
 	return new UserModel({
@@ -29,7 +29,7 @@ describe('User queries', () => {
 	describe('getUser', () => {
 		test('res when logged in', async () => {
 			const res = await getUser.resolve!(
-				{}, { id: userToFind._id }, { sessionOwner: userToFind, ...dataloaders() }, {} as any
+				{}, { id: userToFind._id }, fakeCtx({ sessionOwner: userToFind }), {} as any
 			);
 
 			expect(res.toObject()).toEqual(userToFind);
@@ -38,7 +38,7 @@ describe('User queries', () => {
 		test('error when logout', async () => {
 			try {
 				await getUser.resolve!(
-					{}, { id: userToFind._id }, { sessionOwner: undefined, ...dataloaders() }, {} as any
+					{}, { id: userToFind._id }, fakeCtx(), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
@@ -49,7 +49,7 @@ describe('User queries', () => {
 			try {
 				const sessionOwner = makeUser();
 				await getUser.resolve!(
-					{}, { id: userToFind._id }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { id: userToFind._id }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.RightsForbidden));
@@ -60,7 +60,7 @@ describe('User queries', () => {
 		test('when admin rights', async () => {
 			const sessionOwner = makeUser(true);
 			const res = await getUser.resolve!(
-				{}, { id: userToFind._id }, { sessionOwner, ...dataloaders() }, {} as any
+				{}, { id: userToFind._id }, fakeCtx({ sessionOwner }), {} as any
 			);
 
 			expect(res.toObject()).toEqual(userToFind);
@@ -70,7 +70,7 @@ describe('User queries', () => {
 			try {
 				const sessionOwner = makeUser(true);
 				await getUser.resolve!(
-					{}, { id: String(mongoose.Types.ObjectId()) }, { sessionOwner, ...dataloaders() }, {} as any
+					{}, { id: String(mongoose.Types.ObjectId()) }, fakeCtx({ sessionOwner }), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.UserNotExistsError, 'UserNotExistsError'));
@@ -82,7 +82,7 @@ describe('User queries', () => {
 		test('error when logout', async () => {
 			try {
 				await findUser.resolve!(
-					{}, { query: userToFind.name }, { sessionOwner: undefined } as any, {} as any
+					{}, { query: userToFind.name }, fakeCtx(), {} as any
 				);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
@@ -94,7 +94,7 @@ describe('User queries', () => {
 				try {
 					const sessionOwner = makeUser();
 					await findUser.resolve!(
-						{}, { query: userToFind.name.slice(0, 2) }, { sessionOwner } as any, {} as any
+						{}, { query: userToFind.name.slice(0, 2) }, fakeCtx({ sessionOwner }), {} as any
 					);
 				} catch (e) {
 					expect(e).toStrictEqual(new UserInputError('Query must be at least 3 characters long'));
@@ -104,7 +104,7 @@ describe('User queries', () => {
 			test('successful', async () => {
 				const sessionOwner = makeUser();
 				const res = await findUser.resolve!(
-					{}, { query: userToFind.name }, { sessionOwner } as any, {} as any
+					{}, { query: userToFind.name }, fakeCtx({ sessionOwner }), {} as any
 				);
 				expect(res[0].toObject()).toEqual(userToFind);
 			});
@@ -114,13 +114,13 @@ describe('User queries', () => {
 	describe('currentUser', () => {
 		test('res when logged in', async () => {
 			const sessionOwner = makeUser().toObject();
-			const res = await currentUser.resolve!({}, {}, { sessionOwner } as any, {} as any);
+			const res = await currentUser.resolve!({}, {}, fakeCtx({ sessionOwner }), {} as any);
 			expect(res).toEqual(sessionOwner);
 		});
 
 		test('error when logout', async () => {
 			try {
-				await currentUser.resolve!({}, {}, { sessionOwner: undefined } as any, {} as any);
+				await currentUser.resolve!({}, {}, fakeCtx(), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 			}
@@ -140,14 +140,14 @@ describe('User queries', () => {
 		});
 
 		test('successful', async () => {
-			const res = await login.resolve!({}, { username: user.email, password }, { req: reqSuccess } as any, {} as any);
+			const res = await login.resolve!({}, { username: user.email, password }, fakeCtx({ req: reqSuccess }), {} as any);
 			expect(res.toObject()).toEqual(user.toObject());
 		});
 
 		test('already logged error', async () => {
 			try {
 				const req = { isAuthenticated: () => true };
-				await login.resolve!({}, { username: user.email, password }, { req } as any, {} as any);
+				await login.resolve!({}, { username: user.email, password }, fakeCtx({ req }), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.AlreadyLoggedIn, 'AlreadyLoggedIn'));
 			}
@@ -157,7 +157,7 @@ describe('User queries', () => {
 			test('no username error', async () => {
 				try {
 					await login.resolve!(
-						{}, { username: '', password }, { req: reqSuccess } as any, {} as any
+						{}, { username: '', password }, fakeCtx({ req: reqSuccess }), {} as any
 					);
 				} catch (e) {
 					expect(e).toStrictEqual(new ApolloError(UserErrors.MissingUsernameError, 'MissingUsernameError'));
@@ -167,7 +167,7 @@ describe('User queries', () => {
 			test('wrong username error', async () => {
 				try {
 					await login.resolve!(
-						{}, { username: 'blabla', password }, { req: reqSuccess } as any, {} as any
+						{}, { username: 'blabla', password }, fakeCtx({ req: reqSuccess }), {} as any
 					);
 				} catch (e) {
 					expect(e).toStrictEqual(new ApolloError(UserErrors.IncorrectUsernameError, 'IncorrectUsernameError'));
@@ -179,7 +179,7 @@ describe('User queries', () => {
 			test('no password error', async () => {
 				try {
 					await login.resolve!(
-						{}, { username: user.email, password: '' }, { req: reqSuccess } as any, {} as any
+						{}, { username: user.email, password: '' }, fakeCtx({ req: reqSuccess }), {} as any
 					);
 				} catch (e) {
 					expect(e).toStrictEqual(new ApolloError(UserErrors.MissingPasswordError, 'MissingPasswordError'));
@@ -189,7 +189,7 @@ describe('User queries', () => {
 			test('wrong password error', async () => {
 				try {
 					await login.resolve!(
-						{}, { username: user.email, password: 'blablabla' }, { req: reqSuccess } as any, {} as any
+						{}, { username: user.email, password: 'blablabla' }, fakeCtx({ req: reqSuccess }), {} as any
 					);
 				} catch (e) {
 					expect(e).toStrictEqual(new ApolloError(UserErrors.IncorrectPasswordError, 'IncorrectPasswordError'));
@@ -206,14 +206,14 @@ describe('User queries', () => {
 				user: makeUser().toObject()
 			};
 
-			const res = await logout.resolve!({}, {}, { req } as any, {} as any);
+			const res = await logout.resolve!({}, {}, fakeCtx({ req }), {} as any);
 			expect(res).toEqual(req.user);
 		});
 
 		test('already logout error', async () => {
 			try {
 				const req = { isUnauthenticated: () => true };
-				await logout.resolve!({}, {}, { req } as any, {} as any);
+				await logout.resolve!({}, {}, fakeCtx({ req }), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.AlreadyLoggedOut, 'AlreadyLoggedOut'));
 			}

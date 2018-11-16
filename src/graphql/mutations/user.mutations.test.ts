@@ -4,6 +4,7 @@ import { initTestMongoose } from 'Test/initTestMongoose';
 import UserModel, { UserErrors } from '../../models/user';
 import { ApolloError, ForbiddenError } from 'apollo-server-core';
 import { register, deleteUserAccount } from './user.mutations';
+import { fakeCtx } from 'Test/utils';
 
 const makeUser = (admin = false) => {
 	return new UserModel({
@@ -30,7 +31,7 @@ describe('User mutations', () => {
 				password: 'password',
 			};
 
-			const res = await register.resolve!({}, payload, {} as any, {} as any);
+			const res = await register.resolve!({}, payload, fakeCtx(), {} as any);
 			const userInDB = await UserModel.findById(res._id);
 			expect(res.toObject()).toEqual(userInDB!.toObject());
 		});
@@ -42,7 +43,7 @@ describe('User mutations', () => {
 					email: faker.internet.email(),
 					password: '1234567',
 				};
-				await register.resolve!({}, payload, {} as any, {} as any);
+				await register.resolve!({}, payload, fakeCtx(), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.PasswordIsTooShort, 'PasswordIsTooShort'));
 			}
@@ -55,7 +56,7 @@ describe('User mutations', () => {
 					email: '12',
 					password: 'password',
 				};
-				await register.resolve!({}, payload, {} as any, {} as any);
+				await register.resolve!({}, payload, fakeCtx(), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.UsernameIsTooShort, 'UsernameIsTooShort'));
 			}
@@ -68,10 +69,10 @@ describe('User mutations', () => {
 					email: faker.internet.email(),
 					password: 'password',
 				};
-				await register.resolve!({}, payload, {} as any, {} as any);
+				await register.resolve!({}, payload, fakeCtx(), {} as any);
 
 				const newPayload = Object.assign({}, payload, { name: faker.internet.userName() });
-				await register.resolve!({}, newPayload, {} as any, {} as any);
+				await register.resolve!({}, newPayload, fakeCtx(), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ApolloError(UserErrors.UserExistsError, 'UserExistsError'));
 			}
@@ -83,7 +84,7 @@ describe('User mutations', () => {
 			const sessionOwner = makeUser();
 			await sessionOwner.save();
 
-			const res = await deleteUserAccount.resolve!({}, { id: sessionOwner.id }, { sessionOwner } as any, {} as any);
+			const res = await deleteUserAccount.resolve!({}, { id: sessionOwner.id }, fakeCtx({ sessionOwner }), {} as any);
 			expect(res.toObject()).toEqual(sessionOwner.toObject());
 
 			const userInDB = await UserModel.findById(sessionOwner._id);
@@ -95,7 +96,7 @@ describe('User mutations', () => {
 			const userToDelete = makeUser();
 			await userToDelete.save();
 
-			const res = await deleteUserAccount.resolve!({}, { id: userToDelete.id }, { sessionOwner } as any, {} as any);
+			const res = await deleteUserAccount.resolve!({}, { id: userToDelete.id }, fakeCtx({ sessionOwner }), {} as any);
 			expect(res.toObject()).toEqual(userToDelete.toObject());
 
 			const userInDB = await UserModel.findById(userToDelete._id);
@@ -104,7 +105,7 @@ describe('User mutations', () => {
 
 		test('error when logout', async () => {
 			try {
-				await deleteUserAccount.resolve!({}, { id: 'sad' }, { sessionOwner: undefined } as any, {} as any);
+				await deleteUserAccount.resolve!({}, { id: 'sad' }, fakeCtx(), {} as any);
 
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
@@ -116,7 +117,7 @@ describe('User mutations', () => {
 				const sessionOwner = makeUser();
 				const id = String(mongoose.Types.ObjectId());
 
-				await deleteUserAccount.resolve!({}, { id }, { sessionOwner } as any, {} as any);
+				await deleteUserAccount.resolve!({}, { id }, fakeCtx({ sessionOwner }), {} as any);
 			} catch (e) {
 				expect(e).toStrictEqual(new ForbiddenError(UserErrors.RightsForbidden));
 			}
