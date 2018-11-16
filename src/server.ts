@@ -24,7 +24,7 @@ import initMongoose from './initMongoose';
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
-	req?: IRequest;
+	req: IRequest;
 	sessionOwner: IUser | undefined;
 }
 export interface ISubContext {
