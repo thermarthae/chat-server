@@ -1,4 +1,5 @@
-import { IUser } from '../src/models/user';
+import * as faker from 'faker';
+import UserModel, { IUser } from '../src/models/user';
 import createDataloaders from '../src/dataloaders';
 
 export const fakeCtx = (arg: {
@@ -12,3 +13,11 @@ export const fakeCtx = (arg: {
 	...createDataloaders(),
 	...arg,
 });
+
+export const makeUser = (admin = false) => {
+	return new UserModel({
+		name: faker.internet.userName(),
+		email: faker.internet.email(),
+		role: admin ? 'ADMIN' : 'USER',
+	});
+};

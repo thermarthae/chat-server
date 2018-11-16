@@ -7,15 +7,7 @@ import UserModel, { UserErrors } from '../../models/user';
 import ConversationModel, { IConversation } from '../../models/conversation';
 import MessageModel from '../../models/message';
 import { getConversation, findConversation, userConversations } from './conversation.queries';
-import { fakeCtx } from 'Test/utils';
-
-const makeUser = (admin = false) => {
-	return new UserModel({
-		name: faker.internet.userName(),
-		email: faker.internet.email(),
-		role: admin ? 'ADMIN' : 'USER',
-	});
-};
+import { fakeCtx, makeUser } from 'Test/utils';
 
 describe('Conversation queries', () => {
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace

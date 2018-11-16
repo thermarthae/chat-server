@@ -5,15 +5,7 @@ import UserModel, { UserErrors } from '../../models/user';
 import { initConversation, sendMessage, markConversationAsRead } from './conversation.mutations';
 import ConversationModel from '../../models/conversation';
 import { ForbiddenError, UserInputError, ApolloError } from 'apollo-server-core';
-import { fakeCtx } from 'Test/utils';
-
-const makeUser = (admin = false) => {
-	return new UserModel({
-		name: faker.internet.userName(),
-		email: faker.internet.email(),
-		role: admin ? 'ADMIN' : 'USER',
-	});
-};
+import { fakeCtx, makeUser } from 'Test/utils';
 
 describe('Conversation mutations', () => {
 	let stopMongoose: () => Promise<void>;

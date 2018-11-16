@@ -5,15 +5,7 @@ import { initTestMongoose } from 'Test/initTestMongoose';
 import { ForbiddenError, ApolloError, UserInputError } from 'apollo-server-core';
 import UserModel, { UserErrors, IUser } from '../../models/user';
 import { getUser, findUser, currentUser, login, logout } from './user.queries';
-import { fakeCtx } from 'Test/utils';
-
-const makeUser = (admin = false) => {
-	return new UserModel({
-		name: faker.internet.userName(),
-		email: faker.internet.email(),
-		role: admin ? 'ADMIN' : 'USER',
-	});
-};
+import { fakeCtx, makeUser } from 'Test/utils';
 
 describe('User queries', () => {
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace

@@ -3,17 +3,9 @@ import { initTestMongoose } from 'Test/initTestMongoose';
 import * as faker from 'faker';
 
 import { conversationType, userConversationsType } from './conversation.types';
-import UserModel from '../../models/user';
 import ConversationModel from '../../models/conversation';
 import MessageModel from '../../models/message';
-
-const makeUser = (admin = false) => {
-	return new UserModel({
-		name: faker.internet.userName(),
-		email: faker.internet.email(),
-		role: admin ? 'ADMIN' : 'USER',
-	});
-};
+import { makeUser } from 'Test/utils';
 
 const parseObj = (obj: object) => JSON.parse(JSON.stringify(obj));
 
