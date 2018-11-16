@@ -5,9 +5,7 @@ import * as faker from 'faker';
 import { conversationType, userConversationsType } from './conversation.types';
 import ConversationModel from '../../models/conversation';
 import MessageModel from '../../models/message';
-import { makeUser } from 'Test/utils';
-
-const parseObj = (obj: object) => JSON.parse(JSON.stringify(obj));
+import { makeUser, parseObj } from 'Test/utils';
 
 describe('Conversation Types', () => {
 	const types = conversationType.getFields();

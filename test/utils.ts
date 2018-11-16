@@ -21,3 +21,5 @@ export const makeUser = (admin = false) => {
 		role: admin ? 'ADMIN' : 'USER',
 	});
 };
+
+export const parseObj = (obj: object) => JSON.parse(JSON.stringify(obj));
