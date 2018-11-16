@@ -81,7 +81,7 @@ export const conversationType = new GraphQLObjectType({
 				else messages = messages!.reverse().splice(skip, limit).reverse();
 
 				if (!messages![0].author.name) messages!.forEach(msg =>
-					msg.author = users!.find(usr => String(usr._id) == String(msg.author._id))!
+					msg.author = users!.find(usr => String(usr._id) == String(msg.author._id || msg.author))!
 				);
 				return messages!;
 			}

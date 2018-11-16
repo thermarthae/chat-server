@@ -15,6 +15,8 @@ const makeUser = (admin = false) => {
 	});
 };
 
+const parseObj = (obj: object) => JSON.parse(JSON.stringify(obj));
+
 describe('Conversation Types', () => {
 	const types = conversationType.getFields();
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
@@ -192,6 +194,31 @@ describe('Conversation Types', () => {
 			expect(res).toHaveLength(limit);
 			expect(res[0]).toEqual(messages[1].toObject());
 			expect(res[1]).toEqual(messages[2].toObject());
+		});
+
+		test('when conversation is cached', async () => {
+			const limit = 2;
+			const skip = 2;
+			const users = [1, 2].map(() => makeUser());
+
+			const convID = mongoose.Types.ObjectId();
+			const messages = [0, 1, 0, 1, 0].map(i => new MessageModel({
+				author: users[i],
+				content: faker.lorem.words(3),
+				conversation: convID,
+			}));
+			const conversation = new ConversationModel({
+				_id: convID,
+				users,
+				messages: messages.map(msg => msg.id)
+			});
+			await Promise.all([conversation.save(), MessageModel.create(messages)]);
+
+			const cachedConv = parseObj(conversation.toObject());
+			const res = await types.messages.resolve!(cachedConv, { skip, limit }, {}, {} as any);
+			expect(res).toHaveLength(limit);
+			expect(parseObj(messages[1])).toEqual(parseObj(res[0]));
+			expect(parseObj(messages[2])).toEqual(parseObj(res[1]));
 		});
 
 		test('when not found', async () => {
