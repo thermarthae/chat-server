@@ -18,13 +18,14 @@ import { ConnectionContext, ExecutionParams } from 'subscriptions-transport-ws';
 import initPassport from './passport';
 import schema from './graphql';
 import createDataloaders, { IDataLoaders } from './dataloaders';
-import { getUsernameFromSession, deserializeUser } from './utils/auth.utils';
+import { getUsernameFromSession, deserializeUser, setIsAuthCookie } from './utils/auth.utils';
 import { IUser, IRequest } from './models/user';
 import initMongoose from './initMongoose';
 
 export interface IRootValue { }
 export interface IContext extends IDataLoaders {
 	req: IRequest;
+	res: express.Response;
 	sessionOwner: IUser | undefined;
 }
 export interface ISubContext {
@@ -74,10 +75,13 @@ export default async () => {
 		debug: isDev,
 		schema,
 		tracing: true,
-		context: async ({ req, connection }: IApolloContext) => {
+		context: async ({ res, req, connection }: IApolloContext) => {
 			if (connection) return connection.context;
+			setIsAuthCookie(res, req.isAuthenticated());
+
 			return {
 				req,
+				res,
 				sessionOwner: req.user ? req.user.toObject() : undefined,
 				...createDataloaders(),
 			} as IContext;

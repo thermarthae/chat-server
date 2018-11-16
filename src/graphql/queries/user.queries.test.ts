@@ -132,8 +132,15 @@ describe('User queries', () => {
 		});
 
 		test('successful', async () => {
-			const res = await login.resolve!({}, { username: user.email, password }, fakeCtx({ req: reqSuccess }), {} as any);
+			const serverRes = {
+				cookie: jest.fn((s: string, b: boolean, obj: object) => { /**/ })
+			};
+
+			const res = await login.resolve!(
+				{}, { username: user.email, password }, fakeCtx({ req: reqSuccess, res: serverRes }), {} as any
+			);
 			expect(res.toObject()).toEqual(user.toObject());
+			expect(serverRes.cookie).toHaveBeenCalledWith('logged_in', true, expect.anything());
 		});
 
 		test('already logged error', async () => {
@@ -197,9 +204,13 @@ describe('User queries', () => {
 				isUnauthenticated: () => false,
 				user: makeUser().toObject()
 			};
+			const serverRes = {
+				cookie: jest.fn((s: string, b: boolean, obj: object) => { /**/ })
+			};
 
-			const res = await logout.resolve!({}, {}, fakeCtx({ req }), {} as any);
+			const res = await logout.resolve!({}, {}, fakeCtx({ req, res: serverRes }), {} as any);
 			expect(res).toEqual(req.user);
+			expect(serverRes.cookie).toHaveBeenCalledWith('logged_in', false, expect.anything());
 		});
 
 		test('already logout error', async () => {
