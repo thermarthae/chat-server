@@ -18,7 +18,11 @@ export const newMessageAdded: GraphQLFieldConfig<any, ISubContext> = {
 			return !!authorizedUsers.find((id: string) => verifiedUser._id.equals(id));
 		}
 	),
-	resolve: async payload => payload.message
+	resolve: async ({ message }, { }, { sessionOwner }) => {
+		return Object.assign(message, {
+			me: sessionOwner!._id.equals(message.author) ? true : false
+		});
+	}
 };
 
 export const updatedConversation: GraphQLFieldConfig<any, ISubContext> = {
@@ -30,11 +34,11 @@ export const updatedConversation: GraphQLFieldConfig<any, ISubContext> = {
 			return !!authorizedUsers.find((id: string) => verifiedUser._id.equals(id));
 		}
 	),
-	resolve: async payload => {
-		const updatedConv = Object.assign({},
-			payload.conversation,
-			{ messages: [payload.message] }
-		);
+	resolve: async ({ message, conversation }, { }, { sessionOwner }) => {
+		const messages = [Object.assign(message, {
+			me: sessionOwner!._id.equals(message.author) ? true : false
+		})];
+		const updatedConv = Object.assign({}, conversation, { messages });
 		return updatedConv;
 	}
 };

@@ -99,7 +99,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 	resolve: async ({ }, { conversationId, message }, { sessionOwner, convIDLoader }) => {
 		if (!message || message.length < 1) throw new UserInputError('Message could not be empty');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
-		const conversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
+		const oldConversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
 		const time = new Date();
 		const newMessage = new MessageModel({
 			author: verifiedUser._id,
@@ -108,7 +108,7 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 			content: message,
 		});
 
-		const [{ users }] = await Promise.all([
+		const [{ users, significantlyUpdatedAt, draft, seen }] = await Promise.all([
 			ConversationModel.findByIdAndUpdate(
 				conversationId,
 				{
@@ -127,18 +127,21 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 			newMessage.save()
 		]);
 
-		const parsedMessage = Object.assign({},
-			newMessage.toObject(),
-			{
-				me: true,
-				author: {
-					_id: verifiedUser._id,
-					name: verifiedUser.name,
-					email: verifiedUser.email,
-				}
-			}
-		);
-		pubsub.publish('newMessageAdded', { conversation, authorizedUsers: users, message: parsedMessage });
+		const updatedConv = Object.assign(oldConversation, {
+			significantlyUpdatedAt,
+			seen,
+			draft,
+		});
+		const parsedMessage = Object.assign(newMessage.toObject(), {
+			me: true,
+			author: verifiedUser
+		});
+
+		pubsub.publish('newMessageAdded', {
+			authorizedUsers: users,
+			conversation: updatedConv,
+			message: parsedMessage
+		});
 		return parsedMessage;
 	}
 };

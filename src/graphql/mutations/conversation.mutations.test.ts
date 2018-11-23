@@ -147,11 +147,7 @@ describe('Conversation mutations', () => {
 				{}, { conversationId: conversation.id, message }, fakeCtx({ sessionOwner }), {} as any
 			);
 			expect(res).toMatchObject({
-				author: {
-					_id: sessionOwner._id,
-					name: sessionOwner.name,
-					email: sessionOwner.email,
-				},
+				author: sessionOwner,
 				content: message,
 				conversation: conversation._id,
 				time: expect.any(Date),
