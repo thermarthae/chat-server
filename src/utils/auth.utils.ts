@@ -4,7 +4,7 @@ import { Response } from 'express';
 import { BaseMemoryStore } from 'express-session';
 
 export const setIsAuthCookie = (res: Response, isLoggedIn: boolean) => {
-	res!.cookie('logged_in', isLoggedIn, { sameSite: true, expires: false });
+	res!.cookie('logged_in', isLoggedIn, { sameSite: true, maxAge: 1000 * 60 * 60 * 24 * 14 }); //14 days
 };
 
 export const getUsernameFromSession = (sid: string, store: BaseMemoryStore) => new Promise((resolve, reject) =>
