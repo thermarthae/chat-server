@@ -39,10 +39,11 @@ export const register: GraphQLFieldConfig<IRootValue, IContext, IRegisterArgs> =
 			UserErrors.PasswordIsTooShort,
 			'PasswordIsTooShort'
 		);
-		
+
 		const newUser = new UserModel(payload);
 		return await UserModel.register(newUser, payload.password).catch(err => {
 			if (err.message === UserErrors.UserExistsError) err.name = 'UserExistsError';
+			throw new ApolloError(err.message, err.name);
 		});
 	}
 };
