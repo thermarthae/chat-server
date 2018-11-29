@@ -1,6 +1,12 @@
 {
-	"name": "newChatServer",
+	"name": "chat-server",
 	"version": "0.0.0",
+	"license": "MIT",
+	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/thermarthae/chat-server.git"
+	},
 	"scripts": {
 		"start": "yarn run development",
 		"production": "set NODE_ENV=production&& nodemon src/index.ts",
@@ -9,7 +15,6 @@
 		"build": "tsc",
 		"watch": "tsc -w"
 	},
-	"license": "MIT",
 	"dependencies": {
 		"apollo-server-express": "2.2.2",
 		"cachegoose": "^7.1.0",
