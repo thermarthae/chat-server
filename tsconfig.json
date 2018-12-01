@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"typeRoots" : ["./typings"],
+		"typeRoots" : ["src/typings"],
 		"target": "es5",
 		"module": "commonjs",
 		"lib": ["es5", "es6", "esnext"],
