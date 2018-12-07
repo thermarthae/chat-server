@@ -1,5 +1,5 @@
 import { TUserLoader, TConvLoader } from '../dataloaders';
-import { IUser, UserErrors } from '../models/user';
+import { IUser, UserErrors } from '../modules/user/UserModel';
 import { ForbiddenError, ApolloError } from 'apollo-server-core';
 
 export const checkUserRightsToId = (idToCheck: string, verifiedUser: IUser) => {

@@ -1,4 +1,4 @@
-import UserModel, { IUser } from '../models/user';
+import UserModel, { IUser } from '../modules/user/UserModel';
 
 import { Response } from 'express';
 import { BaseMemoryStore } from 'express-session';

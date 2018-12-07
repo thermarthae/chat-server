@@ -2,8 +2,8 @@ import mongoose = require('mongoose');
 import DataLoader = require('dataloader');
 import { ApolloError, ForbiddenError } from 'apollo-server-core';
 
-import UserModel, { IUser, UserErrors } from './models/user';
-import ConversationModel, { IConversation } from './models/conversation';
+import UserModel, { IUser, UserErrors } from './modules/user/UserModel';
+import ConversationModel, { IConversation } from './modules/conversation/ConversationModel';
 
 export type TUserLoader = DataLoader<string, IUser>;
 export type TConvLoader = DataLoader<string, IConversation>;

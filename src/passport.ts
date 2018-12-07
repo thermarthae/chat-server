@@ -1,5 +1,5 @@
 import passport = require('passport');
-import UserModel from './models/user';
+import UserModel from './modules/user/UserModel';
 import { Application } from 'express';
 
 export default (app: Application) => {

@@ -1,5 +1,5 @@
 import * as faker from 'faker';
-import UserModel, { IUser } from '../src/models/user';
+import UserModel, { IUser } from '../src/modules/user/UserModel';
 import createDataloaders from '../src/dataloaders';
 
 export const fakeCtx = (arg: {

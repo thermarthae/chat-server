@@ -16,10 +16,10 @@ import http = require('http');
 import { ConnectionContext, ExecutionParams } from 'subscriptions-transport-ws';
 
 import initPassport from './passport';
-import schema from './graphql';
+import schema from './modules';
 import createDataloaders, { IDataLoaders } from './dataloaders';
 import { getUsernameFromSession, deserializeUser, setIsAuthCookie } from './utils/auth.utils';
-import { IUser, IRequest } from './models/user';
+import { IUser, IRequest } from './modules/user/UserModel';
 import initMongoose from './initMongoose';
 
 export interface IRootValue { }
