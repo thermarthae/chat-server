@@ -25,7 +25,6 @@ export const getChatJewels: GraphQLFieldConfig<IRootValue, IContext> = {
 					}
 				}
 			},
-			{ $lookup: { from: 'Message', localField: 'messages', foreignField: '_id', as: 'messages' } },
 			{
 				$group: {
 					_id: null,
@@ -39,9 +38,7 @@ export const getChatJewels: GraphQLFieldConfig<IRootValue, IContext> = {
 					},
 					unreadCount: {
 						$sum: {
-							$cond: {
-								if: { $gt: [{ $arrayElemAt: ['$messages.time', -1] }, '$seen.time'] }, then: 1, else: 0
-							}
+							$cond: { if: { $gt: ['$significantlyUpdatedAt', '$seen.time'] }, then: 1, else: 0 }
 						}
 					},
 				},
