@@ -1,12 +1,12 @@
 import { GraphQLFieldConfig } from 'graphql';
 import { IRootValue, IContext } from '../../../server';
-import UserConversationsType from '../UserConversationsType';
+import ChatJewelsType from '../ChatJewelsType';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 import ConversationModel from '../ConversationModel';
 
-export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: UserConversationsType,
-	description: 'Get current user conversations',
+export const getChatJewels: GraphQLFieldConfig<IRootValue, IContext> = {
+	type: ChatJewelsType,
+	description: 'Get count data of user conversations',
 	resolve: async ({ }, { }, { sessionOwner }) => {
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const result = await ConversationModel.aggregate([
@@ -26,11 +26,9 @@ export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 				}
 			},
 			{ $lookup: { from: 'Message', localField: 'messages', foreignField: '_id', as: 'messages' } },
-			{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } },
 			{
 				$group: {
 					_id: null,
-					conversationArr: { $push: '$$ROOT' },
 					conversationCount: { $sum: 1 },
 					draftCount: {
 						$sum: {
@@ -49,12 +47,10 @@ export const userConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 				},
 			}
 		]).cache(10);
-		if (!result[0]) return {
-			conversationArr: [],
+		return result[0] || {
 			conversationCount: 0,
 			draftCount: 0,
 			unreadCount: 0,
 		};
-		return result[0];
 	}
 };

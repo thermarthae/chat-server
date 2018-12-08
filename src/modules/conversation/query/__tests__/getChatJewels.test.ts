@@ -7,18 +7,12 @@ import { UserErrors } from '../../../user/UserModel';
 import ConversationModel from '../../ConversationModel';
 import MessageModel from '../../../message/MessageModel';
 import { fakeCtx, makeUser } from 'Test/utils';
-import { userConversations } from '../userConversations';
+import { getChatJewels } from '../getChatJewels';
 
 
-describe('userConversations', () => {
+describe('getChatJewels', () => {
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
 	let stopMongoose: () => Promise<void>;
-	const emptyResponse = {
-		conversationArr: [],
-		conversationCount: 0,
-		draftCount: 0,
-		unreadCount: 0,
-	};
 
 	beforeAll(async () => {
 		({ stopMongoose, mongoose } = await initTestMongoose());
@@ -27,7 +21,7 @@ describe('userConversations', () => {
 
 	test('reject when logout', async () => {
 		try {
-			await userConversations.resolve!({}, {}, { sessionOwner: undefined } as any, {} as any);
+			await getChatJewels.resolve!({}, {}, { sessionOwner: undefined } as any, {} as any);
 		} catch (e) {
 			expect(e).toStrictEqual(new ForbiddenError(UserErrors.NotLoggedInForbidden));
 		}
@@ -35,8 +29,12 @@ describe('userConversations', () => {
 
 	test('empty when no user conversations found', async () => {
 		const sessionOwner = makeUser();
-		const res = await userConversations.resolve!({}, {}, fakeCtx({ sessionOwner }) as any, {} as any);
-		expect(res).toEqual(emptyResponse);
+		const res = await getChatJewels.resolve!({}, {}, fakeCtx({ sessionOwner }), {} as any);
+		expect(res).toEqual({
+			conversationCount: 0,
+			draftCount: 0,
+			unreadCount: 0,
+		});
 	});
 
 	test('correct response', async () => {
@@ -87,13 +85,8 @@ describe('userConversations', () => {
 			msg.save(),
 		]);
 
-		const res = await userConversations.resolve!({}, {}, fakeCtx({ sessionOwner }) as any, {} as any);
+		const res = await getChatJewels.resolve!({}, {}, fakeCtx({ sessionOwner }), {} as any);
 		expect(res).toMatchObject({
-			conversationArr: expect.arrayContaining([
-				expect.objectContaining({ _id: emptyConv._id }),
-				expect.objectContaining({ _id: convSeen._id }),
-				expect.objectContaining({ _id: convUnseen._id })
-			]),
 			conversationCount: 3,
 			draftCount: 1,
 			unreadCount: 2
