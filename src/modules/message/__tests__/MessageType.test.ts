@@ -2,9 +2,10 @@ import 'ts-jest';
 import * as faker from 'faker';
 import MessageType from '../MessageType';
 import UserModel from '../../user/UserModel';
+import { TFieldMap } from 'Test/utils';
 
 describe('Message Types', () => {
-	const types = MessageType.getFields();
+	const types = MessageType.getFields() as TFieldMap;
 
 	test('_id', () => {
 		const id = faker.random.uuid();

@@ -1,8 +1,9 @@
 import 'ts-jest';
 import UserTypes from '../UserType';
+import { TFieldMap } from 'Test/utils';
 
 describe('User Types', () => {
-	const types = UserTypes.getFields();
+	const types = UserTypes.getFields() as TFieldMap;
 
 	test('_id', () => {
 		const id = 'asdasdasd';

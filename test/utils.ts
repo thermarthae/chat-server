@@ -1,6 +1,10 @@
 import * as faker from 'faker';
 import UserModel, { IUser } from '../src/modules/user/UserModel';
 import createDataloaders from '../src/dataloaders';
+import { GraphQLFieldMap } from 'graphql';
+import { IContext } from 'src/server';
+
+export type TFieldMap<TSource = any> = GraphQLFieldMap<TSource, Partial<IContext>>;
 
 export const fakeCtx = (arg: {
 	sessionOwner?: IUser | undefined,

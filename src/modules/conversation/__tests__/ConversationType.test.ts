@@ -5,10 +5,10 @@ import * as faker from 'faker';
 import ConversationType from '../ConversationType';
 import ConversationModel from '../ConversationModel';
 import MessageModel from '../../message/MessageModel';
-import { makeUser, parseObj } from 'Test/utils';
+import { makeUser, parseObj, TFieldMap } from 'Test/utils';
 
 describe('Conversation Types', () => {
-	const types = ConversationType.getFields();
+	const types = ConversationType.getFields() as TFieldMap;
 	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
 	let stopMongoose: () => Promise<void>;
 
