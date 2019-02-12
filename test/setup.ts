@@ -1,3 +1,6 @@
-// tslint:disable:no-var-requires
-require('ts-node/register');
-module.exports = require('./testStart').default;
+import dotenv = require('dotenv');
+
+//execute before all tests
+export default async () => {
+	dotenv.config();
+};
