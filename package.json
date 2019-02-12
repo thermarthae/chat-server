@@ -16,7 +16,7 @@
 		"watch": "tsc -w"
 	},
 	"dependencies": {
-		"apollo-server-express": "2.3.3",
+		"apollo-server-express": "2.4.0",
 		"cachegoose": "^8.0.0",
 		"connect-mongo": "^2.0.3",
 		"cookie": "^0.3.1",
@@ -53,12 +53,12 @@
 		"@types/mongoose": "^5.3.8",
 		"@types/morgan": "^1.7.35",
 		"@types/multer": "^1.3.7",
-		"@types/node": "^10.12.18",
+		"@types/node": "^11.9.0",
 		"@types/passport": "^1.0.0",
 		"@types/passport-local": "^1.0.33",
 		"faker": "^4.1.0",
 		"jest": "^23.6.0",
-		"mongodb-memory-server": "^3.0.0",
+		"mongodb-memory-server": "^3.1.0",
 		"ts-jest": "^23.10.5",
 		"typescript": "^3.2.4"
 	}
