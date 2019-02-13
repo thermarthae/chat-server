@@ -11,6 +11,6 @@ export default async (uri?: string) => {
 	});
 
 	const mongoUri = uri || process.env.MONGODB_URI!;
-	await mongoose.connect(mongoUri, { useNewUrlParser: true });
+	await mongoose.connect(mongoUri, { useNewUrlParser: true, useCreateIndex: true });
 	return mongoose;
 };
