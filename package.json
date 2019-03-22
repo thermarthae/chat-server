@@ -9,8 +9,9 @@
 	},
 	"scripts": {
 		"start": "yarn run development",
-		"production": "set NODE_ENV=production&& nodemon src/index.ts",
-		"development": "set NODE_ENV=development&& nodemon src/index.ts",
+		"launch": "tsnd src/index.ts --pretty",
+		"production": "set NODE_ENV=production&& yarn run launch",
+		"development": "set NODE_ENV=development&& yarn run launch --respawn",
 		"test": "jest",
 		"build": "tsc",
 		"watch": "tsc -w"
@@ -60,6 +61,7 @@
 		"jest": "^24.5.0",
 		"mongodb-memory-server": "^4.1.2",
 		"ts-jest": "^24.0.0",
+		"ts-node-dev": "^1.0.0-pre.32",
 		"typescript": "^3.2.4"
 	}
 }
