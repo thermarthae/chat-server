@@ -30,7 +30,7 @@ const messageType = new GraphQLObjectType({
 			description: 'String in simplified extended ISO format (ISO 8601)'
 		},
 		content: {
-			type: GraphQLString
+			type: new GraphQLNonNull(GraphQLString)
 		},
 		me: {
 			type: new GraphQLNonNull(GraphQLBoolean),

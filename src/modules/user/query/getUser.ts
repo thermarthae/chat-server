@@ -4,7 +4,7 @@ import { IRootValue, IContext } from '../../../server';
 import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../../utils/access.utils';
 
 export const getUser: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {
-	type: UserType,
+	type: new GraphQLNonNull(UserType),
 	description: 'Get user by ID',
 	args: {
 		id: {

@@ -10,7 +10,7 @@ interface ILoginArgs {
 	password: string;
 }
 export const login: GraphQLFieldConfig<IRootValue, IContext, ILoginArgs> = {
-	type: UserType,
+	type: new GraphQLNonNull(UserType),
 	description: 'Log in',
 	args: {
 		username: { type: new GraphQLNonNull(GraphQLString) },

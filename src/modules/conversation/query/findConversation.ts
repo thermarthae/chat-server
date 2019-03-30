@@ -6,7 +6,7 @@ import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 import ConversationModel from '../ConversationModel';
 
 export const findConversation: GraphQLFieldConfig<IRootValue, IContext, { query: string }> = {
-	type: new GraphQLList(ConversationType),
+	type: new GraphQLNonNull(new GraphQLList(ConversationType)),
 	description: 'Find conversation',
 	args: { query: { type: new GraphQLNonNull(GraphQLString) } },
 	resolve: async ({ }, { query }, { sessionOwner }) => {

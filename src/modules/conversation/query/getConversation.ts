@@ -4,7 +4,7 @@ import ConversationType from '../ConversationType';
 import { checkIfNoSessionOwnerErr, checkUserRightsToConv } from '../../../utils/access.utils';
 
 export const getConversation: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {
-	type: ConversationType,
+	type: new GraphQLNonNull(ConversationType),
 	description: 'Get conversation by ID',
 	args: {
 		id: {

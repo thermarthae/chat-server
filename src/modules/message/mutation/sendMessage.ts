@@ -19,7 +19,7 @@ interface ISendMessageArgs {
 	message: string;
 }
 export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageArgs> = {
-	type: MessageType,
+	type: new GraphQLNonNull(MessageType),
 	description: 'Send message in given conversation',
 	args: {
 		conversationId: {

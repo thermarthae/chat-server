@@ -20,7 +20,7 @@ interface IInitConversationArgs {
 	name: null | string;
 }
 export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitConversationArgs> = {
-	type: ConversationType,
+	type: new GraphQLNonNull(ConversationType),
 	description: 'Send message to initialize conversation with given users',
 	args: {
 		userIdArr: {

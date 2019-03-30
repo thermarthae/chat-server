@@ -1,11 +1,11 @@
-import { GraphQLFieldConfig } from 'graphql';
+import { GraphQLFieldConfig, GraphQLNonNull } from 'graphql';
 import { IRootValue, IContext } from '../../../server';
 import ChatJewelsType from '../ChatJewelsType';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 import ConversationModel from '../ConversationModel';
 
 export const getChatJewels: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: ChatJewelsType,
+	type: new GraphQLNonNull(ChatJewelsType),
 	description: 'Get count data of user conversations',
 	resolve: async ({ }, { }, { sessionOwner }) => {
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);

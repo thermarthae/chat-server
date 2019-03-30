@@ -6,7 +6,7 @@ import { checkIfNoSessionOwnerErr, checkUserRightsToId } from '../../../utils/ac
 import { IRootValue, IContext } from '../../../server';
 
 export const deleteUserAccount: GraphQLFieldConfig<IRootValue, IContext, { id: string }> = {
-	type: UserType,
+	type: new GraphQLNonNull(UserType),
 	description: 'Delete user account',
 	args: {
 		id: {

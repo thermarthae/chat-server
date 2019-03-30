@@ -15,7 +15,7 @@ interface IRegisterArgs {
 	password: string;
 }
 export const register: GraphQLFieldConfig<IRootValue, IContext, IRegisterArgs> = {
-	type: UserType,
+	type: new GraphQLNonNull(UserType),
 	description: 'Register new user',
 	args: {
 		name: {

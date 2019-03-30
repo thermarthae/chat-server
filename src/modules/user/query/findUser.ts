@@ -6,7 +6,7 @@ import { IRootValue, IContext } from '../../../server';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 
 export const findUser: GraphQLFieldConfig<IRootValue, IContext, { query: string }> = {
-	type: new GraphQLList(UserType),
+	type: new GraphQLNonNull(new GraphQLList(UserType)),
 	description: 'Find user',
 	args: { query: { type: new GraphQLNonNull(GraphQLString) } },
 	resolve: async ({ }, { query }, { sessionOwner }) => {

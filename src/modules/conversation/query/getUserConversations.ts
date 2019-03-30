@@ -1,11 +1,11 @@
-import { GraphQLFieldConfig, GraphQLList } from 'graphql';
+import { GraphQLFieldConfig, GraphQLList, GraphQLNonNull } from 'graphql';
 import { IRootValue, IContext } from '../../../server';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 import ConversationModel from '../ConversationModel';
 import conversationType from '../ConversationType';
 
 export const getUserConversations: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: new GraphQLList(conversationType),
+	type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(conversationType))),
 	description: 'Get current user conversations',
 	resolve: async ({ }, { }, { sessionOwner }) => {
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);

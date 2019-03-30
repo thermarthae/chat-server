@@ -1,4 +1,4 @@
-import { GraphQLFieldConfig } from 'graphql';
+import { GraphQLFieldConfig, GraphQLNonNull } from 'graphql';
 import pubSub from '../../../pubSub';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -8,7 +8,7 @@ import ConversationType from '../ConversationType';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 
 export const updatedConversation: GraphQLFieldConfig<any, ISubContext> = {
-	type: ConversationType,
+	type: new GraphQLNonNull(ConversationType),
 	subscribe: withFilter(
 		() => pubSub.asyncIterator('newMessageAdded'),
 		({ authorizedUsers }, { }, { sessionOwner }) => {

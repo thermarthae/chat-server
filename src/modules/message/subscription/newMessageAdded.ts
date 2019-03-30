@@ -1,4 +1,4 @@
-import { GraphQLFieldConfig } from 'graphql';
+import { GraphQLFieldConfig, GraphQLNonNull } from 'graphql';
 import pubSub from '../../../pubSub';
 import { withFilter } from 'graphql-subscriptions';
 
@@ -8,7 +8,7 @@ import MessageType from '../MessageType';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 
 export const newMessageAdded: GraphQLFieldConfig<any, ISubContext> = {
-	type: MessageType,
+	type: new GraphQLNonNull(MessageType),
 	description: 'Get new added message',
 	subscribe: withFilter(
 		() => pubSub.asyncIterator('newMessageAdded'),

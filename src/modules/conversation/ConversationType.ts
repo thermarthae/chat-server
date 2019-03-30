@@ -25,7 +25,7 @@ const conversationType = new GraphQLObjectType({
 			resolve: ({ _id }) => String(_id)
 		},
 		name: {
-			type: GraphQLString,
+			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ name, users }, { }, { sessionOwner }) => {
 				if (name) return name;
 				const usersWithoutCurrent = users!.filter(user => !sessionOwner!._id.equals(user._id));
@@ -56,7 +56,7 @@ const conversationType = new GraphQLObjectType({
 			}
 		},
 		messages: {
-			type: new GraphQLList(MessageType),
+			type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(MessageType))),
 			args: {
 				limit: {
 					type: GraphQLInt,
