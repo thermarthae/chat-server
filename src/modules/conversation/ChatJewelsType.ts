@@ -7,7 +7,7 @@ import {
 import { IContext } from '../../server';
 
 const chatJewels = new GraphQLObjectType({
-	name: 'chatJewels',
+	name: 'ChatJewels',
 	description: 'Count of draft, unread and all user conversation',
 	fields: () => ({
 		conversationCount: {
