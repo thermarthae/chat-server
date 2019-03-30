@@ -59,8 +59,9 @@ const conversationType = new GraphQLObjectType({
 			type: new GraphQLList(MessageType),
 			args: {
 				limit: {
-					type: new GraphQLNonNull(GraphQLInt),
-					description: 'Number of messages to fetch'
+					type: GraphQLInt,
+					description: 'Number of messages to fetch',
+					defaultValue: 10
 				},
 				skip: {
 					type: GraphQLInt,
