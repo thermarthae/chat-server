@@ -12,6 +12,7 @@ import MessageModel from '../../message/MessageModel';
 import ConversationModel from '../ConversationModel';
 import ConversationType from '../ConversationType';
 import { checkIfUsersExist, checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
+import pubSub from '../../../pubSub';
 import { IRootValue, IContext } from '../../../server';
 
 interface IInitConversationArgs {
@@ -73,6 +74,13 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		});
 
 		await Promise.all([newMessage.save(), newConversation.save()]);
-		return await convIDLoader.load(newConversation._id);
+		const populatedConv = await convIDLoader.load(newConversation._id);
+
+		pubSub.publish('updatedConversation', {
+			authorizedIds: parsedUserIds,
+			conversation: populatedConv
+		});
+
+		return populatedConv;
 	}
 };
