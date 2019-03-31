@@ -4,22 +4,36 @@ import { withFilter } from 'graphql-subscriptions';
 
 import { ISubContext } from '../../../server';
 import ConversationType from '../ConversationType';
+import { IConversation } from '../ConversationModel';
 
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 
-export const updatedConversation: GraphQLFieldConfig<any, ISubContext> = {
+interface IUpdatedConversation {
+	authorizedIds: string[];
+	conversation: IConversation;
+}
+
+export const updatedConversation: GraphQLFieldConfig<IUpdatedConversation, ISubContext> = {
 	type: new GraphQLNonNull(ConversationType),
 	subscribe: withFilter(
-		() => pubSub.asyncIterator('newMessageAdded'),
-		({ authorizedUsers }, { }, { sessionOwner }) => {
-			const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
-			return !!authorizedUsers.find((id: string) => verifiedUser._id.equals(id));
+		() => pubSub.asyncIterator('updatedConversation'),
+		({ authorizedIds }: IUpdatedConversation, { }, { sessionOwner }: ISubContext) => {
+			try {
+				const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
+				return !!authorizedIds.find((id: string) => verifiedUser._id.equals(id));
+			} catch (err) {
+				console.log('catch:', err);
+				return false;
+			}
 		}
 	),
-	resolve: async ({ message, conversation }, { }, { sessionOwner }) => {
-		const messages = [Object.assign(message, {
-			me: sessionOwner!._id.equals(message.author) ? true : false
-		})];
+	resolve: async ({ conversation }, { }, { sessionOwner }) => {
+		const messages = conversation.messages!.map(
+			msg => Object.assign(msg, {
+				me: sessionOwner!._id.equals(msg.author) ? true : false
+			})
+		);
+
 		const updatedConv = Object.assign({}, conversation, { messages });
 		return updatedConv;
 	}
