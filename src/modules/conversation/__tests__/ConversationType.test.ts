@@ -6,6 +6,8 @@ import ConversationType from '../ConversationType';
 import ConversationModel from '../ConversationModel';
 import MessageModel from '../../message/MessageModel';
 import { makeUser, parseObj, TFieldMap } from 'Test/utils';
+import { UserInputError } from 'apollo-server-core';
+import UserModel from '../../user/UserModel';
 
 describe('Conversation Types', () => {
 	const types = ConversationType.getFields() as TFieldMap;
@@ -141,10 +143,8 @@ describe('Conversation Types', () => {
 		});
 	});
 
-	describe('messsages', () => {
-		test('when depopulated', async () => {
-			const limit = 2;
-			const skip = 2;
+	describe('messsageFeed', () => {
+		test('when not populated', async () => {
 			const users = [1, 2].map(() => makeUser());
 
 			const convID = mongoose.Types.ObjectId();
@@ -158,37 +158,83 @@ describe('Conversation Types', () => {
 				users,
 				messages: messages.map(msg => msg.id)
 			});
-			await Promise.all([conversation.save(), MessageModel.create(messages)]);
+			await Promise.all([UserModel.create(users), conversation.save(), MessageModel.create(messages)]);
 
-			const res = await types.messages.resolve!(conversation.toObject(), { skip, limit }, {}, {} as any);
-			expect(res).toHaveLength(limit);
-			expect(res[0]).toEqual(messages[1].toObject());
-			expect(res[1]).toEqual(messages[2].toObject());
+			const cursor = String(messages[3]._id);
+
+			/** [0, (1, 0), 1, 0] */
+			const res1 = await types.messageFeed.resolve!(
+				conversation.toObject(), { cursor, limit: 2 }, {}, {} as any
+			);
+			expect(res1.noMore).toEqual(false);
+			expect(res1.node).toHaveLength(2);
+			expect(res1.node[0]).toEqual(messages[1].toObject());
+			expect(res1.node[1]).toEqual(messages[2].toObject());
+
+			/** [(0, 1, 0), 1, 0] */
+			const res2 = await types.messageFeed.resolve!(
+				conversation.toObject(), { cursor, limit: 3 }, {}, {} as any
+			);
+			expect(res2.noMore).toEqual(true);
+			expect(res2.node).toHaveLength(3);
+			expect(res2.node[0]).toEqual(messages[0].toObject());
+			expect(res2.node[1]).toEqual(messages[1].toObject());
+			expect(res2.node[2]).toEqual(messages[2].toObject());
+
+			/** [0, 1, 0), 1, 0] */
+			const res3 = await types.messageFeed.resolve!(
+				conversation.toObject(), { cursor, limit: 10 }, {}, {} as any
+			);
+			expect(res3.noMore).toEqual(true);
+			expect(res3.node).toHaveLength(3);
+			expect(res3.node[0]).toEqual(messages[0].toObject());
+			expect(res3.node[1]).toEqual(messages[1].toObject());
+			expect(res3.node[2]).toEqual(messages[2].toObject());
 		});
 
 		test('when populated', async () => {
-			const limit = 2;
-			const skip = 2;
 			const users = [1, 2].map(() => makeUser());
 
-			const messages = [0, 1, 0, 1, 0].map(i => new MessageModel({
+			const messages = [0, 1, 0, 1, 0].map((i, index) => new MessageModel({
 				author: users[i],
-				content: faker.lorem.words(3)
+				content: index + ': ' + faker.lorem.words(3)
 			}));
 			const conversation = new ConversationModel({
 				users,
 				messages
 			});
 
-			const res = await types.messages.resolve!(conversation.toObject(), { skip, limit }, {}, {} as any);
-			expect(res).toHaveLength(limit);
-			expect(res[0]).toEqual(messages[1].toObject());
-			expect(res[1]).toEqual(messages[2].toObject());
+			const cursor = String(messages[3]._id);
+
+			/** [0, (1, 0), 1, 0] */
+			const res1 = await types.messageFeed.resolve!(conversation.toObject(), { cursor, limit: 2 }, {}, {} as any);
+			expect(res1.noMore).toEqual(false);
+			expect(res1.node).toHaveLength(2);
+			expect(res1.node[0]).toEqual(messages[1].toObject());
+			expect(res1.node[1]).toEqual(messages[2].toObject());
+
+			/** [(0, 1, 0), 1, 0] */
+			const res2 = await types.messageFeed.resolve!(
+				conversation.toObject(), { cursor, limit: 3 }, {}, {} as any
+			);
+			expect(res2.node).toHaveLength(3);
+			expect(res2.noMore).toEqual(true);
+			expect(res2.node[0]).toEqual(messages[0].toObject());
+			expect(res2.node[1]).toEqual(messages[1].toObject());
+			expect(res2.node[2]).toEqual(messages[2].toObject());
+
+			/** [0, 1, 0), 1, 0] */
+			const res3 = await types.messageFeed.resolve!(
+				conversation.toObject(), { cursor, limit: 10 }, {}, {} as any
+			);
+			expect(res3.node).toHaveLength(3);
+			expect(res3.noMore).toEqual(true);
+			expect(res3.node[0]).toEqual(messages[0].toObject());
+			expect(res3.node[1]).toEqual(messages[1].toObject());
+			expect(res3.node[2]).toEqual(messages[2].toObject());
 		});
 
 		test('when conversation is cached', async () => {
-			const limit = 2;
-			const skip = 2;
 			const users = [1, 2].map(() => makeUser());
 
 			const convID = mongoose.Types.ObjectId();
@@ -202,21 +248,154 @@ describe('Conversation Types', () => {
 				users,
 				messages: messages.map(msg => msg.id)
 			});
-			await Promise.all([conversation.save(), MessageModel.create(messages)]);
+			await Promise.all([UserModel.create(users), conversation.save(), MessageModel.create(messages)]);
 
 			const cachedConv = parseObj(conversation.toObject());
-			const res = await types.messages.resolve!(cachedConv, { skip, limit }, {}, {} as any);
-			expect(res).toHaveLength(limit);
-			expect(parseObj(messages[1])).toEqual(parseObj(res[0]));
-			expect(parseObj(messages[2])).toEqual(parseObj(res[1]));
+			const cursor = String(messages[3]._id);
+
+			/** [0, (1, 0), 1, 0] */
+			const res1 = await types.messageFeed.resolve!(cachedConv, { cursor, limit: 2 }, {}, {} as any);
+			expect(res1.noMore).toEqual(false);
+			expect(res1.node).toHaveLength(2);
+			expect(parseObj(res1.node[0])).toEqual(parseObj(messages[1]));
+			expect(parseObj(res1.node[1])).toEqual(parseObj(messages[2]));
+
+			/** [(0, 1, 0), 1, 0] */
+			const res2 = await types.messageFeed.resolve!(cachedConv, { cursor, limit: 3 }, {}, {} as any);
+			expect(res2.noMore).toEqual(true);
+			expect(res2.node).toHaveLength(3);
+			expect(parseObj(res2.node[0])).toEqual(parseObj(messages[0]));
+			expect(parseObj(res2.node[1])).toEqual(parseObj(messages[1]));
+			expect(parseObj(res2.node[2])).toEqual(parseObj(messages[2]));
+
+			/** [0, 1, 0), 1, 0] */
+			const res3 = await types.messageFeed.resolve!(cachedConv, { cursor, limit: 3 }, {}, {} as any);
+			expect(res3.noMore).toEqual(true);
+			expect(res3.node).toHaveLength(3);
+			expect(parseObj(res3.node[0])).toEqual(parseObj(messages[0]));
+			expect(parseObj(res3.node[1])).toEqual(parseObj(messages[1]));
+			expect(parseObj(res3.node[2])).toEqual(parseObj(messages[2]));
 		});
 
-		test('when not found', async () => {
-			const messages = [mongoose.Types.ObjectId()];
-			const conversation = new ConversationModel({ messages });
+		describe('cursor', () => {
+			describe('when messgage id equal to cursor not found', () => {
+				test('in not populated', async () => {
+					const users = [1, 2].map(() => makeUser());
 
-			const res = await types.messages.resolve!(conversation, { skip: 2, limit: 2 }, {}, {} as any);
-			expect(res).toHaveLength(0);
+					const convID = mongoose.Types.ObjectId();
+					const messages = [0, 1, 0, 1, 0].map(i => new MessageModel({
+						author: users[i],
+						content: faker.lorem.words(3),
+						conversation: convID,
+					}));
+					const conversation = new ConversationModel({
+						_id: convID,
+						users,
+						messages: messages.map(msg => msg.id)
+					});
+					await Promise.all([UserModel.create(users), conversation.save(), MessageModel.create(messages)]);
+
+					const cursor = String(mongoose.Types.ObjectId());
+
+					await types.messageFeed.resolve!(conversation.toObject(), { cursor, limit: 2 }, {}, {} as any)
+						.then((x: any) => expect(x).toBeUndefined())
+						.catch((e: any) => {
+							expect(e).toStrictEqual(new UserInputError('Message with id equal to cursor does not exist'));
+						});
+				});
+
+				test('in populated', async () => {
+					const users = [1, 2].map(() => makeUser());
+
+					const messages = [0, 1, 0, 1, 0].map(i => new MessageModel({
+						author: users[i],
+						content: faker.lorem.words(3),
+					}));
+					const conversation = new ConversationModel({
+						users,
+						messages
+					});
+
+					const cursor = String(mongoose.Types.ObjectId());
+
+					await types.messageFeed.resolve!(conversation.toObject(), { cursor, limit: 2 }, {}, {} as any)
+						.then((x: any) => expect(x).toBeUndefined())
+						.catch((e: any) => {
+							expect(e).toStrictEqual(new UserInputError('Message with id equal to cursor does not exist'));
+						});
+				});
+
+			});
+
+			describe('when no cursor', () => {
+				test('when not populated', async () => {
+					const users = [1, 2].map(() => makeUser());
+
+					const convID = mongoose.Types.ObjectId();
+					const messages = [0, 1, 0, 1, 0].map((i, ind) => new MessageModel({
+						author: users[i],
+						content: ind + faker.lorem.words(3),
+						conversation: convID,
+					}));
+					const conversation = new ConversationModel({
+						_id: convID,
+						users,
+						messages: messages.map(msg => msg.id)
+					});
+					await Promise.all([UserModel.create(users), conversation.save(), MessageModel.create(messages)]);
+
+					/** [0, 1, 0, (1, 0)] */
+					const res1 = await types.messageFeed.resolve!(conversation.toObject(), { limit: 2 }, {}, {} as any);
+					expect(res1.noMore).toEqual(false);
+					expect(res1.node).toHaveLength(2);
+					(res1.node as any[]).forEach((msg, index) => expect(msg).toEqual(messages[3 + index].toObject()));
+
+					/** [0, 1, 0, 1, 0)] */
+					const res2 = await types.messageFeed.resolve!(conversation.toObject(), { limit: 6 }, {}, {} as any);
+					expect(res2.noMore).toEqual(true);
+					expect(res2.node).toHaveLength(5);
+					(res2.node as any[]).forEach((msg, index) => expect(msg).toEqual(messages[index].toObject()));
+				});
+
+				test('when populated', async () => {
+					const users = [1, 2].map(() => makeUser());
+
+					const messages = [0, 1, 0, 1, 0].map((i, index) => new MessageModel({
+						author: users[i],
+						content: index + ': ' + faker.lorem.words(3)
+					}));
+					const conversation = new ConversationModel({
+						users,
+						messages
+					});
+
+					/** [0, 1, 0, (1, 0)] */
+					const res1 = await types.messageFeed.resolve!(conversation.toObject(), { limit: 2 }, {}, {} as any);
+					expect(res1.noMore).toEqual(false);
+					expect(res1.node).toHaveLength(2);
+					(res1.node as any[]).forEach((msg, index) => expect(msg).toEqual(messages[3 + index].toObject()));
+
+					/** [0, 1, 0, 1, 0)] */
+					const res2 = await types.messageFeed.resolve!(conversation.toObject(), { limit: 6 }, {}, {} as any);
+					expect(res2.noMore).toEqual(true);
+					expect(res2.node).toHaveLength(5);
+					(res2.node as any[]).forEach((msg, index) => expect(msg).toEqual(messages[index].toObject()));
+				});
+			});
+		});
+
+		test('when limit is < 1', async () => {
+			await types.messageFeed.resolve!({}, { limit: 0 }, {}, {} as any)
+				.then((x: any) => expect(x).toBeUndefined())
+				.catch((e: any) => {
+					expect(e).toStrictEqual(new UserInputError('Limit must be greater than 0'));
+				});
+
+			await types.messageFeed.resolve!({}, { limit: -2 }, {}, {} as any)
+				.then((x: any) => expect(x).toBeUndefined())
+				.catch((e: any) => {
+					expect(e).toStrictEqual(new UserInputError('Limit must be greater than 0'));
+				});
 		});
 	});
 });
