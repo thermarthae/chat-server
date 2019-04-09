@@ -10,10 +10,11 @@ import {
 } from 'graphql';
 import mongoose = require('mongoose');
 import { IConversation } from './ConversationModel';
-import MessageModel from '../message/MessageModel';
+import MessageModel, { IMessage } from '../message/MessageModel';
 import UserType from '../user/UserType';
-import MessageType from '../message/MessageType';
+import messageFeedType, { IMessageFeed } from '../message/MessageFeedType';
 import { IContext } from '../../server';
+import { UserInputError } from 'apollo-server-core';
 
 const isArr = (arg: any): arg is any[] => !arg.user;
 
@@ -55,41 +56,85 @@ const conversationType = new GraphQLObjectType({
 				return !userD ? '' : userD.content;
 			}
 		},
-		messages: {
-			type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(MessageType))),
+		messageFeed: {
+			type: new GraphQLNonNull(messageFeedType),
 			args: {
 				limit: {
 					type: GraphQLInt,
 					description: 'Number of messages to fetch',
 					defaultValue: 10
 				},
-				skip: {
-					type: GraphQLInt,
-					description: 'Messages to skip (cursor)',
-					defaultValue: 0
+				cursor: {
+					type: GraphQLID,
+					description: 'Return messages from before the cursor'
 				},
 			},
-			resolve: async ({ _id, messages, users }, { skip, limit }) => {
-				if (!messages![0].content) {
-					messages = await MessageModel.aggregate([
-						{ $match: { conversation: mongoose.Types.ObjectId(_id as any) } },
-						{ $sort: { _id: -1 } },
-						{ $skip: skip },
-						{ $limit: limit },
-						{ $sort: { _id: 1 } }
-					]);
-					if (!messages![0]) return [];
-				}
-				else messages = messages!.reverse().splice(skip, limit).reverse();
+			resolve: async ({ _id, messages, users }, { limit, cursor }): Promise<IMessageFeed> => {
+				if (limit < 1) throw new UserInputError('Limit must be greater than 0');
+				cursor = cursor ? mongoose.Types.ObjectId(cursor) : null;
+				let node: IMessage[] = [];
+				let noMore: boolean | undefined;
 
-				if (!messages![0].author.name) messages!.forEach(msg =>
-					msg.author = users!.find(usr => String(usr._id) == String(msg.author._id || msg.author))!
-				);
-				return messages!;
+				const msgsArePopulated = !!messages[0].content;
+				if (msgsArePopulated) {
+					const reversed = [...messages].reverse();
+					if (cursor) {
+						const cursorIndex = reversed.findIndex(msg => cursor.equals(msg._id));
+						if (cursorIndex < 0) throw new UserInputError('Message with id equal to cursor does not exist');
+						const fromIndex = cursorIndex + 1;
+						node = reversed.splice(fromIndex, limit).reverse();
+						noMore = limit > reversed.length;
+					}
+					else {
+						noMore = limit >= reversed.length;
+						node = reversed.splice(0, limit).reverse();
+					}
+				}
+				else {
+					const res = await MessageModel.aggregate()
+						.match({ conversation: mongoose.Types.ObjectId(_id) })
+						.sort({ _id: -1 })
+						.lookup({
+							from: 'User',
+							foreignField: '_id',
+							localField: 'author',
+							as: 'author'
+						})
+						.unwind('$author')
+						.group({ _id: null, msgsNode: { $push: '$$ROOT' } })
+						.project({
+							msgsNode: 1,
+							cursorIndex: !cursor ? { $sum: 0 } : { $indexOfArray: ['$msgsNode._id', cursor] }
+						})
+						.match({ cursorIndex: { $ne: -1 } })
+						.project({
+							msgsNode: 1,
+							cursorIndex: !cursor ? 1 : { $sum: ['$cursorIndex', 1] }
+						})
+						.project({
+							msgsNode: { $reverseArray: { $slice: ['$msgsNode', '$cursorIndex', limit] } },
+							debug: '$cursorIndex',
+							noMoreMsgs: {
+								$cond: {
+									if: { $gte: [limit, { $subtract: [{ $size: '$msgsNode' }, '$cursorIndex'] }] },
+									then: true,
+									else: false
+								}
+							}
+						}) as [{ msgsNode: IMessage[] | null; noMoreMsgs: boolean | null } | undefined];
+
+					// TODO: Remove 'as any' when destructuring issue is resolved
+					// See: https://github.com/Microsoft/TypeScript/issues/26235
+					const [{ msgsNode, noMoreMsgs } = {} as any] = res;
+					if (!msgsNode) throw new UserInputError('Message with id equal to cursor does not exist');
+
+					node = msgsNode;
+					noMore = noMoreMsgs;
+				}
+
+				return { node, noMore };
 			}
 		}
 	})
-} as GraphQLObjectTypeConfig<IConversation, IContext>);
+} as GraphQLObjectTypeConfig<IConversation & { messages: IMessage }, IContext>);
 export default conversationType;
-
-
