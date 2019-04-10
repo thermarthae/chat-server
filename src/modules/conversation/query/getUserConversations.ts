@@ -2,11 +2,11 @@ import { GraphQLFieldConfig, GraphQLList, GraphQLNonNull } from 'graphql';
 import { IRootValue, IContext } from '../../../server';
 import { checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 import ConversationModel from '../ConversationModel';
-import conversationType from '../ConversationType';
+import ConversationType from '../ConversationType';
 
 export const getUserConversations: GraphQLFieldConfig<IRootValue, IContext> = {
-	type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(conversationType))),
-	description: 'Get current user conversations',
+	type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(ConversationType))),
+	description: 'Get current user conversations. Return only last message - all args are omitted (cursor, skip, ...)',
 	resolve: async ({ }, { }, { sessionOwner }) => {
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const result = await ConversationModel.aggregate([
@@ -27,7 +27,11 @@ export const getUserConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 				}
 			},
 			{ $lookup: { from: 'Message', localField: 'messages', foreignField: '_id', as: 'messages' } },
-			{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } }
+			{ $unwind: '$messages' },
+			{ $lookup: { from: 'User', localField: 'messages.author', foreignField: '_id', as: 'messages.author' } },
+			{ $unwind: '$messages.author' },
+			{ $addFields: { messages: ['$messages'] } },
+			{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } },
 		]).cache(10);
 		return result;
 	}
