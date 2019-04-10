@@ -121,7 +121,8 @@ const conversationType = new GraphQLObjectType({
 									else: false
 								}
 							}
-						}) as [{ msgsNode: IMessage[] | null; noMoreMsgs: boolean | null } | undefined];
+						})
+						.cache(30) as [{ msgsNode: IMessage[] | null; noMoreMsgs: boolean | null } | undefined];
 
 					// TODO: Remove 'as any' when destructuring issue is resolved
 					// See: https://github.com/Microsoft/TypeScript/issues/26235
