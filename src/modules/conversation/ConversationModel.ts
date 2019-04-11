@@ -5,7 +5,7 @@ import { IUser } from '../user/UserModel';
 const conversationSchema = new mongoose.Schema(
 	{
 		name: {
-			type: String || null,
+			type: String,
 			trim: true
 		},
 		users: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
