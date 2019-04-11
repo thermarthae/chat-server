@@ -8,6 +8,7 @@ export const getUserConversations: GraphQLFieldConfig<IRootValue, IContext> = {
 	type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(ConversationType))),
 	description: 'Get current user conversations. Return only last message - all args are omitted (cursor, skip, ...)',
 	resolve: async ({ }, { }, { sessionOwner }) => {
+		// findConversation is using almost the same aggregation
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const result = await ConversationModel.aggregate([
 			{ $match: { users: verifiedUser._id } },

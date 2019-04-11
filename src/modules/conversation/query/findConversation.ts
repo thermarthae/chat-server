@@ -13,6 +13,7 @@ export const findConversation: GraphQLFieldConfig<IRootValue, IContext, { query:
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		if (query.length < 3) throw new UserInputError('Query must be at least 3 characters long');
 		return await ConversationModel.aggregate([
+			// Copy of getUserConversations aggregation
 			{ $match: { users: verifiedUser._id } },
 			{
 				$addFields: {
@@ -31,7 +32,10 @@ export const findConversation: GraphQLFieldConfig<IRootValue, IContext, { query:
 			},
 			{ $lookup: { from: 'Message', localField: 'messages', foreignField: '_id', as: 'messages' } },
 			{ $unwind: '$messages' },
+			{ $lookup: { from: 'User', localField: 'messages.author', foreignField: '_id', as: 'messages.author' } },
+			{ $unwind: '$messages.author' },
 			{ $lookup: { from: 'User', localField: 'users', foreignField: '_id', as: 'users' } },
+			//
 			{
 				$match: {
 					$or: [
