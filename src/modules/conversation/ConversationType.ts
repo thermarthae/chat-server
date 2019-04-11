@@ -69,7 +69,7 @@ const conversationType = new GraphQLObjectType({
 					description: 'Return messages from before the cursor'
 				},
 			},
-			resolve: async ({ _id, messages, users }, { limit, cursor }): Promise<IMessageFeed> => {
+			resolve: async ({ _id, messages }, { limit, cursor }): Promise<IMessageFeed> => {
 				if (limit < 1) throw new UserInputError('Limit must be greater than 0');
 				cursor = cursor ? mongoose.Types.ObjectId(cursor) : null;
 				let node: IMessage[] = [];
