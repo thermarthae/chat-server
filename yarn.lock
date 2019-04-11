@@ -618,6 +618,13 @@
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
 
+"@types/source-map-support@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@types/source-map-support/-/source-map-support-0.5.0.tgz#40f47e68bc0bdf54d19dddad4550f521cdb9968c"
+  integrity sha512-OrnAz5K5dXDgMdeRRoXIjDAvkodQ9ESvVJCyzrhzUJKmCkXgmYx/KLUBcVFe5eS4FiohfcY7YPxsdkmSwJz9wA==
+  dependencies:
+    "@types/node" "*"
+
 "@types/stack-utils@^1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/stack-utils/-/stack-utils-1.0.1.tgz#0a851d3bd96498fa25c33ab7278ed3bd65f06c3e"
@@ -5154,7 +5161,7 @@ source-map-resolve@^0.5.0:
     source-map-url "^0.4.0"
     urix "^0.1.0"
 
-source-map-support@^0.5.6:
+source-map-support@^0.5.11, source-map-support@^0.5.6:
   version "0.5.12"
   resolved "https://registry.yarnpkg.com/source-map-support/-/source-map-support-0.5.12.tgz#b4f3b10d51857a5af0138d3ce8003b201613d599"
   integrity sha512-4h2Pbvyy15EE02G+JOZpUCmqWJuqrs+sEkzewTm++BPi7Hvn/HwcqLAcNxYAyI0x13CpPPn+kMjl+hplXMHITQ==
