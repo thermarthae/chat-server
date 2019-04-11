@@ -1,5 +1,5 @@
 import initMongoose from '../src/initMongoose';
-import MongoMemoryServer from 'mongodb-memory-server';
+import { MongoMemoryServer } from 'mongodb-memory-server';
 
 export const initTestMongoose = async () => {
 	const mongoServer = new MongoMemoryServer();
