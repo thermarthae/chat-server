@@ -113,7 +113,6 @@ const conversationType = new GraphQLObjectType({
 						})
 						.project({
 							msgsNode: { $reverseArray: { $slice: ['$msgsNode', '$cursorIndex', limit] } },
-							debug: '$cursorIndex',
 							noMoreMsgs: {
 								$cond: {
 									if: { $gte: [limit, { $subtract: [{ $size: '$msgsNode' }, '$cursorIndex'] }] },
