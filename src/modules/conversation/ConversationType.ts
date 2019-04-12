@@ -82,12 +82,12 @@ const conversationType = new GraphQLObjectType({
 						const cursorIndex = reversed.findIndex(msg => cursor.equals(msg._id));
 						if (cursorIndex < 0) throw new UserInputError('Message with id equal to cursor does not exist');
 						const fromIndex = cursorIndex + 1;
-						node = reversed.splice(fromIndex, limit).reverse();
-						noMore = limit > reversed.length;
+						node = [...reversed].splice(fromIndex, limit).reverse();
+						noMore = limit >= reversed.length - fromIndex;
 					}
 					else {
 						noMore = limit >= reversed.length;
-						node = reversed.splice(0, limit).reverse();
+						node = [...reversed].splice(0, limit).reverse();
 					}
 				}
 				else {

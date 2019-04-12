@@ -204,6 +204,7 @@ describe('Conversation Types', () => {
 				messages
 			});
 
+			/** [0, 1, 0, >(1), 0] */
 			const cursor = String(messages[3]._id);
 
 			/** [0, (1, 0), 1, 0] */
