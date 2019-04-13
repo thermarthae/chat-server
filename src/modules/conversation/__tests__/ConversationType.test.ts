@@ -398,5 +398,27 @@ describe('Conversation Types', () => {
 					expect(e).toStrictEqual(new UserInputError('Limit must be greater than 0'));
 				});
 		});
+
+		test('noMoreMessages', async () => {
+			const users = [1, 2].map(() => makeUser());
+
+			const msg = new MessageModel({
+				author: users[0],
+				content: faker.lorem.words(3)
+			});
+			const conversation = new ConversationModel({
+				users,
+				messages: [msg]
+			});
+
+			const res1 = await types.messageFeed.resolve!(conversation.toObject(), { limit: 2 }, {}, {} as any);
+			expect(res1.noMore).toEqual(true);
+
+			const noMoreMessages = false;
+			const res2 = await types.messageFeed.resolve!(
+				Object.assign({ noMoreMessages }, conversation.toObject()), { limit: 2 }, {}, {} as any
+			);
+			expect(res2.noMore).toEqual(noMoreMessages);
+		});
 	});
 });

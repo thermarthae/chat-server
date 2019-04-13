@@ -69,11 +69,11 @@ const conversationType = new GraphQLObjectType({
 					description: 'Return messages from before the cursor'
 				},
 			},
-			resolve: async ({ _id, messages }, { limit, cursor }): Promise<IMessageFeed> => {
+			resolve: async ({ _id, messages, noMoreMessages }, { limit, cursor }): Promise<IMessageFeed> => {
 				if (limit < 1) throw new UserInputError('Limit must be greater than 0');
 				cursor = cursor ? mongoose.Types.ObjectId(cursor) : null;
 				let node: IMessage[] = [];
-				let noMore: boolean | undefined;
+				let noMore = noMoreMessages;
 
 				const msgsArePopulated = !!messages[0].content;
 				if (msgsArePopulated) {
@@ -83,10 +83,10 @@ const conversationType = new GraphQLObjectType({
 						if (cursorIndex < 0) throw new UserInputError('Message with id equal to cursor does not exist');
 						const fromIndex = cursorIndex + 1;
 						node = [...reversed].splice(fromIndex, limit).reverse();
-						noMore = limit >= reversed.length - fromIndex;
+						if (typeof noMore !== 'boolean') noMore = limit >= reversed.length - fromIndex;
 					}
 					else {
-						noMore = limit >= reversed.length;
+						if (typeof noMore !== 'boolean') noMore = limit >= reversed.length;
 						node = [...reversed].splice(0, limit).reverse();
 					}
 				}
@@ -136,5 +136,5 @@ const conversationType = new GraphQLObjectType({
 			}
 		}
 	})
-} as GraphQLObjectTypeConfig<IConversation & { messages: IMessage }, IContext>);
+} as GraphQLObjectTypeConfig<IConversation & { messages: IMessage, noMoreMessages?: boolean }, IContext>);
 export default conversationType;
