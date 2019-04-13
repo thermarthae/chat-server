@@ -63,7 +63,7 @@ describe('getUserConversations', () => {
 		});
 
 		const convID3 = mongoose.Types.ObjectId();
-		const messages3 = [0, 1, 0, 1, 0].map(i => new MessageModel({
+		const messages3 = [0].map(i => new MessageModel({
 			author: users[i],
 			content: faker.lorem.words(3),
 			conversation: convID3,
@@ -92,5 +92,10 @@ describe('getUserConversations', () => {
 		expect(res[0].users[0]).toHaveProperty('name');
 		expect(res[0].messages[0]).toHaveProperty('_id', messages1[lastMsgIndex]._id);
 		expect(res[0].messages[0].author).toHaveProperty('_id', messages1[lastMsgIndex].author._id);
+
+		//check noMoreMessages
+		expect(res[0].noMoreMessages).toEqual(false);
+		expect(res[1].noMoreMessages).toEqual(false);
+		expect(res[2].noMoreMessages).toEqual(true);
 	});
 });
