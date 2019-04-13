@@ -27,6 +27,13 @@ export const findConversation: GraphQLFieldConfig<IRootValue, IContext, { query:
 						$arrayElemAt: [{
 							$filter: { input: '$seen', cond: { $eq: ['$$this.user', verifiedUser._id] } }
 						}, 0]
+					},
+					noMoreMessages: {
+						$cond: {
+							if: { $lte: [{ $size: '$messages' }, 1] },
+							then: true,
+							else: false
+						}
 					}
 				}
 			},

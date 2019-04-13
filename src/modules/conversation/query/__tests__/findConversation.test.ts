@@ -92,4 +92,46 @@ describe('findConversation', () => {
 			expect(e).toStrictEqual(new UserInputError('Query must be at least 3 characters long'));
 		}
 	});
+
+	test('user population', async () => {
+		const res: IConversation[] = await findConversation.resolve!(
+			{}, { query: msgContent }, { sessionOwner: userWithAccess } as any, {} as any
+		);
+
+		//check population
+		expect(res[0].users![0]).toHaveProperty('name');
+		expect(res[0].messages![0]).toHaveProperty('content', msgContent);
+		expect(res[0].messages![0].author).toHaveProperty('name', userWithAccess.name);
+	});
+
+	test('noMoreMessages works', async () => {
+		const convID = mongoose.Types.ObjectId();
+		const content = faker.lorem.words(4);
+		const msgs = [0, 1, 2].map(i => new MessageModel({
+			author: userWithAccess,
+			conversation: convID,
+			content: i + content,
+		}));
+		conv = new ConversationModel({
+			_id: convID,
+			name: faker.lorem.words(4),
+			users: [userWithAccess],
+			messages: msgs,
+		});
+
+		await Promise.all([
+			UserModel.create([userWithAccess, userWithoutAccess]),
+			conv.save(),
+			MessageModel.create(msgs),
+		]);
+
+		const res1 = await findConversation.resolve!(
+			{}, { query: msgContent }, { sessionOwner: userWithAccess } as any, {} as any
+		);
+		const res2 = await findConversation.resolve!(
+			{}, { query: content }, { sessionOwner: userWithAccess } as any, {} as any
+		);
+		expect(res1[0].noMoreMessages).toEqual(true);
+		expect(res2[0].noMoreMessages).toEqual(false);
+	});
 });
