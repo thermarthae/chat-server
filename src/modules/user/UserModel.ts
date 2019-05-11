@@ -52,6 +52,7 @@ export enum UserErrors {
 	RightsForbidden = 'Access denied',
 	UsernameIsTooShort = 'Username is too short (minimum is 3 characters)',
 	PasswordIsTooShort = 'Password is too short (minimum is 8 characters)',
+	PasswordsAreNotEqual = 'Passwords are not equal',
 }
 
 
