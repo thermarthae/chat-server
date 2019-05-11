@@ -6,8 +6,8 @@ export default async (uri?: string) => {
 
 	cachegoose(mongoose, {
 		engine: isProd ? 'redis' : 'memory',
-		port: process.env.REDIS_PORT,
-		host: process.env.REDIS_ADDRESS
+		port: parseInt(process.env.REDIS_PORT!),
+		host: process.env.REDIS_ADDRESS!
 	});
 
 	const mongoUri = uri || process.env.MONGODB_URI!;
