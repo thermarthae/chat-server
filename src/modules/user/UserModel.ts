@@ -37,7 +37,7 @@ const userSchema: mongoose.PassportLocalSchema = new mongoose.Schema(
 
 export enum UserErrors {
 	UnknownError = 'An unknown error has occurred',
-	UserExistsError = 'User with the given username is already registered',
+	UserExistsError = 'User with the given email is already registered',
 	UserNotExistsError = 'User not exist',
 	MissingUsernameError = 'No username was given',
 	IncorrectUsernameError = 'The specified user does not exist.',
