@@ -11,7 +11,7 @@ import UserModel from '../../user/UserModel';
 
 describe('Conversation Types', () => {
 	const types = ConversationType.getFields() as TFieldMap;
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let mongoose: typeof import('mongoose');
 	let stopMongoose: () => Promise<void>;
 
 	beforeAll(async () => {

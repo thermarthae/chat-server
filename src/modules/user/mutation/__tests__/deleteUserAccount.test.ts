@@ -6,7 +6,7 @@ import { fakeCtx, makeUser } from 'Test/utils';
 import { deleteUserAccount } from '../deleteUserAccount';
 
 describe('deleteUserAccount', () => {
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let mongoose: typeof import('mongoose');
 	let stopMongoose: () => Promise<void>;
 
 	beforeAll(async () => {

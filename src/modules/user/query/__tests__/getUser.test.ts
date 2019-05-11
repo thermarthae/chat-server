@@ -7,7 +7,7 @@ import { fakeCtx, makeUser } from 'Test/utils';
 import { getUser } from '../getUser';
 
 describe('getUser', () => {
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let mongoose: typeof import('mongoose');
 	let stopMongoose: () => Promise<void>;
 	let userToFind: IUser;
 

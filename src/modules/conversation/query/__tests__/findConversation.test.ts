@@ -10,7 +10,7 @@ import { makeUser } from 'Test/utils';
 import { findConversation } from '../findConversation';
 
 describe('findConversation', () => {
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let mongoose: typeof import('mongoose');
 	let stopMongoose: () => Promise<void>;
 
 	let conv: IConversation;

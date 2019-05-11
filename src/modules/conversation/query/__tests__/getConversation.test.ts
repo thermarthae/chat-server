@@ -8,7 +8,7 @@ import { fakeCtx, makeUser } from 'Test/utils';
 import { getConversation } from '../getConversation';
 
 describe('getConversation', () => {
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let mongoose: typeof import('mongoose');
 	let stopMongoose: () => Promise<void>;
 	const convError = new ForbiddenError('Conversation does not exist or access denied');
 

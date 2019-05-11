@@ -11,7 +11,7 @@ import { getChatJewels } from '../getChatJewels';
 
 
 describe('getChatJewels', () => {
-	let mongoose: typeof import('mongoose'); // tslint:disable-line:whitespace
+	let mongoose: typeof import('mongoose');
 	let stopMongoose: () => Promise<void>;
 
 	beforeAll(async () => {
