@@ -5,8 +5,8 @@ import { ApolloError, ForbiddenError } from 'apollo-server-core';
 import UserModel, { IUser, UserErrors } from './modules/user/UserModel';
 import ConversationModel, { IConversation } from './modules/conversation/ConversationModel';
 
-export type TUserLoader = DataLoader<string, IUser>;
-export type TConvLoader = DataLoader<string, IConversation>;
+export type TUserLoader = DataLoader<string | {}, IUser>;
+export type TConvLoader = DataLoader<string | {}, IConversation>;
 
 export const userIDFn = async (ids: Array<{}>) => {
 	const error = new ApolloError(
@@ -37,8 +37,8 @@ export interface IDataLoaders {
 }
 
 const createDataloaders = () => ({
-	userIDLoader: new DataLoader(async ids => userIDFn(ids)),
-	convIDLoader: new DataLoader(async ids => convIDFn(ids)),
+	userIDLoader: new DataLoader(async ids => userIDFn(ids)) as TUserLoader,
+	convIDLoader: new DataLoader(async ids => convIDFn(ids)) as TConvLoader,
 });
 
 export default createDataloaders;
