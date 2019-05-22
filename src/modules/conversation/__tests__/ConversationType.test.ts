@@ -19,10 +19,18 @@ describe('Conversation Types', () => {
 	});
 	afterAll(async () => await stopMongoose());
 
-	test('_id', () => {
-		const id = 'asdasdasd';
-		const res = types._id.resolve!({ _id: id }, {}, {}, {} as any);
-		expect(res).toEqual(id);
+	describe('_id', () => {
+		test('without G prefix', () => {
+			const _id = '123456789o123456789o1234'; //24
+			const res = types._id.resolve!({ _id }, {}, {}, {} as any);
+			expect(res).toEqual('G' + _id);
+		});
+
+		test('with G prefix', () => {
+			const _id = 'G123456789o123456789o1234'; //25
+			const res = types._id.resolve!({ _id }, {}, {}, {} as any);
+			expect(res).toEqual(_id);
+		});
 	});
 
 	describe('name', () => {
