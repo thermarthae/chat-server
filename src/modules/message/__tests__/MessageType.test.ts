@@ -13,10 +13,18 @@ describe('Message Types', () => {
 		expect(res).toEqual(id);
 	});
 
-	test('conversation', () => {
-		const conversation = 'conversation';
-		const res = types.conversation.resolve!({ conversation }, {}, {}, {} as any);
-		expect(res).toEqual(conversation);
+	describe('conversation', () => {
+		test('without G prefix', () => {
+			const conversation = '123456789o123456789o1234'; //24
+			const res = types.conversation.resolve!({ conversation }, {}, {}, {} as any);
+			expect(res).toEqual('G' + conversation);
+		});
+
+		test('with G prefix', () => {
+			const conversation = 'G123456789o123456789o1234'; //25
+			const res = types.conversation.resolve!({ conversation }, {}, {}, {} as any);
+			expect(res).toEqual(conversation);
+		});
 	});
 
 	describe('me', () => {
