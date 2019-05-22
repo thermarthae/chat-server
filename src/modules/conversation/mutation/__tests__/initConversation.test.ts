@@ -3,7 +3,7 @@ import * as faker from 'faker';
 import { initTestMongoose } from 'Test/initTestMongoose';
 import UserModel, { UserErrors } from '../../../user/UserModel';
 import ConversationModel from '../../ConversationModel';
-import { ForbiddenError, UserInputError, ApolloError } from 'apollo-server-core';
+import { ForbiddenError, UserInputError, ApolloError, ValidationError } from 'apollo-server-core';
 import { fakeCtx, makeUser } from 'Test/utils';
 import { initConversation } from '../initConversation';
 
@@ -124,6 +124,29 @@ describe('initConversation', () => {
 			);
 		} catch (e) {
 			expect(e).toStrictEqual(new ApolloError(UserErrors.UserNotExistsError, 'UserNotExistsError'));
+		}
+	});
+
+	test('error when similar conversation already exist', async () => {
+		const sessionOwner = makeUser();
+		const ctx = fakeCtx({ sessionOwner });
+		const usersInConv = [makeUser(), makeUser()];
+		await UserModel.create([sessionOwner, ...usersInConv]);
+
+		const userIdArr = usersInConv.map(c => c.id);
+		const message = faker.lorem.words(3);
+		const name = faker.lorem.words(3);
+
+		const res = await initConversation.resolve!(
+			{}, { userIdArr, message, name }, ctx, {} as any
+		);
+		const convInDB = await ConversationModel.findById(res._id).populate(['users', 'messages']);
+		expect(convInDB!.name).toEqual(res!.name);
+
+		try {
+			await initConversation.resolve!({}, { userIdArr, message, name }, ctx, {} as any);
+		} catch (e) {
+			expect(e).toStrictEqual(new ValidationError('Conversation already exist'));
 		}
 	});
 });
