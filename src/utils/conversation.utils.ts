@@ -16,3 +16,24 @@ export const checkIfConvExist = async (parsedUserIds: string[]) => {
 
 	if (convExist) throw new ValidationError('Conversation already exist');
 };
+
+export const determineRealConvId = async (convID: string, verifiedUserId: string) => {
+	if (convID.length === 25) return convID.substr(1);
+
+	const usersIDs = [convID, String(verifiedUserId)].map(id => Types.ObjectId(id));
+	const [conv, unwantedConv] = await ConversationModel.aggregate()
+		.match({
+			$and: [
+				{ users: { $size: 2 } },
+				{ users: { $all: usersIDs } }
+			]
+		})
+		.project({ _id: 1 })
+		.limit(2)
+		.cache(60);
+
+	if (!conv) throw new ValidationError('Could not determine real conversation ID');
+	if (unwantedConv) throw new ValidationError('Too many conversations');
+
+	return String(conv._id);
+};
