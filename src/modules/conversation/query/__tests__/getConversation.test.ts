@@ -23,7 +23,7 @@ describe('getConversation', () => {
 		await Promise.all([sessionOwner.save(), conv.save()]);
 
 		const res = await getConversation.resolve!(
-			{}, { id: conv.id }, fakeCtx({ sessionOwner }), {} as any
+			{}, { id: 'G' + conv.id }, fakeCtx({ sessionOwner }), {} as any
 		);
 		expect(res).toEqual(conv.toObject());
 	});
@@ -34,7 +34,7 @@ describe('getConversation', () => {
 		await conv.save();
 
 		const res = await getConversation.resolve!(
-			{}, { id: conv.id }, fakeCtx({ sessionOwner }), {} as any
+			{}, { id: 'G' + conv.id }, fakeCtx({ sessionOwner }), {} as any
 		);
 		expect(res).toEqual(conv.toObject());
 	});
@@ -50,7 +50,7 @@ describe('getConversation', () => {
 			]);
 
 			await getConversation.resolve!(
-				{}, { id: conv.id }, fakeCtx({ sessionOwner: userWithoutRights }), {} as any
+				{}, { id: 'G' + conv.id }, fakeCtx({ sessionOwner: userWithoutRights }), {} as any
 			);
 		} catch (e) {
 			expect(e).toStrictEqual(convError);
@@ -60,7 +60,7 @@ describe('getConversation', () => {
 	test('reject when conversation not exist', async () => {
 		try {
 			const sessionOwner = makeUser();
-			const id = mongoose.Types.ObjectId() as any;
+			const id = 'G' + mongoose.Types.ObjectId().toHexString();
 
 			await getConversation.resolve!(
 				{}, { id }, fakeCtx({ sessionOwner }), {} as any
@@ -72,7 +72,7 @@ describe('getConversation', () => {
 
 	test('reject when logout', async () => {
 		try {
-			const id = mongoose.Types.ObjectId() as any;
+			const id = 'G' + mongoose.Types.ObjectId().toHexString();
 			await getConversation.resolve!(
 				{}, { id }, fakeCtx(), {} as any
 			);

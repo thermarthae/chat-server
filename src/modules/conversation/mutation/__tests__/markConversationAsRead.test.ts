@@ -15,7 +15,7 @@ describe('markConversationAsRead', () => {
 		users: [sessionOwner],
 		seen: [{ user: sessionOwner._id, time: new Date(0) }],
 	});
-	const conversationId = String(conv._id);
+	const conversationId = 'G' + String(conv._id);
 
 	beforeAll(async () => {
 		({ stopMongoose } = await initTestMongoose());
