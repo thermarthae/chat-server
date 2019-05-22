@@ -23,7 +23,10 @@ const conversationType = new GraphQLObjectType({
 	fields: () => ({
 		_id: {
 			type: new GraphQLNonNull(GraphQLID),
-			resolve: ({ _id }) => String(_id)
+			resolve: ({ _id }) => {
+				const id = String(_id);
+				return id.length === 25 ? id : 'G' + id;
+			}
 		},
 		name: {
 			type: new GraphQLNonNull(GraphQLString),
