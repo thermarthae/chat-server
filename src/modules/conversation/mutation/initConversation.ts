@@ -44,8 +44,12 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		if (userIdArr.length === 0) throw new UserInputError('userIdArr must contain at least 1 user id');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const parsedUserIds = [...new Set(userIdArr).add(String(verifiedUser._id))];
-		await checkIfUsersExist(parsedUserIds, userIDLoader);
-		await checkIfConvExist(parsedUserIds);
+
+		// Concurrently validate data
+		await Promise.all([
+			checkIfUsersExist(parsedUserIds, userIDLoader),
+			checkIfConvExist(parsedUserIds)
+		])
 
 		const time = new Date();
 		const seen = [];
