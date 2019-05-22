@@ -12,6 +12,7 @@ import MessageModel from '../../message/MessageModel';
 import ConversationModel from '../ConversationModel';
 import ConversationType from '../ConversationType';
 import { checkIfUsersExist, checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
+import { checkIfConvExist } from '../../..//utils/conversation.utils';
 import pubSub from '../../../pubSub';
 import { IRootValue, IContext } from '../../../server';
 
@@ -44,6 +45,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
 		const parsedUserIds = [...new Set(userIdArr).add(String(verifiedUser._id))];
 		await checkIfUsersExist(parsedUserIds, userIDLoader);
+		await checkIfConvExist(parsedUserIds);
 
 		const time = new Date();
 		const seen = [];
