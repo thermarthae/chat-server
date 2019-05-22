@@ -13,6 +13,7 @@ import pubSub from '../../../pubSub';
 import MessageType from '../MessageType';
 import { checkUserRightsToConv, checkIfNoSessionOwnerErr } from '../../../utils/access.utils';
 import { IRootValue, IContext } from '../../../server';
+import { determineRealConvId } from '../../../utils/conversation.utils';
 
 interface ISendMessageArgs {
 	conversationId: string;
@@ -34,18 +35,20 @@ export const sendMessage: GraphQLFieldConfig<IRootValue, IContext, ISendMessageA
 	resolve: async ({ }, { conversationId, message }, { sessionOwner, convIDLoader }) => {
 		if (!message || message.length < 1) throw new UserInputError('Message could not be empty');
 		const verifiedUser = checkIfNoSessionOwnerErr(sessionOwner);
-		const oldConversation = await checkUserRightsToConv(conversationId, verifiedUser, convIDLoader);
+		const realConvID = await determineRealConvId(conversationId, verifiedUser._id);
+		const oldConversation = await checkUserRightsToConv(realConvID, verifiedUser, convIDLoader);
+
 		const time = new Date();
 		const newMessage = new MessageModel({
 			author: verifiedUser._id,
-			conversation: conversationId,
+			conversation: realConvID,
 			time,
 			content: message,
 		});
 
 		const [{ users, significantlyUpdatedAt, draft, seen }] = await Promise.all([
 			ConversationModel.findByIdAndUpdate(
-				conversationId,
+				realConvID,
 				{
 					$push: { messages: newMessage._id },
 					$set: {

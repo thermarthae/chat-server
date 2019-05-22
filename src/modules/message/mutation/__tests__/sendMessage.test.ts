@@ -29,7 +29,7 @@ describe('sendMessage', () => {
 
 		const message = faker.lorem.words(4);
 		const res = await sendMessage.resolve!(
-			{}, { conversationId: conversation.id, message }, fakeCtx({ sessionOwner }), {} as any
+			{}, { conversationId: 'G' + conversation.id, message }, fakeCtx({ sessionOwner }), {} as any
 		);
 		expect(res).toMatchObject({
 			author: sessionOwner,
@@ -88,7 +88,7 @@ describe('sendMessage', () => {
 			]);
 
 			await sendMessage.resolve!(
-				{}, { conversationId: conv.id, message: '123' }, fakeCtx({ sessionOwner }), {} as any
+				{}, { conversationId: 'G' + conv.id, message: '123' }, fakeCtx({ sessionOwner }), {} as any
 			);
 		} catch (e) {
 			expect(e).toStrictEqual(new ForbiddenError('Conversation does not exist or access denied'));
