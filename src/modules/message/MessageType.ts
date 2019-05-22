@@ -23,7 +23,10 @@ const messageType = new GraphQLObjectType({
 		},
 		conversation: {
 			type: new GraphQLNonNull(GraphQLString),
-			resolve: ({ conversation }) => String(conversation)
+			resolve: ({ conversation }) => {
+				const convID = String(conversation);
+				return convID.length === 25 ? convID : 'G' + convID;
+			}
 		},
 		time: {
 			type: new GraphQLNonNull(GraphQLDateTime),
