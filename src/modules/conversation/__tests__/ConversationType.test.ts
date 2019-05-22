@@ -33,6 +33,53 @@ describe('Conversation Types', () => {
 		});
 	});
 
+	describe('friendlyID', () => {
+		test('only two users', () => {
+			const users = [makeUser(), makeUser()];
+
+			const arg1 = {
+				_id: 'G123456789o123456789o1234', //25
+				users
+			};
+			const res1 = types._id.resolve!(arg1, {}, { sessionOwner: users[0] }, {} as any);
+			expect(res1).toEqual(arg1._id);
+
+			const arg2 = {
+				_id: '123456789o123456789o1234', //24
+				users
+			};
+			const res2 = types._id.resolve!(arg2, {}, { sessionOwner: users[0] }, {} as any);
+			expect(res2).toEqual('G' + arg2._id);
+		});
+
+		test('more than 2 users', () => {
+			const users1 = [makeUser(), makeUser(), makeUser()];
+			const users2 = [...users1, makeUser()];
+
+			const arg1 = {
+				_id: 'G123456789o123456789o1234', //25
+				users: users1,
+			};
+			const res1 = types._id.resolve!(arg1, {}, { sessionOwner: arg1.users[0] }, {} as any);
+			expect(res1).toEqual(arg1._id);
+
+			const arg2 = {
+				_id: '123456789o123456789o1234', //24
+				users: users1
+			};
+			const res2 = types._id.resolve!(arg2, {}, { sessionOwner: arg2.users[0] }, {} as any);
+			expect(res2).toEqual('G' + arg2._id);
+
+			const arg3 = {
+				_id: 'G123456789o123456789o1234', //25
+				users: users2,
+			};
+			const res3 = types._id.resolve!(arg3, {}, { sessionOwner: arg3.users[0] }, {} as any);
+			expect(res3).toEqual(arg3._id);
+
+		});
+	});
+
 	describe('name', () => {
 		test('made from user names', () => {
 			const user1 = makeUser();

@@ -28,6 +28,18 @@ const conversationType = new GraphQLObjectType({
 				return id.length === 25 ? id : 'G' + id;
 			}
 		},
+		friendlyID: {
+			type: new GraphQLNonNull(GraphQLID),
+			resolve: ({ _id, users }, { }, { sessionOwner }) => {
+				if (users!.length > 2) {
+					const id = String(_id);
+					return id.length === 25 ? id : 'G' + id;
+				}
+
+				const user = users!.find(user => !sessionOwner!._id.equals(user._id))!;
+				return String(user._id);
+			}
+		},
 		name: {
 			type: new GraphQLNonNull(GraphQLString),
 			resolve: ({ name, users }, { }, { sessionOwner }) => {
