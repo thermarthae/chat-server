@@ -24,15 +24,23 @@ describe('markConversationAsRead', () => {
 	afterAll(async () => await stopMongoose());
 
 	test('success', async () => {
-		const res = await markConversationAsRead.resolve!(
-			{}, { conversationId }, fakeCtx({ sessionOwner }), {} as any
-		);
-		expect(res).toBe('Success!');
+		//before
+		const convInDBBefore = await ConversationModel.findById(conv._id) as any;
+		const seenTimeBefore = new Date(convInDBBefore!.seen[0].time).getTime();
+		expect(seenTimeBefore).toEqual(0);
 
-		const convInDB = await ConversationModel.findById(conv._id) as any;
-		const seenTime = new Date(convInDB!.seen[0].time).getTime();
-		expect(seenTime).toBeLessThanOrEqual(Date.now());
-		expect(seenTime).toBeGreaterThan(initDate);
+		const res = await markConversationAsRead.resolve!({}, { conversationId }, fakeCtx({ sessionOwner }), {} as any);
+
+		//after
+		const resSeenTime = new Date(res.seen[0].time).getTime();
+		expect(resSeenTime).not.toEqual(0);
+		expect(resSeenTime).toBeLessThanOrEqual(Date.now());
+		expect(resSeenTime).toBeGreaterThanOrEqual(initDate);
+
+		const convInDBAfter = await ConversationModel.findById(conv._id) as any;
+		const seenTimeAfter = new Date(convInDBAfter!.seen[0].time).getTime();
+		expect(seenTimeAfter).toEqual(resSeenTime);
+
 	});
 
 	test('error when unlogged', async () => {
