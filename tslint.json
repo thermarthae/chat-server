@@ -20,7 +20,8 @@
 		"no-trailing-whitespace": [true, "ignore-blank-lines"],
 		"no-unused-expression": [true, "allow-new"],
 		"quotemark": [true, "single"],
-		"triple-equals": false
+		"triple-equals": false,
+		"radix": false
 	},
 	"rulesDirectory": []
 }
