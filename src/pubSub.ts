@@ -1,15 +1,18 @@
 import { PubSub } from 'graphql-subscriptions';
+import { RedisPubSub } from 'graphql-redis-subscriptions';
+import * as RedisClient from 'ioredis';
 
-/**
- * Note that the default PubSub implementation is intended for demo purposes.
- * It only works if you have a single instance of your server and doesn't scale beyond a couple of connections.
- * For production usage you'll want to use one of the PubSub implementations backed by an external store.
- *
- * If possble memory leak warning: (pubsub as any).ee.setMaxListeners(30);
- *
- * //TODO: Replace with graphql-redis-subscriptions or graphql-mqtt-subscriptions
- * https://github.com/davidyaha/graphql-mqtt-subscriptions
- * https://github.com/davidyaha/graphql-redis-subscriptions
- */
-const pubSub = new PubSub();
-export default pubSub;
+const options = {
+	host: process.env.REDIS_ADDRESS!,
+	port: parseInt(process.env.REDIS_PORT!)
+};
+
+const pubSub = process.env.NODE_ENV !== 'production'
+	? new PubSub()
+	: new RedisPubSub({
+		publisher: new RedisClient(options),
+		subscriber: new RedisClient(options)
+	});
+
+// HACK: PubSub have a different types than RedisPubSub
+export default pubSub as PubSub & Partial<RedisPubSub>;
