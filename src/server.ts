@@ -13,6 +13,9 @@ import cookieParser = require('cookie-parser');
 import { ApolloServer, ApolloError } from 'apollo-server-express';
 import morgan = require('morgan');
 import http = require('http');
+import https = require('https');
+import path = require('path');
+import fs = require('fs');
 import { ConnectionContext, ExecutionParams } from 'subscriptions-transport-ws';
 
 import initPassport from './passport';
@@ -36,6 +39,7 @@ export default async () => {
 	const isTest = process.env.NODE_ENV === 'test';
 	const isProd = process.env.NODE_ENV === 'production';
 	const isDev = process.env.NODE_ENV === 'development';
+	const useHttps = process.env.HTTPS === 'true';
 	if (isDev) console.log('\x1b[31m%s\x1b[0m', 'DEVELOPMENT MODE');
 
 	const mongoose = await initMongoose().finally(() => console.log('Connected to DB'));
@@ -117,19 +121,29 @@ export default async () => {
 		}
 	});
 
-	const httpServer = http.createServer(app);
+	const httpServer = !useHttps
+		? http.createServer(app)
+		: https.createServer(
+			{
+				key: fs.readFileSync(path.resolve(__dirname, '../ssl/private.key')),
+				cert: fs.readFileSync(path.resolve(__dirname, '../ssl/server.crt'))
+			},
+			app
+		);
+
 	server.installSubscriptionHandlers(httpServer);
 
 	httpServer.listen(process.env.SERVER_PORT as any, () => {
 		const { address, port } = httpServer.address() as any;
 		const url = address + ':' + port;
+		const s = useHttps ? 's' : '';
 		console.log(
 			'\x1b[36m%s\x1b[0m',
-			`GraphQL Server is now running on http://${url + server.graphqlPath}`
+			`GraphQL Server is now running on http${s}://${url + server.graphqlPath}`
 		);
 		console.log(
 			'\x1b[35m%s\x1b[0m',
-			`GraphQL WS is now running on ws://${url + server.subscriptionsPath}`
+			`GraphQL WS is now running on ws${s}://${url + server.subscriptionsPath}`
 		);
 	});
 };
