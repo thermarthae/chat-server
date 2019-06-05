@@ -3,8 +3,6 @@
 // TODO: rate limit
 // TODO: add setDraft with convIDLoader cache clearing
 
-import dotenv = require('dotenv');
-dotenv.config();
 import express = require('express');
 import session = require('express-session');
 import connectMongo = require('connect-mongo');
