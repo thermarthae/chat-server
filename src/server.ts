@@ -112,7 +112,7 @@ export default async () => {
 	server.applyMiddleware({
 		app,
 		cors: {
-			origin: process.env.CORS_ORGIN,
+			origin: ((isDev ? process.env.CORS_ORIGIN_DEV : process.env.CORS_ORIGIN) || '').split(', '),
 			credentials: true
 		}
 	});
