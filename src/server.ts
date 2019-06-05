@@ -76,6 +76,7 @@ export default async () => {
 		connection?: ExecutionParams;
 	}
 	const server = new ApolloServer({
+		introspection: true,
 		debug: isDev,
 		schema,
 		tracing: true,
