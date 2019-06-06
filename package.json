@@ -13,6 +13,7 @@
 		"production": "set NODE_ENV=production&& yarn run launch",
 		"development": "set NODE_ENV=development&& yarn run launch --respawn",
 		"test": "jest",
+		"clear": "rimraf dist",
 		"build": "tsc",
 		"watch": "tsc -w"
 	},
@@ -62,6 +63,7 @@
 		"faker": "^4.1.0",
 		"jest": "^24.5.0",
 		"mongodb-memory-server": "^5.0.2",
+		"rimraf": "^2.6.3",
 		"source-map-support": "^0.5.11",
 		"ts-jest": "^24.0.0",
 		"ts-node-dev": "^1.0.0-pre.39",
