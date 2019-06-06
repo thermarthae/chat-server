@@ -29,9 +29,6 @@
 			"Test": ["test"],
 		},
 	},
-	"include": ["."],
-	"exclude": [
-		"node_modules",
-		"dist"
-	]
+	"include": ["src/**/*"],
+	"exclude": ["src/**/__tests__"]
 }
