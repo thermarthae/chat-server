@@ -49,7 +49,7 @@ export const initConversation: GraphQLFieldConfig<IRootValue, IContext, IInitCon
 		await Promise.all([
 			checkIfUsersExist(parsedUserIds, userIDLoader),
 			checkIfConvExist(parsedUserIds)
-		])
+		]);
 
 		const time = new Date();
 		const seen = [];
