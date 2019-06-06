@@ -6,10 +6,11 @@ const getFiles = (filePath: string) => glob.sync(filePath)
 	.map(resolver => require(resolver) as object)
 	.reduce((all, current) => Object.assign(all, current));
 const pathToModules = path.join(__dirname);
+const extPattern = '+(ts|js)';
 
-const queries = getFiles(`${pathToModules}/*/query/*.ts`);
-const mutations = getFiles(`${pathToModules}/*/mutation/*.ts`);
-const subscriptions = getFiles(`${pathToModules}/*/subscription/*.ts`);
+const queries = getFiles(`${pathToModules}/*/query/*.${extPattern}`);
+const mutations = getFiles(`${pathToModules}/*/mutation/*.${extPattern}`);
+const subscriptions = getFiles(`${pathToModules}/*/subscription/*.${extPattern}`);
 
 export default new GraphQLSchema({
 	query: new GraphQLObjectType({
