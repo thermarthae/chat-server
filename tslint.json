@@ -2,6 +2,9 @@
 	"defaultSeverity": "warning",
 	"extends": ["tslint:recommended"],
 	"jsRules": true,
+	"linterOptions": {
+		"exclude": ["node_modules", "dist", "coverage"]
+	},
 	"rules": {
 		"arrow-parens": [true, "ban-single-arg-parens"],
 		"curly": [true, "as-needed"],
