@@ -9,9 +9,8 @@
 	},
 	"scripts": {
 		"start": "yarn run development",
-		"launch": "tsnd src/index.ts --pretty",
-		"production": "set NODE_ENV=production&& yarn run launch",
-		"development": "set NODE_ENV=development&& yarn run launch --respawn",
+		"production": "set NODE_ENV=production&& node dist/index.js",
+		"development": "set NODE_ENV=development&& tsnd --pretty --no-deps --respawn src/index.ts",
 		"test": "jest",
 		"clear": "rimraf dist",
 		"build": "tsc",
