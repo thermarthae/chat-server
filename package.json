@@ -13,7 +13,7 @@
 		"development": "set NODE_ENV=development&& tsnd --pretty --no-deps --respawn src/index.ts",
 		"test": "jest",
 		"clear": "rimraf dist",
-		"build": "tsc",
+		"build": "yarn run clear && tsc",
 		"watch": "tsc -w"
 	},
 	"dependencies": {
