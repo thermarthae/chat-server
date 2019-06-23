@@ -5,6 +5,8 @@ services:
     image: redis:5-alpine
   db:
     image: mongo
+    volumes: 
+      - ./config/mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh
     environment:
       MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
