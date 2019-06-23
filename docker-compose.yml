@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  redis:
+    image: redis:5-alpine
+  db:
+    image: mongo
+    environment:
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_NODE_CLIENT_USERNAME: ${MONGO_NODE_CLIENT_USERNAME}
+      MONGO_NODE_CLIENT_PASSWORD: ${MONGO_NODE_CLIENT_PASSWORD}
+  server:
+    image: chat-server
+    build: .
+    ports:
+      - 3000:${SERVER_PORT}
+    depends_on:
+      - db
+    links:
+      - db
+    environment:
+      NODE_ENV: production
+      REDIS_ADDRESS: redis
+      MONGODB_URI: mongodb://${MONGO_NODE_CLIENT_USERNAME}:${MONGO_NODE_CLIENT_PASSWORD}@db:27017/${MONGO_INITDB_DATABASE}
